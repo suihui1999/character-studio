@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,mkdir,writeFile,readFile} from 'node:fs/promises';
+import {mkdtemp,mkdir,writeFile,readFile,realpath} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
@@ -22,7 +22,10 @@ async function makePackage(){
 }
 test('Windows installer handles Chinese paths, repeat install, and preserves the previous version on corrupted input',{skip:process.platform!=='win32'},async()=>{
   const f=await makePackage(),args=['-PackagePath',f.zip,'-InstallRoot',f.destination,'-NoOpen'];
-  await ps(install,args);const pointerFile=path.join(f.destination,'current.json'),first=JSON.parse(await readFile(pointerFile,'utf8'));assert.ok(first.path.startsWith(f.destination));
+  await ps(install,args);const pointerFile=path.join(f.destination,'current.json'),first=JSON.parse(await readFile(pointerFile,'utf8'));
+  // .NET expands RUNNER~1 to runneradmin on hosted Windows. Compare the real
+  // directories, not a textual prefix that treats the same path as different.
+  const relative=path.relative(await realpath(f.destination),await realpath(first.path));assert.ok(relative&&!relative.startsWith('..'+path.sep)&&relative!=='..'&&!path.isAbsolute(relative));
   await ps(install,args);assert.equal(JSON.parse(await readFile(pointerFile,'utf8')).path,first.path);
   await writeFile(f.zip+'.sha256','0'.repeat(64));await assert.rejects(ps(install,args),/checksum mismatch/);assert.equal(JSON.parse(await readFile(pointerFile,'utf8')).path,first.path);
   await writeFile(f.zip+'.sha256',hash(await readFile(f.zip)));await writeFile(path.join(first.path,'dist/cli.mjs'),'damaged installed file');

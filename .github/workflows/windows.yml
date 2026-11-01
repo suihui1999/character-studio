@@ -33,6 +33,8 @@ jobs:
         with:
           name: character-studio-windows-x64
           compression-level: 0
+          include-hidden-files: true
+          if-no-files-found: error
           path: |
             .local/distribution/character-studio-windows-x64.zip
             .local/distribution/character-studio-windows-x64.zip.sha256
