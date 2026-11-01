@@ -1,0 +1,10 @@
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.png binary
+*.jpg binary
+*.webp binary
+*.zip binary
+*.exe binary
+# Preserve upstream license text without applying local whitespace lint.
+plugins/character-studio/dist/THIRD_PARTY_LICENSES.txt -whitespace

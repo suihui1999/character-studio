@@ -1,0 +1,10 @@
+{
+  "name": "character-studio-local",
+  "interface": {"displayName": "Character Studio 本地开发"},
+  "plugins": [{
+    "name": "character-studio",
+    "source": {"source": "local", "path": "./plugins/character-studio"},
+    "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
+    "category": "Creativity"
+  }]
+}

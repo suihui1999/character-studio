@@ -1,0 +1,37 @@
+name: Bug report / 问题反馈
+description: Installation, workbench, or generation problems / 安装、界面或生图问题
+title: '[Bug] '
+body:
+  - type: markdown
+    attributes:
+      value: '请勿公开 Key、私人人像或完整数据目录。Do not include API keys, private portraits, or your full data folder.'
+  - type: input
+    id: version
+    attributes:
+      label: Version / 版本
+      placeholder: '0.3.0'
+    validations:
+      required: true
+  - type: dropdown
+    id: host
+    attributes:
+      label: Where did it happen? / 在哪里遇到问题？
+      options:
+        - Doubao Work / 豆包工作
+        - Codex
+        - Local browser / 本机浏览器
+        - Other / 其他
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps and actual behavior / 操作步骤和实际结果
+      description: Include the expected behavior and the exact visible error, with sensitive data removed.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment / 使用环境
+      description: Windows version, agent version, and chosen generation provider, if relevant.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Character Studio"
+  short_description: "上传主角，多选服装和姿势，整理任务并交给 Agent 生图"
+  default_prompt: "使用 $character-studio 打开人物服装姿势工作台。"

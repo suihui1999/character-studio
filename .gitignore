@@ -1,0 +1,14 @@
+node_modules/
+.local/
+test-results/
+__pycache__/
+*.log
+*.zip
+.env*
+!.env.example
+
+# Local planning/history; public engineering docs live in docs/architecture.md.
+docs/decisions-*.md
+docs/research-mcp-installation.md
+docs/development.md
+docs/verification.md
