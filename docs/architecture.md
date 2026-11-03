@@ -6,7 +6,7 @@ Character Studio is a local-first workbench. The same business service supplies 
 
 | Component | Responsibility |
 |---|---|
-| `src/store.mjs` | Local assets, task snapshots, sample approval, pause/cancel, result persistence, cross-process write locking |
+| `src/store.mjs` | Local assets, task snapshots, pause/cancel, result persistence, cross-process write locking |
 | `src/catalog.mjs` | Read approved gallery metadata, filter references, cache the catalog |
 | `src/server.mjs` | Shared tool operations, loopback HTTP service, optional stdio MCP service |
 | `src/cli.mjs` | Start/reuse the local service and expose fixed commands to agents |
@@ -20,7 +20,7 @@ Character Studio is a local-first workbench. The same business service supplies 
 
 The draft records the portrait, outfits, poses, prompt, ratio, and provider. Submitting creates independent outfit × pose tasks with snapshots of the chosen provider and preset. Later settings edits do not silently change a submitted batch.
 
-Before generation, a worker receives exactly three local references: portrait, outfit, and pose. A successful result must contain real image bytes or a readable output file. Failed tasks record their actual reason; independent later tasks can continue. The first successful sample waits for user approval when sample mode is enabled.
+Before generation, a worker receives the portrait and the selected outfit and pose references. A successful result must contain real image bytes or a readable output file. Failed tasks record their actual reason; independent later tasks can continue.
 
 ## Agent connection
 

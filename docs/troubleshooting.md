@@ -20,7 +20,7 @@ The agent must report unavailable tools rather than simulate success, generate a
 
 ## 有 Key 但没有可选模型 / Key saved, no model available
 
-Key 只负责连接账户，还需要 AI 应用或工作流预设。当前版本没有附带推荐预设；高级用户可以在设置里导入自己的链接。请不要在公开 Issue 中发送 Key。
+API Key 用于连接账户。若看到「默认工作流尚未上线」，该站点需要等工作台版本提供内置工作流。Key 填在本机工作台。
 
 ## 图库加载失败 / Gallery loading failed
 

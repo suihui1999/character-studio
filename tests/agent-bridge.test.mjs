@@ -20,9 +20,9 @@ test('an active waiter receives a newly submitted task with three local referenc
   const result=await waiting;assert.equal(result.task.status,'running');assert.deepEqual(result.task.references.map(r=>r.kind),['portrait','costume','pose']);
   await assert.rejects(bridge.wait(input),/先回填/);await store.recordResult(result.task.id,{base64:PNG.toString('base64')});bridge.finish(result.task.id);assert.equal(bridge.status().connected,false);
 });
-test('pause and sample approval gates do not generate; Continue wakes the waiter',async()=>{
+test('paused batches do not generate; Continue wakes the waiter',async()=>{
   const {store,bridge}=await setup();await store.mutate(()=>store.state.tasks.push({...store.state.tasks[0],id:'second'}));await store.batchAction('start');
-  const first=await bridge.wait(input);await store.recordResult(first.task.id,{base64:PNG.toString('base64')});bridge.finish(first.task.id);assert.equal((await store.refresh()).batch.status,'awaiting-approval');
+  const first=await bridge.wait(input);await store.batchAction('pause');await store.recordResult(first.task.id,{base64:PNG.toString('base64')});bridge.finish(first.task.id);assert.equal((await store.refresh()).batch.status,'paused');
   const waiting=bridge.wait(input);await delay(40);assert.equal((await store.refresh()).tasks.find(t=>t.id==='second').attempts,0);await store.batchAction('continue');assert.equal((await waiting).task.id,'second');
 });
 test('aborting a waiter releases the connection and never claims a draft task',async()=>{

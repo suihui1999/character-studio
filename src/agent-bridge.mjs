@@ -40,7 +40,7 @@ export class AgentBridge{
           }
           return {...next,reason:next.batch?.status||'empty'};
         }
-        // A sample gate or manual pause never claims a task. Keep the active
+        // A manual pause never claims a task. Keep the active
         // agent waiting for the user's Continue button, without generating.
         await delay(Math.min(this.pollMs,Math.max(1,deadline-Date.now())),undefined,{signal});
       }

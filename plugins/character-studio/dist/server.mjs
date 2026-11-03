@@ -36661,16 +36661,47 @@ import { createServer } from "node:http";
 import path5 from "node:path";
 
 // src/store.mjs
-import { mkdir, readFile, writeFile, rename, rm, realpath, access } from "node:fs/promises";
-import path from "node:path";
+import { mkdir as mkdir2, readFile as readFile2, writeFile as writeFile2, rename, rm, realpath, access } from "node:fs/promises";
+import path2 from "node:path";
 import os from "node:os";
 import { randomUUID, createHash } from "node:crypto";
 
 // src/generation-models.mjs
 var PROVIDERS = [{ id: "codex", name: "\u672C\u673A Codex \u751F\u56FE" }, { id: "agent", name: "\u5F53\u524D Agent \u539F\u751F\u751F\u56FE" }, { id: "runninghub-cn", name: "RunningHub \u56FD\u5185\u7AD9" }, { id: "runninghub-global", name: "RunningHub \u56FD\u9645\u7AD9" }];
 var isNativeProvider = (provider) => provider === "codex" || provider === "agent";
+var REFERENCE_LABELS = { portrait: "\u4E3B\u89D2", costume: "\u670D\u88C5", pose: "\u59FF\u52BF" };
+var DEFAULT_RATIOS = ["3:4", "1:1", "4:3", "9:16", "16:9"];
+function outputRatios(preset) {
+  const choices = preset?.nodes.find((n) => n.source === "ratio" && n.options?.length)?.options;
+  return choices ? choices.map((o) => o.value).filter((v) => typeof v === "string" && /^\d{1,3}:\d{1,3}$/.test(v)) : DEFAULT_RATIOS;
+}
+function queueReferences(draft) {
+  const costumes = draft.costumeIds.length ? draft.costumeIds : [null];
+  const poses = draft.poseIds.length ? draft.poseIds : [null];
+  return { costumes, poses, count: costumes[0] || poses[0] ? costumes.length * poses.length : 0 };
+}
+function queueInputs(draft, provider, preset) {
+  return JSON.stringify([draft.portraitId, draft.costumeIds, draft.poseIds, draft.mode || "all", draft.ratio, draft.template, draft.notes, provider, preset || null]);
+}
+function referenceCompatibility(preset, kinds, ratio) {
+  if (!preset) return "";
+  const sources = new Set(preset.nodes.map((n) => n.source));
+  for (const kind of Object.keys(REFERENCE_LABELS)) {
+    if (!kinds.includes(kind) && (sources.has(kind) || sources.has("references") && !preset.allowPartialReferences)) {
+      return "\u5F53\u524D\u6A21\u578B\u9700\u8981" + REFERENCE_LABELS[kind] + "\u53C2\u8003\u56FE\uFF0C\u8BF7\u5148\u8865\u9F50\u518D\u751F\u6210\u3002";
+    }
+  }
+  if (preset.nodes.some((n) => n.source === "ratio" && n.options?.length && !n.options.some((o) => o.value === ratio))) {
+    return "\u5F53\u524D\u6A21\u578B\u4E0D\u652F\u6301 " + ratio + "\uFF0C\u8BF7\u66F4\u6362\u6A21\u578B\u6216\u8F93\u51FA\u6BD4\u4F8B\u3002";
+  }
+  return "";
+}
+function selectedPreset(presets, provider, id) {
+  if (isNativeProvider(provider)) return null;
+  return presets.find((p) => p.provider === provider && p.id === id) || presets.find((p) => p.provider === provider && p.builtin) || null;
+}
 var RH_ORIGINS = { "runninghub-cn": "https://www.runninghub.cn", "runninghub-global": "https://www.runninghub.ai" };
-var INPUT_SOURCES = [["fixed", "\u4FDD\u7559\u539F\u503C"], ["portrait", "\u4E3B\u89D2\u53C2\u8003\u56FE"], ["costume", "\u670D\u88C5\u53C2\u8003\u56FE"], ["pose", "\u59FF\u52BF\u53C2\u8003\u56FE"], ["references", "\u4E09\u5F20\u53C2\u8003\u56FE\u5217\u8868\uFF08JSON\uFF09"], ["prompt", "\u4EFB\u52A1\u63D0\u793A\u8BCD"], ["ratio", "\u8F93\u51FA\u6BD4\u4F8B"], ["width", "\u8F93\u51FA\u5BBD\u5EA6"], ["height", "\u8F93\u51FA\u9AD8\u5EA6"]];
+var INPUT_SOURCES = [["fixed", "\u4FDD\u7559\u539F\u503C"], ["portrait", "\u4E3B\u89D2\u53C2\u8003\u56FE"], ["costume", "\u670D\u88C5\u53C2\u8003\u56FE"], ["pose", "\u59FF\u52BF\u53C2\u8003\u56FE"], ["references", "\u53C2\u8003\u56FE\u5217\u8868\uFF08JSON\uFF09"], ["prompt", "\u4EFB\u52A1\u63D0\u793A\u8BCD"], ["ratio", "\u8F93\u51FA\u6BD4\u4F8B"], ["width", "\u8F93\u51FA\u5BBD\u5EA6"], ["height", "\u8F93\u51FA\u9AD8\u5EA6"]];
 function checkProvider(provider) {
   if (!PROVIDERS.some((p) => p.id === provider)) throw Error("\u672A\u77E5\u751F\u56FE\u6E20\u9053");
   return provider;
@@ -36769,42 +36800,156 @@ function validatePreset(preset) {
     return { nodeId: n.nodeId, fieldName: n.fieldName, value: n.value ?? "", description: String(n.description || "").slice(0, 200), source: n.source, format: n.format || "fileName", ...n.options ? { options: n.options } : {} };
   });
   if (!sources.has("prompt")) throw Error("\u8BF7\u6307\u5B9A\u4E00\u4E2A\u201C\u4EFB\u52A1\u63D0\u793A\u8BCD\u201D\u8F93\u5165");
-  if (!sources.has("references") && !["portrait", "costume", "pose"].every((s) => sources.has(s))) throw Error("\u8BF7\u6620\u5C04\u4E3B\u89D2\u3001\u670D\u88C5\u3001\u59FF\u52BF\u4E09\u5F20\u56FE\uFF0C\u6216\u6620\u5C04\u201C\u4E09\u5F20\u53C2\u8003\u56FE\u5217\u8868\u201D\u8F93\u5165");
-  return { id: preset.id, provider: preset.provider, kind: preset.kind, remoteId: id, name: preset.name.trim(), nodes };
+  if (!sources.has("references") && !["portrait", "costume", "pose"].every((s) => sources.has(s))) throw Error("\u8BF7\u6620\u5C04\u4E3B\u89D2\u3001\u670D\u88C5\u3001\u59FF\u52BF\u4E09\u5F20\u56FE\uFF0C\u6216\u6620\u5C04\u201C\u53C2\u8003\u56FE\u5217\u8868\u201D\u8F93\u5165");
+  return { id: preset.id, provider: preset.provider, kind: preset.kind, remoteId: id, name: preset.name.trim(), nodes, ...preset.kind === "workflow" && preset.apiVersion === 2 ? { apiVersion: 2 } : {}, ...sources.has("references") && preset.allowPartialReferences ? { allowPartialReferences: true } : {} };
 }
 function personalPayload(task, files) {
   const preset = validatePreset(task.providerPreset);
   if (preset.provider !== task.provider) throw Error("\u4EFB\u52A1\u6E20\u9053\u4E0E\u6A21\u578B\u9884\u8BBE\u4E0D\u4E00\u81F4");
+  const kinds = Object.keys(REFERENCE_LABELS).filter((kind) => files.some((file2) => file2.kind === kind));
+  if (!kinds.includes("portrait")) throw Error("\u7F3A\u5C11\u4E3B\u89D2\u53C2\u8003\u56FE");
+  const problem = referenceCompatibility(preset, kinds, task.ratio);
+  if (problem) throw Error(problem);
   const [a, b] = task.ratio.split(":").map(Number), unit = Math.ceil(1024 / Math.max(a, b) / 8) * 8;
   return { preset, nodeInfoList: preset.nodes.map((n) => {
     let value = n.value;
     const ref = (s) => files.find((f) => f.kind === s)?.[n.format === "url" ? "url" : "fileName"];
     if (["portrait", "costume", "pose"].includes(n.source)) value = ref(n.source);
     if (n.source === "references") {
-      const values = ["portrait", "costume", "pose"].map(ref);
-      if (values.some((v) => !v)) throw Error("\u7F3A\u5C11\u4E09\u5F20\u53C2\u8003\u56FE\u5217\u8868\u4E2D\u7684\u56FE\u7247");
+      const values = kinds.map(ref);
+      if (values.some((v) => !v)) throw Error("\u53C2\u8003\u56FE\u5217\u8868\u4E2D\u7684\u56FE\u7247\u4E0A\u4F20\u4E0D\u5B8C\u6574");
       value = JSON.stringify(values);
     }
     if (n.source === "prompt") value = task.prompt;
-    if (n.source === "ratio") value = task.ratio;
+    if (n.source === "ratio") value = n.options?.find((o) => o.value === task.ratio)?.fieldValue ?? task.ratio;
     if (n.source === "width") value = a * unit;
     if (n.source === "height") value = b * unit;
     if (value === void 0) throw Error("\u7F3A\u5C11\u6620\u5C04\u7684\u53C2\u8003\u56FE\uFF1A" + n.source);
-    if (n.source === "ratio" && n.options?.length && !n.options.some((o) => o.value === value)) throw Error("\u5E94\u7528\u4E0D\u652F\u6301\u6240\u9009\u8F93\u51FA\u6BD4\u4F8B\uFF1A" + value);
     return { nodeId: n.nodeId, fieldName: n.fieldName, fieldValue: value };
   }) };
 }
 
+// src/runninghub-defaults.mjs
+var resolutionOptions = [
+  "1:1 (Square)",
+  "2:3 (Portrait Photo)",
+  "3:2 (Photo)",
+  "3:4 (Portrait Standard)",
+  "4:3 (Standard)",
+  "9:16 (Portrait Widescreen)",
+  "16:9 (Widescreen)",
+  "21:9 (Ultrawide)"
+].map((fieldValue) => ({ value: fieldValue.split(" ")[0], fieldValue }));
+var RUNNINGHUB_DEFAULTS = [
+  ["cn", "2117565399293321218"],
+  ["global", "2117590622597468162"]
+].map(([site, remoteId2]) => ({
+  id: "rh-" + site + "-qwen21-three-reference",
+  provider: "runninghub-" + site,
+  kind: "workflow",
+  apiVersion: 2,
+  remoteId: remoteId2,
+  name: "Qwen 2.1 \u6362\u88C5\u4E0E\u59FF\u52BF",
+  nodes: [
+    { nodeId: "1", fieldName: "image", source: "portrait" },
+    { nodeId: "2", fieldName: "image", source: "costume" },
+    { nodeId: "3", fieldName: "image", source: "pose" },
+    { nodeId: "10", fieldName: "prompt", source: "prompt" },
+    { nodeId: "4", fieldName: "aspect_ratio", source: "ratio", value: "3:4", options: resolutionOptions }
+  ]
+}));
+
+// src/catalog.mjs
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+var SOURCES = { pose: "https://ai-pose-depth-gallery.pages.dev/", costume: "https://ai-costume-gallery.pages.dev/", portrait: "https://ai-portrait-gallery.pages.dev/" };
+var categories = { "\u7ACB\u3061": "\u7AD9\u59FF", "\u5EA7\u308A": "\u5750\u59FF", "\u819D\u7ACB\u3061": "\u8DEA\u59FF", "\u5BDD\u305D\u3079\u308A": "\u8EBA\u5367", "\u3057\u3083\u304C\u307F": "\u8E72\u59FF", "\u524D\u304B\u304C\u307F": "\u524D\u503E", "\u6A2A\u5EA7\u308A\u30FB\u5973\u306E\u5B50\u5EA7\u308A": "\u4FA7\u5750", "\u306E\u3051\u305E\u308A\u30FB\u53CD\u308A": "\u540E\u4EF0", "\u3072\u306D\u308A": "\u8F6C\u8EAB", "\u6625": "\u6625\u5B63", "\u590F": "\u590F\u5B63", "\u79CB": "\u79CB\u5B63", "\u51AC": "\u51AC\u5B63", "\u30D1\u30FC\u30C6\u30A3": "\u793C\u670D", "\u6C34\u7740": "\u6CF3\u88C5", "\u30E9\u30F3\u30B8\u30A7\u30EA\u30FC": "\u5185\u8863\u7761\u8863", "\u30BB\u30AF\u30B7\u30FC": "\u9020\u578B" };
+var hairNames = { "\u30B7\u30E7\u30FC\u30C8": "\u77ED\u53D1", "\u30DF\u30C7\u30A3\u30A2\u30E0": "\u4E2D\u53D1", "\u30BB\u30DF\u30ED\u30F3\u30B0": "\u4E2D\u957F\u53D1", "\u30ED\u30F3\u30B0": "\u957F\u53D1" };
+function portraitUrl(relative, folder) {
+  const url2 = new URL(relative, SOURCES.portrait);
+  if (url2.origin !== new URL(SOURCES.portrait).origin || !url2.pathname.startsWith("/img/" + folder + "/")) {
+    throw Error("\u4EBA\u50CF\u56FE\u7247\u6765\u6E90\u65E0\u6548");
+  }
+  return url2.href;
+}
+function parsePortraitCatalog(script) {
+  const match = script.match(/^\s*window\.GALLERY_IMAGES\s*=\s*(\[[\s\S]*\])\s*;?\s*$/);
+  if (!match) throw Error("\u4EBA\u50CF\u5E93\u6570\u636E\u683C\u5F0F\u53D1\u751F\u53D8\u5316");
+  const records = JSON.parse(match[1]);
+  if (!records.length) throw Error("\u4EBA\u50CF\u5E93\u7D22\u5F15\u4E3A\u7A7A");
+  return records.map(({ id, section, hair, style, full, thumb }) => {
+    if (!id || !full || !thumb) throw Error("\u4EBA\u50CF\u5E93\u6761\u76EE\u7F3A\u5C11\u5B57\u6BB5");
+    const category = section === "styling" ? "\u4EBA\u7269\u9020\u578B" : "\u6B63\u9762\u4EBA\u50CF";
+    const group = hairNames[hair] || hair || "";
+    return { id, kind: "portrait", name: style || group || category, category, group, angle: "", url: portraitUrl(full, "full"), thumb: portraitUrl(thumb, "thumb") };
+  });
+}
+function parseCatalog(html, kind) {
+  if (kind === "portrait") return parsePortraitCatalog(html);
+  const match = html.match(/const\s+D\s*=\s*(\[[\s\S]*?\]);/);
+  if (!match) throw Error("\u56FE\u5E93\u6570\u636E\u683C\u5F0F\u53D1\u751F\u53D8\u5316");
+  const records = JSON.parse(match[1]);
+  if (!Array.isArray(records) || !records.length) throw Error("\u56FE\u5E93\u7D22\u5F15\u4E3A\u7A7A");
+  return records.map((d) => {
+    const category = d["\u5206\u985E"] || d["\u30AB\u30C6\u30B4\u30EA"] || "", name = d["\u30DD\u30FC\u30BA\u540D"] || d["\u30AD\u30FC\u30EF\u30FC\u30C9"] || d.id;
+    const original = d["\u753B\u50CF"] || d["\u539F\u5BF8"];
+    if (!d.id || !original || !d["\u30B5\u30E0\u30CD"]) throw Error("\u56FE\u5E93\u6761\u76EE\u7F3A\u5C11\u5B57\u6BB5");
+    const url2 = new URL(original, SOURCES[kind]), thumb = new URL(d["\u30B5\u30E0\u30CD"], SOURCES[kind]);
+    if (url2.origin !== new URL(SOURCES[kind]).origin || thumb.origin !== url2.origin) throw Error("\u56FE\u5E93\u56FE\u7247\u6765\u6E90\u8D8A\u754C");
+    const angle = { "\u6B63\u9762": "\u6B63\u9762", "\u4E0A\u304B\u3089": "\u4FEF\u89C6", "\u4E0B\u304B\u3089": "\u4EF0\u89C6", "\u6A2A": "\u4FA7\u9762", "\u659C\u3081": "\u659C\u4FA7" }[d["\u30A2\u30F3\u30B0\u30EB"]] || "";
+    return { id: d.id, kind, name, category: categories[category] || category, group: d["\u7CFB\u7D71"] || category, angle, url: url2.href, thumb: thumb.href };
+  });
+}
+var Catalog = class {
+  constructor(root) {
+    this.root = path.join(root, "catalog");
+    this.inflight = /* @__PURE__ */ new Map();
+  }
+  async load(kind, refresh = false) {
+    if (!SOURCES[kind]) throw Error("\u672A\u77E5\u56FE\u5E93");
+    const file2 = path.join(this.root, kind + ".json");
+    if (!refresh) {
+      try {
+        return JSON.parse(await readFile(file2, "utf8"));
+      } catch (e) {
+        if (e.code !== "ENOENT") throw e;
+      }
+    }
+    if (this.inflight.has(kind)) return this.inflight.get(kind);
+    const job = (async () => {
+      const index = kind === "portrait" ? new URL("data/images.js", SOURCES[kind]) : SOURCES[kind];
+      const r = await fetch(index, { headers: { "User-Agent": "Mozilla/5.0 CharacterStudio/0.1" }, signal: AbortSignal.timeout(25e3) });
+      if (!r.ok) throw Error("\u56FE\u5E93\u6682\u65F6\u65E0\u6CD5\u8BBF\u95EE\uFF1A" + r.status);
+      const data = parseCatalog(await r.text(), kind);
+      await mkdir(this.root, { recursive: true });
+      await writeFile(file2, JSON.stringify(data));
+      return data;
+    })().finally(() => this.inflight.delete(kind));
+    this.inflight.set(kind, job);
+    return job;
+  }
+  async query({ kind, q = "", category = "", angle = "", offset = 0, limit = 18, refresh = false }) {
+    const all = await this.load(kind, refresh), term = q.toLowerCase();
+    const categories2 = [...new Set(all.map((d) => d.category))];
+    const filtered = all.filter((d) => (!category || d.category === category) && (!angle || d.angle === angle) && (!term || [d.name, d.id, d.category, d.group].join(" ").toLowerCase().includes(term)));
+    return { items: filtered.slice(offset, offset + Math.min(limit, 60)), total: filtered.length, totalInLibrary: all.length, categories: categories2, source: SOURCES[kind] };
+  }
+};
+
 // src/store.mjs
-var DEFAULT_TEMPLATE = `\u8BF7\u7ED3\u5408\u63D0\u4F9B\u7684\u53C2\u8003\u56FE\uFF0C\u878D\u5408\u6210\u4E00\u5F20\u5B8C\u6574\u7684\u4EBA\u7269\u56FE\u50CF\uFF1A
+var PREVIOUS_DEFAULT_TEMPLATE = `\u8BF7\u7ED3\u5408\u63D0\u4F9B\u7684\u53C2\u8003\u56FE\uFF0C\u878D\u5408\u6210\u4E00\u5F20\u5B8C\u6574\u7684\u4EBA\u7269\u56FE\u50CF\uFF1A
 \u2022 \u3010\u56FE1\uFF08\u4EBA\u50CF\u53C2\u8003\uFF09\u3011\uFF1A\u4FDD\u6301\u4E0A\u4F20\u4E3B\u89D2\u7684\u4E94\u5B98\u8138\u578B\u3001\u8EAB\u4EFD\u3001\u53D1\u8272\u4E0E\u53D1\u578B\u6C14\u8D28\u4E00\u81F4\uFF0C\u4E0D\u6DFB\u52A0\u672A\u51FA\u73B0\u5728\u53C2\u8003\u56FE\u4E2D\u7684\u56FA\u5B9A\u53D1\u578B\u63CF\u8FF0\u3002
 \u2022 \u3010\u56FE2\uFF08\u670D\u88C5\u53C2\u8003\uFF09\u3011\uFF1A\u7A7F\u4E0A\u670D\u88C5\u53C2\u8003\u4E2D\u7684\u5B8C\u6574\u670D\u9970\u300C{{costume}}\u300D\uFF0C\u8FD8\u539F\u9762\u6599\u8D28\u611F\u3001\u989C\u8272\u3001\u56FE\u6848\u4E0E\u526A\u88C1\u3002
 \u2022 \u3010\u56FE3\uFF08\u59FF\u52BF\u53C2\u8003\uFF09\u3011\uFF1A\u8EAB\u4F53\u59FF\u6001\u4E0E\u955C\u5934\u900F\u89C6\u9075\u5FAA\u59FF\u52BF\u53C2\u8003\u300C{{pose}}\u300D\u3010{{angle}}\u3011\uFF0C\u4EC5\u53C2\u8003\u9AA8\u67B6\u52A8\u4F5C\uFF0C\u5FFD\u7565\u7D20\u4F53\u767D\u6A21\u6750\u8D28\u3002
 \u2022 \u3010\u753B\u98CE\u8981\u6C42\u3011\uFF1A\u5199\u5B9E\u5546\u4E1A\u6444\u5F71\u7EA7\u8D28\u611F\uFF0C85mm \u4EBA\u50CF\u955C\u5934\uFF0C\u81EA\u7136\u67D4\u548C\u5149\u5F71\uFF0C\u771F\u5B9E\u808C\u80A4\u7EB9\u7406\u4E0E\u7EC7\u7269\u7EC6\u8282\uFF0C8k \u9AD8\u6E05\u753B\u8D28\u3002\u4EBA\u7269\u6BD4\u4F8B\u534F\u8C03\uFF0C\u624B\u90E8\u4E0E\u4E94\u5B98\u81EA\u7136\uFF0C\u5149\u5F71\u7EDF\u4E00\u3002
 \u8F93\u51FA\u6BD4\u4F8B\uFF1A{{ratio}}\u3002\u6BCF\u4E2A\u4EFB\u52A1\u5355\u72EC\u751F\u6210\u4E00\u5F20\u56FE\u7247\uFF0C\u4E0D\u62FC\u56FE\u3002
 {{notes}}`;
+var DEFAULT_TEMPLATE = PREVIOUS_DEFAULT_TEMPLATE.replace(
+  "\u2022 \u3010\u753B\u98CE\u8981\u6C42\u3011",
+  "\u2022 \u3010\u80CC\u666F\u8981\u6C42\u3011\uFF1A\u82E5\u672A\u53E6\u884C\u6307\u5B9A\uFF0C\u4F7F\u7528\u4E2D\u6027\u6D45\u7070\u8272\u65E0\u7F1D\u5F71\u68DA\u80CC\u666F\uFF0C\u5730\u9762\u4E0E\u80CC\u666F\u81EA\u7136\u8FC7\u6E21\uFF0C\u65E0\u5E03\u666F\u548C\u9053\u5177\u3002\n\u2022 \u3010\u753B\u98CE\u8981\u6C42\u3011"
+);
 function initialState() {
-  return { version: 1, revision: 0, assets: {}, providerPresets: [], draft: { portraitId: null, costumeIds: [], poseIds: [], mode: "sample", ratio: "3:4", template: DEFAULT_TEMPLATE, notes: "", provider: "codex", providerPresetId: null }, tasks: [], batch: null };
+  return { version: 1, revision: 0, assets: {}, providerPresets: [], draft: { portraitId: null, costumeIds: [], poseIds: [], ratio: "3:4", template: DEFAULT_TEMPLATE, notes: "", provider: "codex", providerPresetId: null }, tasks: [], batch: null };
 }
 var uid = () => randomUUID();
 function retainedTasks(state) {
@@ -36818,21 +36963,25 @@ function imageType(b) {
   throw Error("\u4EC5\u652F\u6301\u6709\u6548\u7684 PNG\u3001JPEG\u3001WebP \u56FE\u7247");
 }
 var Store = class {
-  constructor(root = process.env.CHARACTER_STUDIO_HOME || path.join(os.homedir(), ".character-studio")) {
-    this.root = path.resolve(root);
-    this.file = path.join(this.root, "state.json");
+  constructor(root = process.env.CHARACTER_STUDIO_HOME || path2.join(os.homedir(), ".character-studio"), { builtinPresets = RUNNINGHUB_DEFAULTS } = {}) {
+    this.builtinPresets = builtinPresets.map((p) => ({ ...validatePreset(p), builtin: true }));
+    this.root = path2.resolve(root);
+    this.file = path2.join(this.root, "state.json");
     this.chain = Promise.resolve();
   }
   async init() {
-    await mkdir(path.join(this.root, "assets"), { recursive: true });
+    await mkdir2(path2.join(this.root, "assets"), { recursive: true });
     try {
-      this.state = JSON.parse(await readFile(this.file, "utf8"));
+      this.state = JSON.parse(await readFile2(this.file, "utf8"));
       if (this.state.version !== 1) throw Error("\u4E0D\u652F\u6301\u6B64\u6570\u636E\u7248\u672C");
     } catch (e) {
       if (e.code !== "ENOENT") throw e;
       this.state = initialState();
       await this.persist();
     }
+    if (this.state.draft.template === PREVIOUS_DEFAULT_TEMPLATE) await this.mutate(() => {
+      if (this.state.draft.template === PREVIOUS_DEFAULT_TEMPLATE) this.state.draft.template = DEFAULT_TEMPLATE;
+    });
     const alive = (pid) => {
       if (!pid) return false;
       try {
@@ -36849,6 +36998,15 @@ var Store = class {
       });
       if (this.state.batch) this.state.batch.status = "paused";
     });
+    if (this.state.batch?.status === "awaiting-approval") await this.mutate(() => {
+      const { batch, execution } = this.state;
+      if (batch?.status !== "awaiting-approval") return;
+      batch.status = "paused";
+      if (execution?.batchId === batch.id) {
+        execution.phase = "paused";
+        execution.message = "\u4EFB\u52A1\u5DF2\u6682\u505C\uFF0C\u70B9\u51FB\u300C\u7EE7\u7EED\u5269\u4F59\u4EFB\u52A1\u300D\u53EF\u6062\u590D\u3002";
+      }
+    });
     if (retainedTasks(this.state).length !== this.state.tasks.length) await this.mutate(() => {
     });
     return this;
@@ -36857,11 +37015,11 @@ var Store = class {
     this.state.tasks = retainedTasks(this.state);
     this.state.revision++;
     const tmp = this.file + "." + uid() + ".tmp";
-    await writeFile(tmp, JSON.stringify(this.state, null, 2));
+    await writeFile2(tmp, JSON.stringify(this.state, null, 2));
     await rename(tmp, this.file);
   }
   async reload() {
-    this.state = JSON.parse(await readFile(this.file, "utf8"));
+    this.state = JSON.parse(await readFile2(this.file, "utf8"));
     return this.snapshot();
   }
   refresh() {
@@ -36871,17 +37029,17 @@ var Store = class {
     return run;
   }
   async lock() {
-    const dir = path.join(this.root, ".write-lock");
-    if (path.dirname(dir) !== this.root) throw Error("\u4FDD\u5B58\u9501\u8DEF\u5F84\u8D8A\u754C");
+    const dir = path2.join(this.root, ".write-lock");
+    if (path2.dirname(dir) !== this.root) throw Error("\u4FDD\u5B58\u9501\u8DEF\u5F84\u8D8A\u754C");
     for (let n = 0; n < 400; n++) {
       try {
-        await mkdir(dir);
-        await writeFile(path.join(dir, "owner"), String(process.pid));
+        await mkdir2(dir);
+        await writeFile2(path2.join(dir, "owner"), String(process.pid));
         return () => rm(dir, { recursive: true, force: true });
       } catch (e) {
         if (e.code !== "EEXIST") throw e;
         try {
-          const pid = Number(await readFile(path.join(dir, "owner"), "utf8"));
+          const pid = Number(await readFile2(path2.join(dir, "owner"), "utf8"));
           try {
             process.kill(pid, 0);
           } catch (err) {
@@ -36911,20 +37069,47 @@ var Store = class {
     });
     return run;
   }
-  snapshot() {
-    return structuredClone({ ...this.state, tasks: retainedTasks(this.state) });
+  availablePresets() {
+    return [...this.builtinPresets, ...this.state.providerPresets || []];
   }
-  async putImage(bytes, name, kind = "portrait") {
+  snapshot() {
+    return structuredClone({ ...this.state, providerPresets: this.availablePresets(), tasks: retainedTasks(this.state) });
+  }
+  async putImage(bytes, name, kind = "portrait", sourceId) {
     if (bytes.length > 12 * 1024 * 1024) throw Error("\u5355\u5F20\u56FE\u7247\u4E0D\u80FD\u8D85\u8FC7 12 MB");
     const type = imageType(bytes), hash2 = createHash("sha256").update(bytes).digest("hex");
-    const id = kind + "-" + hash2.slice(0, 20), file2 = path.join(this.root, "assets", hash2 + type.ext);
-    await writeFile(file2, bytes);
+    const id = sourceId ? kind + ":" + sourceId : kind + "-" + hash2.slice(0, 20), file2 = path2.join(this.root, "assets", hash2 + type.ext);
+    await writeFile2(file2, bytes);
     return this.mutate(() => {
-      const asset = { id, kind, name: path.basename(name).slice(0, 180), mime: type.mime, path: file2, createdAt: (/* @__PURE__ */ new Date()).toISOString() };
+      const asset = { id, kind, name: path2.basename(name).slice(0, 180), mime: type.mime, path: file2, createdAt: (/* @__PURE__ */ new Date()).toISOString(), ...sourceId ? { sourceId } : {} };
       this.state.assets[id] = asset;
       if (kind === "portrait") this.state.draft.portraitId = id;
       return asset;
     });
+  }
+  async selectPortrait(item) {
+    const id = "portrait:" + item.id;
+    const cached2 = (await this.refresh()).assets[id];
+    if (cached2?.path) {
+      const exists = await access(cached2.path).then(() => true, (e) => {
+        if (e.code !== "ENOENT") throw e;
+        return false;
+      });
+      if (exists) {
+        await this.saveDraft({ portraitId: id });
+        return cached2;
+      }
+    }
+    const response = await fetch(portraitUrl(item.url, "full"), { signal: AbortSignal.timeout(25e3), redirect: "error" });
+    if (!response.ok || !response.body) throw Error("\u4EBA\u50CF\u539F\u56FE\u8BFB\u53D6\u5931\u8D25\uFF08HTTP " + response.status + "\uFF09\uFF0C\u8BF7\u91CD\u8BD5\u3002");
+    const chunks = [];
+    let size = 0;
+    for await (const chunk of response.body) {
+      size += chunk.length;
+      if (size > 12 * 1024 * 1024) throw Error("\u4EBA\u50CF\u539F\u56FE\u8D85\u8FC7 12 MB\uFF0C\u8BF7\u9009\u62E9\u53E6\u4E00\u5F20\u3002");
+      chunks.push(chunk);
+    }
+    return this.putImage(Buffer.concat(chunks), item.name + " \xB7 " + item.id, "portrait", item.id);
   }
   async addReference(item) {
     if (!["costume", "pose"].includes(item.kind) || !item.id || !item.url) throw Error("\u53C2\u8003\u56FE\u7C7B\u578B\u6216\u7F16\u53F7\u65E0\u6548");
@@ -36939,13 +37124,14 @@ var Store = class {
   }
   saveDraft(patch) {
     return this.mutate(() => {
-      const d = this.state.draft;
+      const { draft: d, batch } = this.state;
+      if (batch?.status === "draft" && !batch.inputs) batch.inputs = queueInputs(d, batch.provider || "codex", batch.providerPreset);
       if (patch.provider !== void 0) {
         d.provider = checkProvider(patch.provider);
-        if (isNativeProvider(d.provider) || !(this.state.providerPresets || []).some((p) => p.id === d.providerPresetId && p.provider === d.provider)) d.providerPresetId = null;
+        if (isNativeProvider(d.provider) || !this.availablePresets().some((p) => p.id === d.providerPresetId && p.provider === d.provider)) d.providerPresetId = null;
       }
       if (patch.providerPresetId !== void 0) {
-        if (patch.providerPresetId !== null && !(this.state.providerPresets || []).some((p) => p.id === patch.providerPresetId && p.provider === (d.provider || "codex"))) throw Error("\u8BE5\u6A21\u578B\u9884\u8BBE\u4E0D\u5C5E\u4E8E\u6240\u9009\u6E20\u9053");
+        if (patch.providerPresetId !== null && !this.availablePresets().some((p) => p.id === patch.providerPresetId && p.provider === (d.provider || "codex"))) throw Error("\u8BE5\u6A21\u578B\u9884\u8BBE\u4E0D\u5C5E\u4E8E\u6240\u9009\u6E20\u9053");
         d.providerPresetId = patch.providerPresetId;
       }
       for (const key of ["costumeIds", "poseIds"]) if (patch[key]) {
@@ -36956,13 +37142,12 @@ var Store = class {
         if (patch.portraitId !== null && this.state.assets[patch.portraitId]?.kind !== "portrait") throw Error("\u4E3B\u89D2\u56FE\u7247\u65E0\u6548");
         d.portraitId = patch.portraitId;
       }
-      if (patch.mode !== void 0) {
-        if (!["sample", "all"].includes(patch.mode)) throw Error("\u6267\u884C\u6A21\u5F0F\u65E0\u6548");
-        d.mode = patch.mode;
-      }
+      const ratios = outputRatios(selectedPreset(this.availablePresets(), d.provider || "codex", d.providerPresetId));
       if (patch.ratio !== void 0) {
-        if (!["3:4", "1:1", "4:3", "9:16", "16:9"].includes(patch.ratio)) throw Error("\u6BD4\u4F8B\u65E0\u6548");
+        if (!ratios.includes(patch.ratio)) throw Error("\u5F53\u524D\u6A21\u578B\u4E0D\u652F\u6301\u8FD9\u4E2A\u56FE\u7247\u6BD4\u4F8B");
         d.ratio = patch.ratio;
+      } else if ((patch.provider !== void 0 || patch.providerPresetId !== void 0) && ratios.length && !ratios.includes(d.ratio)) {
+        d.ratio = ratios.includes("3:4") ? "3:4" : ratios[0];
       }
       for (const key of ["template", "notes"]) if (patch[key] !== void 0) {
         if (typeof patch[key] !== "string" || patch[key].length > 12e3) throw Error("\u63D0\u793A\u8BCD\u8FC7\u957F");
@@ -36999,21 +37184,39 @@ var Store = class {
     });
   }
   prompt(costume, pose, draft = this.state.draft) {
-    return draft.template.replace(/\{\{(costume|pose|angle|ratio|notes)\}\}/g, (_, k) => ({ costume: costume.name, pose: pose.name, angle: pose.angle || "\u53C2\u8003\u56FE\u89C6\u89D2", ratio: draft.ratio, notes: draft.notes })[k]);
+    let template = draft.template;
+    if (!costume || !pose) {
+      template = template.split("\n").filter(
+        (line) => (costume || !line.includes("\u3010\u56FE2\uFF08\u670D\u88C5\u53C2\u8003\uFF09\u3011")) && (pose || !line.includes("\u3010\u56FE3\uFF08\u59FF\u52BF\u53C2\u8003\uFF09\u3011"))
+      ).join("\n");
+      if (!costume && pose) template = template.replace("\u3010\u56FE3\uFF08\u59FF\u52BF\u53C2\u8003\uFF09\u3011", "\u3010\u56FE2\uFF08\u59FF\u52BF\u53C2\u8003\uFF09\u3011");
+    }
+    const values = { costume: costume?.name || "\u4E3B\u89D2\u539F\u56FE\u7684\u670D\u88C5", pose: pose?.name || "\u4E3B\u89D2\u539F\u56FE\u7684\u59FF\u52BF", angle: pose?.angle || "\u53C2\u8003\u56FE\u89C6\u89D2", ratio: draft.ratio, notes: draft.notes };
+    const prompt = template.replace(/\{\{(costume|pose|angle|ratio|notes)\}\}/g, (_, key) => values[key]);
+    if (costume && pose) return prompt;
+    return [
+      prompt.trim(),
+      !costume && "\u4FDD\u7559\u4E3B\u89D2\u539F\u56FE\u7684\u670D\u88C5\u3002",
+      !pose && "\u4FDD\u7559\u4E3B\u89D2\u539F\u56FE\u7684\u59FF\u52BF\u3002"
+    ].filter(Boolean).join("\n");
   }
   buildQueue() {
     return this.mutate(() => {
       const s = this.state, d = s.draft;
-      const provider = d.provider || "codex", providerPreset = isNativeProvider(provider) ? null : (s.providerPresets || []).find((p) => p.id === d.providerPresetId && p.provider === provider);
-      if (!isNativeProvider(provider) && !providerPreset) throw Error("\u8BF7\u5148\u5BFC\u5165\u5E76\u9009\u62E9\u8BE5\u7AD9\u70B9\u7684 AI \u5E94\u7528\u6216\u5DE5\u4F5C\u6D41\u6A21\u578B\u9884\u8BBE");
+      const provider = d.provider || "codex", providerPreset = selectedPreset(this.availablePresets(), provider, d.providerPresetId);
+      if (!isNativeProvider(provider) && !providerPreset) throw Error("\u6B64\u7AD9\u7684\u9ED8\u8BA4\u5DE5\u4F5C\u6D41\u5C1A\u672A\u4E0A\u7EBF");
       if (!d.portraitId) throw Error("\u8BF7\u5148\u4E0A\u4F20\u4E3B\u89D2\u56FE\u7247");
-      if (!d.costumeIds.length || !d.poseIds.length) throw Error("\u8BF7\u81F3\u5C11\u9009\u62E9\u4E00\u5957\u670D\u88C5\u548C\u4E00\u4E2A\u59FF\u52BF");
+      const { costumes, poses, count } = queueReferences(d), ratio = d.ratio;
+      if (!count) throw Error("\u8BF7\u81F3\u5C11\u9009\u62E9\u4E00\u5957\u670D\u88C5\u6216\u4E00\u4E2A\u59FF\u52BF");
+      const kinds = ["portrait", ...costumes[0] ? ["costume"] : [], ...poses[0] ? ["pose"] : []];
+      const problem = referenceCompatibility(providerPreset, kinds, ratio);
+      if (problem) throw Error(problem);
       if (s.batch && ["queued", "running", "paused", "awaiting-approval"].includes(s.batch.status)) throw Error("\u8BF7\u5148\u5B8C\u6210\u6216\u53D6\u6D88\u5F53\u524D\u6279\u6B21");
-      if (d.costumeIds.length * d.poseIds.length > 200) throw Error("\u6BCF\u6279\u6700\u591A 200 \u4E2A\u4EFB\u52A1\uFF0C\u8BF7\u51CF\u5C11\u9009\u62E9");
+      if (count > 200) throw Error("\u6BCF\u6279\u6700\u591A 200 \u4E2A\u4EFB\u52A1\uFF0C\u8BF7\u51CF\u5C11\u9009\u62E9");
       const batchId = uid();
       s.tasks = s.tasks.filter((t) => t.status === "done" || t.status === "failed" || t.status === "interrupted");
-      for (const c of d.costumeIds) for (const p of d.poseIds) s.tasks.push({ id: uid(), batchId, portraitId: d.portraitId, costumeId: c, poseId: p, prompt: this.prompt(s.assets[c], s.assets[p]), ratio: d.ratio, provider, providerPreset: providerPreset ? structuredClone(providerPreset) : null, status: "pending", createdAt: (/* @__PURE__ */ new Date()).toISOString(), attempts: 0 });
-      s.batch = { id: batchId, status: "draft", mode: d.mode, approved: d.mode === "all", provider, providerPreset: providerPreset ? structuredClone(providerPreset) : null, createdAt: (/* @__PURE__ */ new Date()).toISOString() };
+      for (const c of costumes) for (const p of poses) s.tasks.push({ id: uid(), batchId, portraitId: d.portraitId, costumeId: c, poseId: p, prompt: this.prompt(s.assets[c], s.assets[p]), ratio, provider, providerPreset: providerPreset ? structuredClone(providerPreset) : null, status: "pending", createdAt: (/* @__PURE__ */ new Date()).toISOString(), attempts: 0 });
+      s.batch = { id: batchId, status: "draft", inputs: queueInputs(d, provider, providerPreset), provider, providerPreset: providerPreset ? structuredClone(providerPreset) : null, createdAt: (/* @__PURE__ */ new Date()).toISOString() };
       delete s.execution;
       return this.snapshot();
     });
@@ -37027,10 +37230,18 @@ var Store = class {
         s.tasks = s.tasks.filter((t2) => t2.id !== taskId);
         return this.snapshot();
       }
-      for (const [k, kind] of [["costumeId", "costume"], ["poseId", "pose"]]) if (patch[k]) {
-        if (s.assets[patch[k]]?.kind !== kind) throw Error("\u53C2\u8003\u56FE\u65E0\u6548");
-        t[k] = patch[k];
-        t.prompt = this.prompt(s.assets[t.costumeId], s.assets[t.poseId]);
+      const costumeId = patch.costumeId === void 0 ? t.costumeId : patch.costumeId;
+      const poseId = patch.poseId === void 0 ? t.poseId : patch.poseId;
+      for (const [id, kind] of [[costumeId, "costume"], [poseId, "pose"]]) {
+        if (id && s.assets[id]?.kind !== kind) throw Error("\u53C2\u8003\u56FE\u65E0\u6548");
+      }
+      if (!costumeId && !poseId) throw Error("\u8BF7\u4FDD\u7559\u4E00\u5F20\u670D\u88C5\u6216\u59FF\u52BF\u53C2\u8003\u56FE");
+      const problem = referenceCompatibility(t.providerPreset, ["portrait", ...costumeId ? ["costume"] : [], ...poseId ? ["pose"] : []], t.ratio);
+      if (problem) throw Error(problem);
+      if (costumeId !== t.costumeId || poseId !== t.poseId) {
+        t.costumeId = costumeId;
+        t.poseId = poseId;
+        t.prompt = this.prompt(s.assets[costumeId], s.assets[poseId], { ...s.draft, ratio: t.ratio });
       }
       if (patch.prompt !== void 0) {
         if (typeof patch.prompt !== "string" || patch.prompt.length > 16e3) throw Error("\u63D0\u793A\u8BCD\u65E0\u6548");
@@ -37045,13 +37256,14 @@ var Store = class {
       if (!b) throw Error("\u8BF7\u5148\u5EFA\u7ACB\u961F\u5217");
       if (action === "start") {
         if (b.status !== "draft") throw Error("\u8BE5\u6279\u6B21\u5DF2\u63D0\u4EA4");
-        if (!this.state.tasks.some((t) => t.batchId === b.id && t.status === "pending")) throw Error("\u961F\u5217\u4E3A\u7A7A");
+        const pending = this.state.tasks.filter((t) => t.batchId === b.id && t.status === "pending");
+        if (!pending.length) throw Error("\u961F\u5217\u4E3A\u7A7A");
+        if (pending.some((t) => t.outputStyle === "three-view")) throw Error("\u8BF7\u91CD\u65B0\u9884\u89C8\u5F53\u524D\u642D\u914D\u540E\u751F\u6210");
         b.status = "queued";
       } else if (action === "pause") {
         if (["queued", "running", "awaiting-approval"].includes(b.status)) b.status = "paused";
       } else if (action === "continue") {
         if (!["awaiting-approval", "paused"].includes(b.status)) throw Error("\u5F53\u524D\u6279\u6B21\u65E0\u9700\u7EE7\u7EED");
-        b.approved = true;
         b.status = "queued";
       } else if (action === "cancel") {
         b.status = "cancelled";
@@ -37079,8 +37291,8 @@ var Store = class {
     if (!r.ok) throw Error("\u8BFB\u53D6\u53C2\u8003\u56FE\u5931\u8D25 " + r.status + ": " + a.sourceId);
     const bytes = Buffer.from(await r.arrayBuffer());
     if (bytes.length > 20 * 1024 * 1024) throw Error("\u53C2\u8003\u56FE\u8D85\u8FC7\u5927\u5C0F\u9650\u5236");
-    const type = imageType(bytes), f = path.join(this.root, "assets", createHash("sha256").update(bytes).digest("hex") + type.ext);
-    await writeFile(f, bytes);
+    const type = imageType(bytes), f = path2.join(this.root, "assets", createHash("sha256").update(bytes).digest("hex") + type.ext);
+    await writeFile2(f, bytes);
     a.path = f;
     a.mime = type.mime;
     return f;
@@ -37091,10 +37303,6 @@ var Store = class {
       if (expectedBatchId && b?.id !== expectedBatchId) return { task: null, batch: b };
       if (!b || !["queued", "running"].includes(b.status)) return { task: null, batch: b };
       if (s.tasks.some((t) => t.batchId === b.id && t.status === "running")) throw Error("\u5DF2\u6709\u4EFB\u52A1\u6267\u884C\u4E2D\uFF0C\u8BF7\u5148\u56DE\u586B\u7ED3\u679C");
-      if (b.mode === "sample" && !b.approved && s.tasks.some((t) => t.batchId === b.id && t.status === "done")) {
-        b.status = "awaiting-approval";
-        return { task: null, batch: b };
-      }
       while (true) {
         const t = s.tasks.find((t2) => t2.batchId === b.id && t2.status === "pending");
         if (!t) {
@@ -37103,7 +37311,7 @@ var Store = class {
         }
         const refs = [];
         try {
-          for (const id of [t.portraitId, t.costumeId, t.poseId]) refs.push({ kind: s.assets[id].kind, path: await this.downloadAsset(id), id });
+          for (const id of [t.portraitId, t.costumeId, t.poseId].filter(Boolean)) refs.push({ kind: s.assets[id].kind, path: await this.downloadAsset(id), id });
         } catch (e) {
           t.status = "failed";
           t.error = e.message;
@@ -37124,8 +37332,8 @@ var Store = class {
   async recordResult(taskId, { filePath, base64: base643, error: error62 }) {
     let asset;
     if (!error62) {
-      const bytes = base643 ? Buffer.from(base643, "base64") : await readFile(await realpath(filePath));
-      asset = await this.putImage(bytes, path.basename(filePath || "generated.png"), "result");
+      const bytes = base643 ? Buffer.from(base643, "base64") : await readFile2(await realpath(filePath));
+      asset = await this.putImage(bytes, path2.basename(filePath || "generated.png"), "result");
     }
     return this.mutate(() => {
       const s = this.state, t = s.tasks.find((t2) => t2.id === taskId);
@@ -37141,7 +37349,7 @@ var Store = class {
       }
       if (b?.id === t.batchId && !["paused", "cancelled"].includes(b.status)) {
         const remain = s.tasks.some((t2) => t2.batchId === b.id && t2.status === "pending");
-        b.status = !remain ? "done" : !error62 && b.mode === "sample" && !b.approved ? "awaiting-approval" : "queued";
+        b.status = remain ? "queued" : "done";
       }
       return this.snapshot();
     });
@@ -37150,10 +37358,11 @@ var Store = class {
     return this.mutate(() => {
       const s = this.state, t = s.tasks.find((t2) => t2.id === taskId);
       if (!t || !["done", "failed", "interrupted"].includes(t.status)) throw Error("\u8BE5\u4EFB\u52A1\u65E0\u6CD5\u91CD\u505A");
+      if (t.outputStyle === "three-view") throw Error("\u8BE5\u8BB0\u5F55\u4EC5\u4F9B\u67E5\u770B\uFF0C\u8BF7\u521B\u5EFA\u65B0\u7684\u5355\u5F20\u4EBA\u7269\u56FE\u4EFB\u52A1");
       if (s.batch && s.tasks.some((t2) => t2.batchId === s.batch.id && ["pending", "running"].includes(t2.status)) && s.batch.status !== "cancelled") throw Error("\u8BF7\u5148\u5904\u7406\u5F53\u524D\u6279\u6B21");
       const id = uid();
       s.tasks.push({ ...t, id, batchId: id, status: "pending", resultId: null, error: null, attempts: 0, remoteTaskId: null, providerStatus: null, outputUrl: null });
-      s.batch = { id, status: "queued", mode: "all", approved: true, provider: t.provider || "codex", providerPreset: t.providerPreset || null };
+      s.batch = { id, status: "queued", provider: t.provider || "codex", providerPreset: t.providerPreset || null };
       delete s.execution;
       return this.snapshot();
     });
@@ -37161,63 +37370,8 @@ var Store = class {
   async image(id) {
     const a = this.state.assets[id];
     if (!a?.path) throw Error("\u672C\u5730\u56FE\u7247\u4E0D\u5B58\u5728");
-    const bytes = await readFile(a.path);
+    const bytes = await readFile2(a.path);
     return { mime: a.mime || imageType(bytes).mime, base64: bytes.toString("base64") };
-  }
-};
-
-// src/catalog.mjs
-import { mkdir as mkdir2, readFile as readFile2, writeFile as writeFile2 } from "node:fs/promises";
-import path2 from "node:path";
-var SOURCES = { pose: "https://ai-pose-depth-gallery.pages.dev/", costume: "https://ai-costume-gallery.pages.dev/" };
-var categories = { "\u7ACB\u3061": "\u7AD9\u59FF", "\u5EA7\u308A": "\u5750\u59FF", "\u819D\u7ACB\u3061": "\u8DEA\u59FF", "\u5BDD\u305D\u3079\u308A": "\u8EBA\u5367", "\u3057\u3083\u304C\u307F": "\u8E72\u59FF", "\u524D\u304B\u304C\u307F": "\u524D\u503E", "\u6A2A\u5EA7\u308A\u30FB\u5973\u306E\u5B50\u5EA7\u308A": "\u4FA7\u5750", "\u306E\u3051\u305E\u308A\u30FB\u53CD\u308A": "\u540E\u4EF0", "\u3072\u306D\u308A": "\u8F6C\u8EAB", "\u6625": "\u6625\u5B63", "\u590F": "\u590F\u5B63", "\u79CB": "\u79CB\u5B63", "\u51AC": "\u51AC\u5B63", "\u30D1\u30FC\u30C6\u30A3": "\u793C\u670D", "\u6C34\u7740": "\u6CF3\u88C5", "\u30E9\u30F3\u30B8\u30A7\u30EA\u30FC": "\u5185\u8863\u7761\u8863", "\u30BB\u30AF\u30B7\u30FC": "\u9020\u578B" };
-function parseCatalog(html, kind) {
-  const match = html.match(/const\s+D\s*=\s*(\[[\s\S]*?\]);/);
-  if (!match) throw Error("\u56FE\u5E93\u6570\u636E\u683C\u5F0F\u53D1\u751F\u53D8\u5316");
-  const records = JSON.parse(match[1]);
-  if (!Array.isArray(records) || !records.length) throw Error("\u56FE\u5E93\u7D22\u5F15\u4E3A\u7A7A");
-  return records.map((d) => {
-    const category = d["\u5206\u985E"] || d["\u30AB\u30C6\u30B4\u30EA"] || "", name = d["\u30DD\u30FC\u30BA\u540D"] || d["\u30AD\u30FC\u30EF\u30FC\u30C9"] || d.id;
-    const original = d["\u753B\u50CF"] || d["\u539F\u5BF8"];
-    if (!d.id || !original || !d["\u30B5\u30E0\u30CD"]) throw Error("\u56FE\u5E93\u6761\u76EE\u7F3A\u5C11\u5B57\u6BB5");
-    const url2 = new URL(original, SOURCES[kind]), thumb = new URL(d["\u30B5\u30E0\u30CD"], SOURCES[kind]);
-    if (url2.origin !== new URL(SOURCES[kind]).origin || thumb.origin !== url2.origin) throw Error("\u56FE\u5E93\u56FE\u7247\u6765\u6E90\u8D8A\u754C");
-    const angle = { "\u6B63\u9762": "\u6B63\u9762", "\u4E0A\u304B\u3089": "\u4FEF\u89C6", "\u4E0B\u304B\u3089": "\u4EF0\u89C6", "\u6A2A": "\u4FA7\u9762", "\u659C\u3081": "\u659C\u4FA7" }[d["\u30A2\u30F3\u30B0\u30EB"]] || "";
-    return { id: d.id, kind, name, category: categories[category] || category, group: d["\u7CFB\u7D71"] || category, angle, url: url2.href, thumb: thumb.href };
-  });
-}
-var Catalog = class {
-  constructor(root) {
-    this.root = path2.join(root, "catalog");
-    this.inflight = /* @__PURE__ */ new Map();
-  }
-  async load(kind, refresh = false) {
-    if (!SOURCES[kind]) throw Error("\u672A\u77E5\u56FE\u5E93");
-    const file2 = path2.join(this.root, kind + ".json");
-    if (!refresh) {
-      try {
-        return JSON.parse(await readFile2(file2, "utf8"));
-      } catch (e) {
-        if (e.code !== "ENOENT") throw e;
-      }
-    }
-    if (this.inflight.has(kind)) return this.inflight.get(kind);
-    const job = (async () => {
-      const r = await fetch(SOURCES[kind], { headers: { "User-Agent": "Mozilla/5.0 CharacterStudio/0.1" }, signal: AbortSignal.timeout(25e3) });
-      if (!r.ok) throw Error("\u56FE\u5E93\u6682\u65F6\u65E0\u6CD5\u8BBF\u95EE\uFF1A" + r.status);
-      const data = parseCatalog(await r.text(), kind);
-      await mkdir2(this.root, { recursive: true });
-      await writeFile2(file2, JSON.stringify(data));
-      return data;
-    })().finally(() => this.inflight.delete(kind));
-    this.inflight.set(kind, job);
-    return job;
-  }
-  async query({ kind, q = "", category = "", angle = "", offset = 0, limit = 18, refresh = false }) {
-    const all = await this.load(kind, refresh), term = q.toLowerCase();
-    const categories2 = [...new Set(all.map((d) => d.category))];
-    const filtered = all.filter((d) => (!category || d.category === category) && (!angle || d.angle === angle) && (!term || [d.name, d.id, d.category].join(" ").toLowerCase().includes(term)));
-    return { items: filtered.slice(offset, offset + Math.min(limit, 60)), total: filtered.length, totalInLibrary: all.length, categories: categories2, source: SOURCES[kind] };
   }
 };
 
@@ -37512,12 +37666,12 @@ var GenerationRunner = class {
         if (next.batch?.id !== batchId) break;
         if (!next.task) {
           const finished = next.batch?.status === "done" && next.batch.failedCount ? "\u672C\u6279\u6B21\u5DF2\u5904\u7406\u5B8C\u6210\uFF0C\u5DF2\u8DF3\u8FC7 " + next.batch.failedCount + " \u4E2A\u5931\u8D25\u4EFB\u52A1\u3002\u6700\u8FD1\u5931\u8D25\u539F\u56E0\uFF1A" + next.batch.lastError : null;
-          await this.execution(batchId, next.error ? "failed" : next.batch?.status || "done", next.error || finished || ({ "awaiting-approval": "\u6837\u56FE\u5DF2\u5B8C\u6210\uFF0C\u8BF7\u786E\u8BA4\u540E\u7EE7\u7EED\u3002", paused: "\u6279\u6B21\u5DF2\u6682\u505C\u3002", cancelled: "\u6279\u6B21\u5DF2\u53D6\u6D88\u3002", done: "\u672C\u6279\u6B21\u5DF2\u5168\u90E8\u5B8C\u6210\u3002" }[next.batch?.status] || "\u6682\u65E0\u5F85\u6267\u884C\u4EFB\u52A1\u3002"));
+          await this.execution(batchId, next.error ? "failed" : next.batch?.status || "done", next.error || finished || ({ paused: "\u6279\u6B21\u5DF2\u6682\u505C\u3002", cancelled: "\u6279\u6B21\u5DF2\u53D6\u6D88\u3002", done: "\u672C\u6279\u6B21\u5DF2\u5168\u90E8\u5B8C\u6210\u3002" }[next.batch?.status] || "\u6682\u65E0\u5F85\u6267\u884C\u4EFB\u52A1\u3002"));
           break;
         }
         const task = next.task;
         activeTask = task.id;
-        await this.execution(batchId, "generating", "\u6B63\u5728\u751F\u6210\uFF1A" + task.costumeId.replace("costume:", "") + " \xD7 " + task.poseId.replace("pose:", ""));
+        await this.execution(batchId, "generating", "\u6B63\u5728\u751F\u6210\uFF1A" + ([task.costumeId, task.poseId].filter(Boolean).map((id) => id.replace(/^(costume|pose):/, "")).join(" \xD7 ") || (task.outputStyle === "three-view" ? "\u4E09\u89C6\u56FE\uFF0B\u7279\u5199" : "\u4EBA\u7269\u56FE")));
         try {
           if (task.provider && task.provider !== "codex") {
             const result = await this.runninghub.generate(task, { signal, onProgress: (message) => this.execution(batchId, "generating", message), onRemote: (patch) => this.store.updateRemoteTask(task.id, patch) });
@@ -37537,7 +37691,7 @@ var GenerationRunner = class {
           };
           client.on("notification", collect);
           try {
-            const text = "\u7ACB\u5373\u4F7F\u7528\u5185\u7F6E\u751F\u56FE\u5DE5\u5177\u5B8C\u6210\u4EE5\u4E0B\u4EFB\u52A1\uFF0C\u8F93\u51FA\u4E00\u5F20\u771F\u5B9E\u56FE\u7247\u3002\u4E0D\u8981\u53EA\u56DE\u590D\u63D0\u793A\u8BCD\u3002\u4E09\u5F20\u8F93\u5165\u56FE\u7247\u6309\u987A\u5E8F\u5206\u522B\u662F\uFF1A\u56FE1\u4E3B\u89D2\u8EAB\u4EFD\u53C2\u8003\uFF0C\u56FE2\u5B8C\u6574\u670D\u88C5\u53C2\u8003\uFF0C\u56FE3\u6DF1\u5EA6\u59FF\u52BF\u53C2\u8003\u3002\n" + task.prompt + "\n\u5982\u679C\u5DE5\u5177\u4E0D\u53EF\u7528\u3001\u9700\u8981\u989D\u5916\u6743\u9650\u6216\u751F\u6210\u5931\u8D25\uFF0C\u76F4\u63A5\u8BF4\u660E\u5177\u4F53\u539F\u56E0\uFF1B\u4E0D\u8981\u6539\u7528\u6536\u8D39 API\uFF0C\u4E5F\u4E0D\u8981\u521B\u5EFA\u5360\u4F4D\u56FE\u3002";
+            const text = "\u7ACB\u5373\u4F7F\u7528\u5185\u7F6E\u751F\u56FE\u5DE5\u5177\u5B8C\u6210\u4EE5\u4E0B\u4EFB\u52A1\uFF0C\u8F93\u51FA\u4E00\u5F20\u771F\u5B9E\u56FE\u7247\u3002\u4E0D\u8981\u53EA\u56DE\u590D\u63D0\u793A\u8BCD\u3002\u8F93\u5165\u56FE\u7247\u6309\u987A\u5E8F\u4E3A " + task.references.map((r, i) => "\u56FE" + (i + 1) + " " + REFERENCE_LABELS[r.kind] + "\u53C2\u8003").join("\u3001") + "\u3002\n" + task.prompt + "\n\u5982\u679C\u5DE5\u5177\u4E0D\u53EF\u7528\u3001\u9700\u8981\u989D\u5916\u6743\u9650\u6216\u751F\u6210\u5931\u8D25\uFF0C\u76F4\u63A5\u8BF4\u660E\u5177\u4F53\u539F\u56E0\uFF1B\u4E0D\u8981\u6539\u7528\u6536\u8D39 API\uFF0C\u4E5F\u4E0D\u8981\u521B\u5EFA\u5360\u4F4D\u56FE\u3002";
             const started = await client.request("turn/start", { threadId, input: [{ type: "text", text, text_elements: [] }, ...task.references.map((r) => ({ type: "localImage", path: r.path }))] });
             const turn = await client.waitForTurn(threadId, started.turn.id, void 0, signal);
             if (signal.aborted) throw signal.reason;
@@ -37621,7 +37775,7 @@ var ProviderCredentials = class {
     if (env) return env;
     const value = (await this.load())[provider];
     if (!value) {
-      const e = Error("\u5C1A\u672A\u914D\u7F6E\u8BE5\u7AD9\u70B9\u7684 RunningHub API Key\uFF0C\u8BF7\u5728\u201C\u6E20\u9053\u8BBE\u7F6E\u201D\u4E2D\u586B\u5199\u3002");
+      const e = Error("\u5C1A\u672A\u914D\u7F6E\u672C\u7AD9 API Key\uFF0C\u8BF7\u70B9\u51FB\u300C\u586B\u5199 API Key\u300D\u3002");
       e.fatal = true;
       throw e;
     }
@@ -37670,7 +37824,7 @@ var RunningHubClient = class {
       const j = await response.json().catch(() => {
         throw Error("RunningHub \u8FD4\u56DE\u4E86\u65E0\u6CD5\u8BFB\u53D6\u7684\u54CD\u5E94\uFF08HTTP " + response.status + "\uFF09");
       });
-      if (!response.ok || j.code !== void 0 && !["0", "200"].includes(String(j.code))) {
+      if (!response.ok || j.code !== void 0 && !["0", "200"].includes(String(j.code)) || endpoint.startsWith("/openapi/v2/") && j.errorCode && !j.taskId) {
         const detail = [j.errorCode, j.errorMessage, j.errorMsg, j.message, j.msg, j.data?.failedReason, j.data?.exception_message, typeof j.error === "string" ? j.error : j.error?.message].filter(Boolean).join(" \xB7 ") || "\u8BF7\u6C42\u5931\u8D25";
         const e = Error("RunningHub HTTP " + response.status + (j.code !== void 0 ? " / " + j.code : "") + "\uFF1A" + detail);
         e.providerCode = String(j.code ?? "");
@@ -37724,22 +37878,27 @@ var RunningHubClient = class {
   }, onRemote = async () => {
   } } = {}) {
     const key = await this.preflight(task.provider, task.providerPreset), preset = validatePreset(task.providerPreset), files = [];
-    if (task.references.length !== 3) throw Error("\u9700\u8981\u6309\u4E3B\u89D2\u3001\u670D\u88C5\u3001\u59FF\u52BF\u63D0\u4F9B\u4E09\u5F20\u53C2\u8003\u56FE");
-    personalPayload(task, ["portrait", "costume", "pose"].map((kind) => ({ kind, fileName: "validation.png", url: "https://example.invalid/validation.png" })));
+    const v2 = preset.apiVersion === 2;
+    personalPayload(task, task.references.map(({ kind }) => ({ kind, fileName: "validation.png", url: "https://example.invalid/validation.png" })));
     for (let i = 0; i < task.references.length; i++) {
       signal?.throwIfAborted();
       const ref = task.references[i], bytes = await readFile4(ref.path), type = imageType(bytes);
       if (bytes.length > 30 * 1024 * 1024) throw Error("\u53C2\u8003\u56FE\u8D85\u8FC7 RunningHub 30 MB \u9650\u5236");
       const formats = new Set(preset.nodes.filter((n) => n.source === ref.kind || n.source === "references").map((n) => n.format));
       const file2 = { kind: ref.kind };
-      await onProgress("\u6B63\u5728\u4E0A\u4F20\u53C2\u8003\u56FE " + (i + 1) + "/3\u2026");
+      await onProgress("\u6B63\u5728\u4E0A\u4F20\u53C2\u8003\u56FE " + (i + 1) + "/" + task.references.length + "\u2026");
       for (const format of formats) {
         const form = new FormData();
         form.set("file", new Blob([bytes], { type: type.mime }), "reference-" + (i + 1) + type.ext);
-        if (format === "url") {
+        if (v2 || format === "url") {
           const upload = await this.request(task.provider, key, "/openapi/v2/media/upload/binary", form, { signal, multipart: true });
-          file2.url = upload.data?.download_url;
-          if (!file2.url || !/^https?:\/\//.test(file2.url)) throw Error("RunningHub \u4E0A\u4F20\u672A\u8FD4\u56DE\u56FE\u7247 URL");
+          if (format === "url") {
+            file2.url = upload.data?.download_url;
+            if (!file2.url || !/^https?:\/\//.test(file2.url)) throw Error("RunningHub \u4E0A\u4F20\u672A\u8FD4\u56DE\u56FE\u7247 URL");
+          } else {
+            file2.fileName = upload.data?.fileName || upload.data?.filename;
+            if (!file2.fileName) throw Error("RunningHub \u4E0A\u4F20\u672A\u8FD4\u56DE fileName");
+          }
         } else {
           form.set("apiKey", key);
           form.set("fileType", "input");
@@ -37752,7 +37911,7 @@ var RunningHubClient = class {
     }
     const { nodeInfoList } = personalPayload(task, files);
     await onProgress("\u6B63\u5728\u63D0\u4EA4\u5230 RunningHub \u4E2A\u4EBA\u7248\u2026");
-    const submitted = await this.request(task.provider, key, preset.kind === "app" ? "/task/openapi/ai-app/run" : "/task/openapi/create", { apiKey: key, [preset.kind === "app" ? "webappId" : "workflowId"]: preset.remoteId, nodeInfoList });
+    const submitted = v2 ? await this.request(task.provider, key, "/openapi/v2/run/workflow/" + preset.remoteId, { addMetadata: true, nodeInfoList, instanceType: "default", usePersonalQueue: "false" }, { signal }) : await this.request(task.provider, key, preset.kind === "app" ? "/task/openapi/ai-app/run" : "/task/openapi/create", { apiKey: key, [preset.kind === "app" ? "webappId" : "workflowId"]: preset.remoteId, nodeInfoList });
     const taskId = submitted.data?.taskId || submitted.taskId;
     if (!taskId) throw Error("RunningHub \u672A\u8FD4\u56DE taskId\uFF0C\u672A\u81EA\u52A8\u91CD\u63D0\u4EE5\u907F\u514D\u91CD\u590D\u8BA1\u8D39");
     await onRemote({ remoteTaskId: String(taskId), providerStatus: "CREATE" });
@@ -37760,14 +37919,18 @@ var RunningHubClient = class {
     try {
       while (Date.now() < deadline) {
         signal?.throwIfAborted();
-        const raw = await this.request(task.provider, key, "/task/openapi/status", { apiKey: key, taskId }, { signal });
-        const status = typeof raw.data === "string" ? raw.data : raw.data?.status || raw.data?.taskStatus;
+        const raw = v2 ? await this.request(task.provider, key, "/openapi/v2/query", { taskId }, { signal }) : await this.request(task.provider, key, "/task/openapi/status", { apiKey: key, taskId }, { signal });
+        const status = v2 ? raw.status : typeof raw.data === "string" ? raw.data : raw.data?.status || raw.data?.taskStatus;
         if (!["CREATE", "QUEUED", "RUNNING", "SUCCESS", "FAILED", "CANCEL", "CANCELED", "CANCELLED"].includes(status)) throw Error("RunningHub \u8FD4\u56DE\u672A\u77E5\u4EFB\u52A1\u72B6\u6001\uFF1A" + status);
         await onRemote({ remoteTaskId: String(taskId), providerStatus: status });
         if (status === "SUCCESS" || status === "FAILED") {
-          const outputs = await this.request(task.provider, key, "/task/openapi/outputs", { apiKey: key, taskId }, { signal });
-          if (status === "FAILED") throw Error("RunningHub \u751F\u6210\u5931\u8D25\uFF0C\u672A\u8FD4\u56DE\u53EF\u7528\u7ED3\u679C");
-          const output2 = (Array.isArray(outputs.data) ? outputs.data : []).find((r) => (!r.fileType || /^(png|jpe?g|webp|image)$/i.test(r.fileType)) && r.fileUrl), url2 = output2?.fileUrl;
+          const results = v2 ? raw.results : (await this.request(task.provider, key, "/task/openapi/outputs", { apiKey: key, taskId }, { signal })).data;
+          if (status === "FAILED") throw Error([raw.errorCode, raw.errorMessage].filter(Boolean).join(" \xB7 ") || "RunningHub \u751F\u6210\u5931\u8D25\uFF0C\u672A\u8FD4\u56DE\u53EF\u7528\u7ED3\u679C");
+          const image = (Array.isArray(results) ? results : []).find((r) => {
+            const type = v2 ? r.outputType : r.fileType;
+            return (!type || /^(png|jpe?g|webp|image|image\/(png|jpe?g|webp))$/i.test(type)) && (v2 ? r.url : r.fileUrl);
+          });
+          const url2 = v2 ? image?.url : image?.fileUrl;
           if (!url2) throw Error("RunningHub \u62A5\u544A\u6210\u529F\u4F46\u672A\u8FD4\u56DE\u56FE\u7247\u5730\u5740");
           const parsed = new URL(url2);
           if (parsed.protocol !== "https:" && !(parsed.protocol === "http:" && new URL(this.origins[task.provider]).protocol === "http:")) throw Error("\u7ED3\u679C\u56FE\u7247\u5730\u5740\u534F\u8BAE\u4E0D\u53D7\u652F\u6301");
@@ -37893,17 +38056,17 @@ var AgentBridge = class {
 };
 
 // src/version.mjs
-var VERSION = false ? "0.3.0-dev" : "0.3.0";
-var BUILD_ID = false ? "development" : "ff4d3698ca16f3274832";
+var VERSION = false ? "0.3.1-dev" : "0.3.1";
+var BUILD_ID = false ? "development" : "6f575dcc3574854baf3a";
 var SERVICE = "character-studio";
 
 // src/server.mjs
 import { createHash as createHash2 } from "node:crypto";
 import { writeFile as writeFile4, rename as rename3 } from "node:fs/promises";
 var UI_URI = "ui://character-studio/workbench.html";
-var resourceMeta = { ui: { prefersBorder: false, csp: { resourceDomains: ["https://ai-pose-depth-gallery.pages.dev", "https://ai-costume-gallery.pages.dev", "data:", "blob:"], connectDomains: [] } }, "openai/widgetDescription": "\u4EBA\u7269\u3001\u670D\u88C5\u3001\u59FF\u52BF\u7EC4\u5408\u4E0E\u6279\u91CF\u4EFB\u52A1\u5DE5\u4F5C\u53F0", "openai/widgetPrefersBorder": false };
+var resourceMeta = { ui: { prefersBorder: false, csp: { resourceDomains: [...Object.values(SOURCES).map((source) => new URL(source).origin), "data:", "blob:"], connectDomains: [] } }, "openai/widgetDescription": "\u4EBA\u7269\u3001\u670D\u88C5\u3001\u59FF\u52BF\u7EC4\u5408\u4E0E\u6279\u91CF\u4EFB\u52A1\u5DE5\u4F5C\u53F0", "openai/widgetPrefersBorder": false };
 async function createStudio(root, options = {}) {
-  const store = await new Store(root).init(), catalog = new Catalog(store.root);
+  const store = await new Store(root, { builtinPresets: options.builtinPresets }).init(), catalog = new Catalog(store.root);
   const credentials = new ProviderCredentials(store), runninghub = new RunningHubClient(credentials, options.runninghubOptions);
   const runner = new GenerationRunner(store, { ...options, runninghub });
   const agentBridge = new AgentBridge(store, options.agentBridgeOptions);
@@ -37913,11 +38076,22 @@ async function createStudio(root, options = {}) {
   };
   const provider = external_exports.enum(["codex", "agent", "runninghub-cn", "runninghub-global"]), rhProvider = external_exports.enum(["runninghub-cn", "runninghub-global"]);
   const scalar = external_exports.union([external_exports.string().max(12e3), external_exports.number(), external_exports.boolean(), external_exports.null()]);
-  const preset = external_exports.object({ id: external_exports.string().optional(), provider: rhProvider, kind: external_exports.enum(["app", "workflow"]), remoteId: external_exports.string().max(2e3), name: external_exports.string().max(150), nodes: external_exports.array(external_exports.object({ nodeId: external_exports.string().max(100), fieldName: external_exports.string().max(150), value: scalar, description: external_exports.string().max(200).optional(), source: external_exports.enum(INPUT_SOURCES.map(([s]) => s)), format: external_exports.enum(["fileName", "url"]).optional(), options: external_exports.array(external_exports.object({ value: scalar, label: external_exports.string().max(500) })).optional() })).max(300) });
+  const preset = external_exports.object({ id: external_exports.string().optional(), provider: rhProvider, kind: external_exports.enum(["app", "workflow"]), remoteId: external_exports.string().max(2e3), name: external_exports.string().max(150), allowPartialReferences: external_exports.boolean().optional(), nodes: external_exports.array(external_exports.object({ nodeId: external_exports.string().max(100), fieldName: external_exports.string().max(150), value: scalar, description: external_exports.string().max(200).optional(), source: external_exports.enum(INPUT_SOURCES.map(([s]) => s)), format: external_exports.enum(["fileName", "url"]).optional(), options: external_exports.array(external_exports.object({ value: scalar, label: external_exports.string().max(500) })).optional() })).max(300) });
+  const connectionReports = /* @__PURE__ */ new Map();
   const tools = {
+    agent_connection_status: { schema: { checkId: external_exports.string().uuid().optional() }, read: true, appOnly: true, description: "\u8BFB\u53D6\u5F53\u524D Agent \u7684\u8FDE\u63A5\u53CA\u672C\u6B21\u68C0\u6D4B\u7684\u56DE\u6267\u3002", run: (a) => {
+      const report = connectionReports.get(a.checkId);
+      return { connection: agentBridge.status(), report: report?.expiresAt > Date.now() ? report.result : null };
+    } },
+    agent_report_connection: { schema: { checkId: external_exports.string().uuid(), agentName: external_exports.string().min(1).max(80), imageTool: external_exports.string().min(1).max(150).optional(), reason: external_exports.string().min(1).max(1e3).optional() }, modelOnly: true, description: "\u56DE\u5E94\u5DE5\u4F5C\u53F0\u7684\u8FDE\u63A5\u68C0\u6D4B\u3002\u786E\u8BA4\u5177\u5907\u770B\u56FE\u3001\u751F\u56FE\u548C\u56DE\u586B\u56FE\u7247\u80FD\u529B\u540E\u586B\u5199\u771F\u5B9E imageTool\uFF1B\u80FD\u529B\u7F3A\u5931\u65F6\u586B\u5199\u5177\u4F53 reason\u3002\u4EC5\u56DE\u62A5\u8FDE\u63A5\uFF0C\u4E0D\u9886\u53D6\u3001\u6062\u590D\u6216\u6267\u884C\u4EFB\u52A1\u3002", run: (a) => {
+      if (!!a.imageTool === !!a.reason) throw Error("\u8BF7\u586B\u5199\u5DF2\u786E\u8BA4\u7684\u751F\u56FE\u5DE5\u5177\u540D\u79F0\u6216\u5177\u4F53\u5931\u8D25\u539F\u56E0\uFF0C\u4E24\u8005\u9009\u4E00\u3002");
+      if (connectionReports.size >= 16) connectionReports.delete(connectionReports.keys().next().value);
+      connectionReports.set(a.checkId, { expiresAt: Date.now() + 6e4, result: { agentName: a.agentName, imageTool: a.imageTool, reason: a.reason } });
+      return { received: true };
+    } },
     open_workbench: { schema: { executor: external_exports.enum(["agent", "codex"]).optional() }, render: true, description: "\u6253\u5F00\u4EBA\u7269\u670D\u88C5\u59FF\u52BF\u5185\u5D4C\u5DE5\u4F5C\u53F0\uFF1B\u6062\u590D\u672C\u673A\u5185\u5BB9\u3002\u53EF\u663E\u5F0F\u6307\u5B9A\u4E0B\u4E00\u6279\u4F7F\u7528 agent\uFF08\u5F53\u524D\u5BBF\u4E3B\u539F\u751F\u751F\u56FE\uFF09\u6216 codex\uFF08\u672C\u673A Codex\uFF09\uFF1B\u4E0D\u6539\u53D8\u5DF2\u63D0\u4EA4\u6279\u6B21\u3002", run: (a) => a.executor ? store.saveDraft({ provider: a.executor }) : store.refresh() },
     get_state: { schema: {}, read: true, description: "\u8BFB\u53D6\u5DE5\u4F5C\u53F0\u72B6\u6001\u4E0E\u5F53\u524D\u4EFB\u52A1\u7ED3\u679C\u3002", run: snapshot },
-    agent_wait: { schema: { sessionId: external_exports.string().min(1).max(100), agentName: external_exports.string().min(1).max(80), imageTool: external_exports.string().min(1).max(150), timeoutMs: external_exports.number().int().min(100).max(55e3).optional() }, modelOnly: true, description: "\u5DF2\u786E\u8BA4\u5177\u5907\u539F\u751F\u751F\u56FE\u5DE5\u5177\u7684\u5F53\u524D Agent \u7B49\u5F85\u7528\u6237\u63D0\u4EA4\uFF0C\u6700\u591A 55 \u79D2\uFF1B\u8FD4\u56DE\u4EFB\u52A1\u65F6\u5DF2\u9886\u53D6\uFF0C\u5FC5\u987B\u5148\u770B\u4E09\u5F20\u56FE\u518D\u751F\u6210\u3002idle \u53EF\u7EE7\u7EED\u7B49\u5F85\uFF0C\u4E0D\u80FD\u51ED\u8FDE\u63A5\u72B6\u6001\u5BA3\u79F0\u5DF2\u751F\u6210\u3002", run: (a, ctx) => agentBridge.wait(a, ctx?.signal) },
+    agent_wait: { schema: { sessionId: external_exports.string().min(1).max(100), agentName: external_exports.string().min(1).max(80), imageTool: external_exports.string().min(1).max(150), timeoutMs: external_exports.number().int().min(100).max(55e3).optional() }, modelOnly: true, description: "\u5DF2\u786E\u8BA4\u5177\u5907\u539F\u751F\u751F\u56FE\u5DE5\u5177\u7684\u5F53\u524D Agent \u7B49\u5F85\u7528\u6237\u63D0\u4EA4\uFF0C\u6700\u591A 55 \u79D2\uFF1B\u8FD4\u56DE\u4EFB\u52A1\u65F6\u5DF2\u9886\u53D6\uFF0C\u5FC5\u987B\u5148\u67E5\u770B\u53C2\u8003\u56FE\u518D\u751F\u6210\u3002idle \u53EF\u7EE7\u7EED\u7B49\u5F85\uFF0C\u4E0D\u80FD\u51ED\u8FDE\u63A5\u72B6\u6001\u5BA3\u79F0\u5DF2\u751F\u6210\u3002", run: (a, ctx) => agentBridge.wait(a, ctx?.signal) },
     agent_disconnect: { schema: { sessionId: external_exports.string() }, modelOnly: true, description: "\u5F53\u524D Agent \u7ED3\u675F\u5DE5\u4F5C\u53F0\u7B49\u5F85\uFF0C\u91CA\u653E\u8FDE\u63A5\u72B6\u6001\u3002", run: (a) => agentBridge.disconnect(a.sessionId) },
     agent_unavailable: { schema: { sessionId: external_exports.string(), reason: external_exports.string().min(1).max(2e3) }, modelOnly: true, description: "\u5F53\u524D\u4F1A\u8BDD\u7F3A\u5C11\u770B\u56FE\u3001\u751F\u56FE\u6216\u8F93\u51FA\u6587\u4EF6\u5DE5\u5177\u65F6\uFF0C\u5728\u5DE5\u4F5C\u53F0\u663E\u793A\u771F\u5B9E\u539F\u56E0\u3002", run: async (a) => {
       const connection = agentBridge.unavailable(a.reason);
@@ -37946,14 +38120,19 @@ async function createStudio(root, options = {}) {
       return store.snapshot();
     }) },
     upload_character: { schema: { name: external_exports.string().max(180), base64: external_exports.string().max(17 * 1024 * 1024) }, appOnly: true, description: "\u4FDD\u5B58\u7528\u6237\u901A\u8FC7\u5DE5\u4F5C\u53F0\u6587\u4EF6\u9009\u62E9\u5668\u4E0A\u4F20\u7684\u4E3B\u89D2\u56FE\u3002", run: async (a) => store.putImage(Buffer.from(a.base64, "base64"), a.name) },
+    select_portrait: { schema: { id: external_exports.string().min(1).max(100) }, appOnly: true, description: "\u4ECE\u4EBA\u50CF\u5E93\u4E0B\u8F7D\u539F\u56FE\u5E76\u5C06\u5B83\u8BBE\u4E3A\u552F\u4E00\u4E3B\u89D2\u3002", run: async (a) => {
+      const item = (await catalog.load("portrait")).find((entry) => entry.id === a.id);
+      if (!item) throw Error("\u627E\u4E0D\u5230\u8FD9\u5F20\u4EBA\u50CF\uFF0C\u8BF7\u5237\u65B0\u4EBA\u50CF\u5E93\u540E\u91CD\u8BD5\u3002");
+      return store.selectPortrait(item);
+    } },
     read_image: { schema: { id: external_exports.string() }, read: true, appOnly: true, description: "\u8BFB\u53D6\u5DE5\u4F5C\u53F0\u672C\u5730\u56FE\u7247\u4F9B\u754C\u9762\u663E\u793A\u3002", run: async (a) => ({ id: a.id, ...await store.image(a.id) }) },
-    browse_catalog: { schema: { kind: external_exports.enum(["pose", "costume"]), q: external_exports.string().optional(), category: external_exports.string().optional(), angle: external_exports.string().optional(), offset: external_exports.number().int().min(0).optional(), limit: external_exports.number().int().min(1).max(60).optional(), refresh: external_exports.boolean().optional() }, read: true, description: "\u6D4F\u89C8\u6307\u5B9A\u7684\u5916\u90E8\u59FF\u52BF\u6216\u670D\u88C5\u56FE\u5E93\uFF0C\u53EF\u6309\u5206\u7C7B\u3001\u89C6\u89D2\u548C\u5173\u952E\u8BCD\u7B5B\u9009\u3002", run: (a) => catalog.query(a) },
+    browse_catalog: { schema: { kind: external_exports.enum(["portrait", "pose", "costume"]), q: external_exports.string().optional(), category: external_exports.string().optional(), angle: external_exports.string().optional(), offset: external_exports.number().int().min(0).optional(), limit: external_exports.number().int().min(1).max(60).optional(), refresh: external_exports.boolean().optional() }, read: true, description: "\u6D4F\u89C8\u4EBA\u50CF\u3001\u670D\u88C5\u6216\u59FF\u52BF\u56FE\u5E93\uFF0C\u53EF\u6309\u5206\u7C7B\u548C\u5173\u952E\u8BCD\u7B5B\u9009\u3002", run: (a) => catalog.query(a) },
     select_reference: { schema: { item: external_exports.object({ id: external_exports.string(), kind: external_exports.enum(["pose", "costume"]), name: external_exports.string(), category: external_exports.string().optional(), group: external_exports.string().optional(), angle: external_exports.string().optional(), url: external_exports.string().url(), thumb: external_exports.string().url() }) }, appOnly: true, description: "\u767B\u8BB0\u7528\u6237\u4ECE\u56FE\u5E93\u9009\u4E2D\u7684\u53C2\u8003\u7D20\u6750\u3002", run: (a) => store.addReference(a.item) },
-    save_draft: { schema: { patch: external_exports.object({ portraitId: external_exports.string().nullable().optional(), costumeIds: external_exports.array(external_exports.string()).optional(), poseIds: external_exports.array(external_exports.string()).optional(), mode: external_exports.enum(["sample", "all"]).optional(), ratio: external_exports.enum(["3:4", "1:1", "4:3", "9:16", "16:9"]).optional(), template: external_exports.string().optional(), notes: external_exports.string().optional(), provider: provider.optional(), providerPresetId: external_exports.string().nullable().optional() }) }, appOnly: true, description: "\u4FDD\u5B58\u7528\u6237\u7684\u9009\u62E9\u3001\u6E20\u9053\u3001\u6A21\u578B\u9884\u8BBE\u3001\u6267\u884C\u6A21\u5F0F\u548C\u63D0\u793A\u8BCD\u3002", run: (a) => store.saveDraft(a.patch) },
+    save_draft: { schema: { patch: external_exports.object({ portraitId: external_exports.string().nullable().optional(), costumeIds: external_exports.array(external_exports.string()).optional(), poseIds: external_exports.array(external_exports.string()).optional(), ratio: external_exports.string().regex(/^\d{1,3}:\d{1,3}$/).optional(), template: external_exports.string().optional(), notes: external_exports.string().optional(), provider: provider.optional(), providerPresetId: external_exports.string().nullable().optional() }) }, appOnly: true, description: "\u4FDD\u5B58\u7528\u6237\u7684\u9009\u62E9\u3001\u6E20\u9053\u3001\u6A21\u578B\u9884\u8BBE\u3001\u6BD4\u4F8B\u548C\u63D0\u793A\u8BCD\u3002", run: (a) => store.saveDraft(a.patch) },
     build_queue: { schema: {}, appOnly: true, description: "\u6309\u6240\u9009\u670D\u88C5\u4E58\u59FF\u52BF\u5EFA\u7ACB\u4EFB\u52A1\u8349\u7A3F\uFF0C\u4FDD\u7559\u5386\u53F2\u7ED3\u679C\u3002", run: () => store.buildQueue() },
-    edit_task: { schema: { taskId: external_exports.string(), patch: external_exports.object({ remove: external_exports.boolean().optional(), costumeId: external_exports.string().optional(), poseId: external_exports.string().optional(), prompt: external_exports.string().optional() }) }, appOnly: true, description: "\u5728\u63D0\u4EA4\u4E4B\u524D\u5220\u9664\u4EFB\u52A1\u6216\u8C03\u6574\u7EC4\u5408\u53CA\u5355\u6761\u63D0\u793A\u8BCD\u3002", run: (a) => store.patchTask(a.taskId, a.patch) },
-    control_batch: { schema: { action: external_exports.enum(["start", "pause", "continue", "cancel"]) }, appOnly: true, description: "\u63D0\u4EA4\u6279\u6B21\u3001\u6682\u505C\u540E\u7EED\u4EFB\u52A1\u3001\u786E\u8BA4\u6837\u56FE\u7EE7\u7EED\u6216\u53D6\u6D88\u6279\u6B21\u3002", run: (a) => store.batchAction(a.action) },
-    claim_next_task: { schema: {}, modelOnly: true, description: "\u9886\u53D6\u4F7F\u7528 Codex/\u5BBF\u4E3B\u751F\u56FE\u7684\u4E0B\u4E00\u4E2A\u5DF2\u63D0\u4EA4\u4EFB\u52A1\u3002RunningHub \u4EFB\u52A1\u7531\u672C\u673A\u6267\u884C\u5668\u5904\u7406\uFF1B\u6837\u56FE\u5F85\u786E\u8BA4\u3001\u6682\u505C\u6216\u53D6\u6D88\u65F6\u4E0D\u9886\u53D6\u3002", run: async () => {
+    edit_task: { schema: { taskId: external_exports.string(), patch: external_exports.object({ remove: external_exports.boolean().optional(), costumeId: external_exports.string().nullable().optional(), poseId: external_exports.string().nullable().optional(), prompt: external_exports.string().optional() }) }, appOnly: true, description: "\u5728\u63D0\u4EA4\u4E4B\u524D\u5220\u9664\u4EFB\u52A1\u6216\u8C03\u6574\u7EC4\u5408\u53CA\u5355\u6761\u63D0\u793A\u8BCD\u3002", run: (a) => store.patchTask(a.taskId, a.patch) },
+    control_batch: { schema: { action: external_exports.enum(["start", "pause", "continue", "cancel"]) }, appOnly: true, description: "\u63D0\u4EA4\u6279\u6B21\u3001\u6682\u505C\u540E\u7EED\u4EFB\u52A1\u3001\u7EE7\u7EED\u6216\u53D6\u6D88\u6279\u6B21\u3002", run: (a) => store.batchAction(a.action) },
+    claim_next_task: { schema: {}, modelOnly: true, description: "\u9886\u53D6\u4F7F\u7528 Codex/\u5BBF\u4E3B\u751F\u56FE\u7684\u4E0B\u4E00\u4E2A\u5DF2\u63D0\u4EA4\u4EFB\u52A1\u3002RunningHub \u4EFB\u52A1\u7531\u672C\u673A\u6267\u884C\u5668\u5904\u7406\uFF1B\u6682\u505C\u6216\u53D6\u6D88\u65F6\u4E0D\u9886\u53D6\u3002", run: async () => {
       const s = await store.refresh();
       return s.batch?.provider && !isNativeProvider(s.batch.provider) ? { task: null, batch: s.batch, error: "\u6B64\u6279\u6B21\u4F7F\u7528 RunningHub\uFF0C\u8BF7\u5728\u5DE5\u4F5C\u53F0\u542F\u52A8\u81EA\u52A8\u6267\u884C\uFF0C\u4E0D\u4F7F\u7528\u5BBF\u4E3B\u751F\u56FE\u5DE5\u5177\u3002" } : store.claimNext(s.batch?.id);
     } },
@@ -37963,7 +38142,7 @@ async function createStudio(root, options = {}) {
       return store.mutate(() => {
         const s = store.state, b = s.batch;
         if (b?.id === result.batch?.id) {
-          const message = b.status === "done" ? b.failedCount ? "\u672C\u6279\u6B21\u5DF2\u5904\u7406\u5B8C\u6210\uFF0C\u5DF2\u8DF3\u8FC7 " + b.failedCount + " \u4E2A\u5931\u8D25\u4EFB\u52A1\u3002\u6700\u8FD1\u5931\u8D25\u539F\u56E0\uFF1A" + b.lastError : "\u672C\u6279\u6B21\u5DF2\u5B8C\u6210\uFF0C\u56FE\u7247\u5DF2\u4FDD\u5B58\u5728\u6210\u529F\u8BB0\u5F55\u3002" : b.status === "awaiting-approval" ? "\u6837\u56FE\u5DF2\u5B8C\u6210\uFF0C\u786E\u8BA4\u540E\u7EE7\u7EED\u751F\u6210\u3002" : b.status === "paused" ? "\u4EFB\u52A1\u5DF2\u6682\u505C\u3002" : "\u5F53\u524D\u56FE\u7247\u5DF2\u5904\u7406\uFF0C\u7B49\u5F85\u4E0B\u4E00\u9879\u4EFB\u52A1\u3002";
+          const message = b.status === "done" ? b.failedCount ? "\u672C\u6279\u6B21\u5DF2\u5904\u7406\u5B8C\u6210\uFF0C\u5DF2\u8DF3\u8FC7 " + b.failedCount + " \u4E2A\u5931\u8D25\u4EFB\u52A1\u3002\u6700\u8FD1\u5931\u8D25\u539F\u56E0\uFF1A" + b.lastError : "\u672C\u6279\u6B21\u5DF2\u5B8C\u6210\uFF0C\u56FE\u7247\u5DF2\u4FDD\u5B58\u5728\u6210\u529F\u8BB0\u5F55\u3002" : b.status === "paused" ? "\u4EFB\u52A1\u5DF2\u6682\u505C\u3002" : "\u5F53\u524D\u56FE\u7247\u5DF2\u5904\u7406\uFF0C\u7B49\u5F85\u4E0B\u4E00\u9879\u4EFB\u52A1\u3002";
           s.execution = { batchId: b.id, phase: b.status, message, updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
         }
         return store.snapshot();
@@ -37987,7 +38166,7 @@ async function createStudio(root, options = {}) {
     title: name === "open_workbench" ? "\u6253\u5F00 Character Studio" : name,
     description: t.description,
     inputSchema: t.schema,
-    annotations: { readOnlyHint: !!t.read, destructiveHint: false, openWorldHint: name === "browse_catalog" || name === "claim_next_task", idempotentHint: !!t.read },
+    annotations: { readOnlyHint: !!t.read, destructiveHint: false, openWorldHint: ["browse_catalog", "select_portrait", "claim_next_task"].includes(name), idempotentHint: !!t.read },
     _meta: { ui: { ...t.render ? { resourceUri: UI_URI } : {}, ...t.appOnly ? { visibility: ["app"] } : t.modelOnly ? { visibility: ["model"] } : {} }, ...t.render ? { "openai/outputTemplate": UI_URI } : {}, "openai/widgetAccessible": !t.modelOnly }
   }, (a) => invoke(name, a));
   server.registerResource("character-studio-ui", UI_URI, { mimeType: "text/html;profile=mcp-app", _meta: resourceMeta }, async () => ({ contents: [{ uri: UI_URI, mimeType: "text/html;profile=mcp-app", text: await readFile5(new URL("./workbench.html", import.meta.url), "utf8"), _meta: resourceMeta }] }));

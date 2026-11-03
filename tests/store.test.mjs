@@ -22,17 +22,17 @@ test('reselecting a cached reference keeps its original file for reuse',async()=
   await s.addReference({id:a.sourceId,kind:a.kind,name:'重新选择',url:a.url,thumb:'https://ai-costume-gallery.pages.dev/thumbs/c0.png'});
   assert.equal((await s.refresh()).assets[cs[0]].path,p.path);assert.equal(await s.downloadAsset(cs[0]),p.path);
 });
-test('Cartesian queue snapshots references; sample gate is enforced server-side',async()=>{
+test('Cartesian queue snapshots references and continues after the first image',async()=>{
   const {s}=await fixture();await s.buildQueue();assert.equal(s.state.tasks.length,4);
   const portrait=s.state.draft.portraitId;await s.batchAction('start');const r=await s.claimNext();
   assert.equal(r.task.references.length,3);assert.equal(r.task.portraitId,portrait);
   await assert.rejects(s.claimNext(),/已有任务/);
   await s.recordResult(r.task.id,{base64:PNG.toString('base64')});
-  assert.equal(s.state.batch.status,'awaiting-approval');assert.equal((await s.claimNext()).task,null);
-  await s.batchAction('continue');const second=await s.claimNext();assert.ok(second.task);assert.notEqual(second.task.id,r.task.id);
+  assert.equal(s.state.batch.status,'queued');
+  const second=await s.claimNext();assert.ok(second.task);assert.notEqual(second.task.id,r.task.id);
 });
 test('pause/cancel stop pending work and completion does not unpause',async()=>{
-  const {s}=await fixture();await s.saveDraft({mode:'all'});await s.buildQueue();await s.batchAction('start');
+  const {s}=await fixture();await s.buildQueue();await s.batchAction('start');
   const r=await s.claimNext();await s.batchAction('pause');await s.recordResult(r.task.id,{base64:PNG.toString('base64')});
   assert.equal(s.state.batch.status,'paused');assert.equal((await s.claimNext()).task,null);
   await s.batchAction('cancel');assert.equal((await s.claimNext()).task,null);assert.equal(s.state.tasks.filter(t=>t.status==='cancelled').length,3);
@@ -88,7 +88,7 @@ test('failed history is removed automatically while current errors and successfu
 });
 
 test('reference download failure skips that task and claims the next without pausing',async()=>{
-  const {s}=await fixture();await s.saveDraft({mode:'all'});await s.buildQueue();await s.batchAction('start');
+  const {s}=await fixture();await s.buildQueue();await s.batchAction('start');
   const download=s.downloadAsset.bind(s);let first=true;s.downloadAsset=async id=>{if(first){first=false;throw Error('fixture missing reference');}return download(id);};
   const next=await s.claimNext();assert.ok(next.task);assert.equal(s.state.tasks[0].status,'failed');assert.equal(next.task.id,s.state.tasks[1].id);assert.equal(s.state.batch.failedCount,1);assert.match(s.state.tasks[0].error,/missing reference/);
 });
@@ -97,4 +97,33 @@ test('an old executor cannot claim a task from a replacement batch',async()=>{
   const {s}=await fixture();await s.buildQueue();await s.batchAction('start');const oldId=s.state.batch.id;
   await s.batchAction('cancel');await s.buildQueue();await s.batchAction('start');
   assert.equal((await s.claimNext(oldId)).task,null);assert.ok(s.state.tasks.every(t=>t.attempts===0));
+});
+
+test('partial references preserve the original clothing or pose',async()=>{
+  const {s,ps}=await fixture();
+  for(const [patch,kinds,expected] of [
+    [{poseIds:[]},['portrait','costume'],/保留主角原图的姿势/],
+    [{costumeIds:[],poseIds:ps},['portrait','pose'],/【图2（姿势参考）】[\s\S]*保留主角原图的服装/]
+  ]){
+    await s.saveDraft(patch);
+    await s.buildQueue();
+    assert.equal(s.state.tasks.filter(t=>t.batchId===s.state.batch.id).length,2);
+    await s.batchAction('start');
+    const {task}=await s.claimNext();
+    assert.deepEqual(task.references.map(r=>r.kind),kinds);
+    assert.match(task.prompt,expected);
+    await s.batchAction('cancel');
+  }
+});
+test('a legacy batch waiting for sample approval reopens as paused and can finish',async()=>{
+  const {s,root}=await fixture();
+  await s.buildQueue();await s.batchAction('start');
+  const {task}=await s.claimNext();
+  await s.recordResult(task.id,{base64:PNG.toString('base64')});
+  await s.mutate(()=>{s.state.batch.status='awaiting-approval';});
+  const reopened=await new Store(root).init();
+  assert.equal(reopened.state.batch.status,'paused');
+  assert.equal((await reopened.claimNext()).task,null);
+  await reopened.batchAction('continue');
+  assert.ok((await reopened.claimNext()).task);
 });

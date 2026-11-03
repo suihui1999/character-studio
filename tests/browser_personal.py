@@ -1,4 +1,4 @@
-"""Personal Key -> import app/workflow -> select site/model -> real HTTP lifecycle.
+"""Personal Key -> built-in workflow -> real HTTP lifecycle.
 Uses isolated protocol fixtures; no real provider calls, user data, or image generation.
 """
 from pathlib import Path
@@ -9,6 +9,7 @@ ROOT=Path(__file__).resolve().parents[1]
 RESULTS=ROOT/'test-results';RESULTS.mkdir(exist_ok=True)
 data=Path(tempfile.mkdtemp(prefix='character-personal-browser-'));seed_catalog(data)
 URL='http://127.0.0.1:43130'
+PRESETS={'runninghub-cn':'rh-cn-qwen21-three-reference','runninghub-global':'rh-global-qwen21-three-reference'}
 PNG=base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l9sAAAAASUVORK5CYII=')
 def tool(name,args=None):
     req=urllib.request.Request(URL+'/api/tool',data=json.dumps({'name':name,'arguments':args or {}}).encode(),headers={'Content-Type':'application/json'})
@@ -23,37 +24,41 @@ try:
         browser=pw.chromium.launch(headless=True);page=browser.new_page(viewport={'width':1200,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
         page.route('https://ai-pose-depth-gallery.pages.dev/thumbs/**',lambda r:r.fulfill(content_type='image/png',body=PNG))
         page.route('https://ai-costume-gallery.pages.dev/thumbs/**',lambda r:r.fulfill(content_type='image/png',body=PNG))
-        page.goto(URL);page.locator('#open-provider-settings').click()
-        page.locator('#provider-settings').wait_for()
-        for provider,kind,key in [('runninghub-cn','app','cn-personal-fixture'),('runninghub-global','workflow','global-personal-fixture')]:
-            page.locator('#config-provider').select_option(provider)
-            page.locator('#provider-key').fill(key);page.locator('#save-provider-key').click()
-            page.locator('#key-state').get_by_text('已配置',exact=False).wait_for()
-            assert page.locator('#provider-key').input_value()==''
-            assert key not in json.dumps(tool('get_state'))
+        page.goto(URL)
+        page.locator('#provider [aria-pressed=true]').wait_for()
+        assert not page.locator('#rh-guide').is_visible()
+        assert page.locator('#open-provider-settings').count()==0
+        for provider,link,key in [
+            ('runninghub-cn','https://www.runninghub.cn?inviteCode=s3dw8iym','cn-personal-fixture'),
+            ('runninghub-global','https://www.runninghub.ai?inviteCode=qpj6esof','global-personal-fixture')
+        ]:
+            page.locator('[data-provider='+provider+']').click()
+            page.locator('#open-rh-guide').click()
+            assert not page.locator('#provider-key').is_visible()
+            page.locator('#rh-guide a[href="'+link+'"]').wait_for()
+            assert page.locator('#rh-guide a:visible').count()==1
+            page.wait_for_function("document.querySelector('#rh-guide img').naturalWidth>0")
+            page.locator('#rh-guide').screenshot(path=str(RESULTS/(provider+'-guide.png')))
+            page.locator('#close-rh-guide').click()
+            page.locator('#open-rh-key').click()
+            assert page.locator('#rh-key-dialog').is_visible()
+            assert page.locator('#provider-preset').input_value()==PRESETS[provider]
+            assert page.locator('#provider-preset').is_disabled()
             if provider=='runninghub-cn':
                 page.locator('#provider-key').fill('not-found-fixture')
-                page.locator('#test-provider').click()
-                assert page.locator('#test-provider').is_disabled()
-                assert page.locator('#test-provider').inner_text()=='测试中…'
-                page.locator('#provider-connection-status').get_by_text('返回 806',exact=False).wait_for()
-                assert page.locator('#provider-connection-status').evaluate('(el)=>{const r=el.getBoundingClientRect(),d=el.closest("dialog").getBoundingClientRect();return r.top>=d.top&&r.bottom<=d.bottom&&r.top>=0&&r.bottom<=innerHeight}')
-                page.locator('#provider-settings').screenshot(path=str(RESULTS/'personal-key-error-visible.png'))
-                assert page.locator('#key-state').inner_text().startswith('已配置')
-                page.locator('#provider-key').fill('')
-            page.locator('#test-provider').click();page.locator('#provider-connection-status').get_by_text('个人版连接成功',exact=False).wait_for()
-            page.locator('#preset-name').fill(provider+' '+kind)
-            page.locator('#preset-kind').select_option(kind)
-            domain='cn' if provider.endswith('cn') else 'ai'
-            page.locator('#preset-link').fill('https://www.runninghub.'+domain+'/ai-detail/1877265245566922753')
-            page.locator('#inspect-provider-preset').click();page.locator('[data-node-source="0"]').wait_for()
-            assert page.locator('[data-node-source="0"]').input_value()=='portrait'
-            assert page.locator('[data-node-source="1"]').input_value()=='costume'
-            assert page.locator('[data-node-source="2"]').input_value()=='pose'
-            if kind=='app':page.locator('[data-node-value="5"]').select_option('"fixture-v2"')
-            page.locator('#provider-settings').screenshot(path=str(RESULTS/('personal-import-'+kind+'.png')))
-            page.locator('#save-provider-preset').click();page.locator('#provider-settings-status').get_by_text('模型预设已保存',exact=False).wait_for()
-        page.locator('#close-provider-settings').click()
+                page.locator('#save-provider-key').click()
+                page.locator('#rh-key-status').get_by_text('返回 806',exact=False).wait_for()
+                assert not tool('generation_channels')['credentials'][provider]['configured']
+            page.locator('#provider-key').fill(key)
+            page.locator('#save-provider-key').click()
+            page.locator('#rh-key-status').get_by_text('Key 已保存在本机',exact=False).wait_for()
+            assert page.locator('#provider-key').input_value()==''
+            assert key not in json.dumps(tool('get_state'))
+            page.locator('#rh-key-dialog').screenshot(path=str(RESULTS/(provider+'-key-dialog.png')))
+            page.locator('#close-rh-key').click()
+            assert not page.locator('#provider-key').is_visible()
+        saved=json.loads((data/'state.json').read_text(encoding='utf-8'))
+        assert saved['providerPresets']==[]
         portrait=tool('upload_character',{'name':'fixture.png','base64':base64.b64encode(PNG).decode()})
         costume=tool('browse_catalog',{'kind':'costume','limit':1})['items'][0];c=tool('select_reference',{'item':costume});poses=[]
         for query in ['full_single_P015_front','full_single_P016_front']:
@@ -64,25 +69,41 @@ try:
             if a['kind'] in ['pose','costume']:a.update(path=portrait['path'],mime='image/png')
         (data/'state.json').write_text(json.dumps(saved),encoding='utf-8')
         page.reload();page.locator('#portrait-name').get_by_text('fixture.png',exact=True).wait_for()
+        page.locator('[data-provider=runninghub-cn]').click()
+        tool('save_provider_keys',{'keys':{'runninghub-cn':'not-found-fixture'}})
+        page.locator('#check-provider').click()
+        page.locator('#channel-status').get_by_text('返回 806',exact=False).wait_for()
+        page.locator('#channel-details>summary').click()
+        page.locator('#channel-details p').get_by_text('HTTP 200 / 806',exact=False).wait_for()
+        page.locator('.generation-choice').screenshot(path=str(RESULTS/'personal-main-connection-error.png'))
+        tool('save_provider_keys',{'keys':{'runninghub-cn':'cn-personal-fixture'}})
+        assert tool('get_state')['batch'] is None
         for provider,count in [('runninghub-cn','2'),('runninghub-global','4')]:
-            page.locator('#provider').select_option(provider)
-            page.wait_for_function('()=>document.querySelector("#provider-preset").options.length===2')
-            preset=next(p for p in tool('get_state')['providerPresets'] if p['provider']==provider)
-            page.locator('#provider-preset').select_option(preset['id'])
+            page.locator('[data-provider='+provider+']').click()
+            page.locator('#check-provider').click()
+            page.locator('#channel-status').get_by_text('个人版连接成功',exact=False).wait_for()
+            assert tool('get_state')['batch'] is None or tool('get_state')['batch']['status']=='done'
+            assert page.locator('#provider-preset').input_value()==PRESETS[provider]
+            assert page.locator('#ratio option').evaluate_all('(options) => options.map(o => o.value)')==['1:1','2:3','3:2','3:4','4:3','9:16','16:9','21:9']
+            assert page.locator('#ratio').input_value()==('3:4' if provider=='runninghub-cn' else '21:9')
+            ratio='21:9' if provider=='runninghub-cn' else '2:3'
+            page.locator('#ratio').select_option(ratio)
+            page.locator('.generation-actions').screenshot(path=str(RESULTS/(provider+'-image-ratio.png')))
             page.locator('#submit').click();page.locator('#success-count').get_by_text(count,exact=True).wait_for(timeout=20000)
             state=tool('get_state');assert state['batch']['status']=='done'
             assert len([t for t in state['tasks'] if t['provider']==provider and t['status']=='done'])==2
+            assert all(t['ratio']==ratio for t in state['tasks'] if t['provider']==provider)
         page.locator('#success-history>summary').click();page.locator('[data-result-image]').first.wait_for()
         page.locator('.queue').screenshot(path=str(RESULTS/'personal-channels-results.png'))
         for width in [910,390,320]:
             page.set_viewport_size({'width':width,'height':1000})
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),width
         assert not errors,errors
-        page.reload();page.wait_for_function('()=>document.querySelector("#provider").value==="runninghub-global"')
+        page.reload();page.wait_for_function('()=>document.querySelector("[data-provider=runninghub-global]").getAttribute("aria-pressed")==="true"')
         assert len(tool('get_state')['providerPresets'])==2
         page.unroute_all(behavior='wait')
         page.close()
         browser.close()
-    print('PASS personal API: encrypted keys; app/workflow import; site/model selection; 3-reference upload; polling/result persistence; reopen; mobile layout. No real generation.')
+    print('PASS personal API: encrypted keys; shared app/workflow defaults; site onboarding; 3-reference upload; polling/result persistence; reopen; mobile layout. No real generation.')
 finally:
     proc.terminate();proc.wait(timeout=10)

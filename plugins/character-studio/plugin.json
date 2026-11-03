@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "character-studio",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "上传主角、组合服装和姿势，由当前 Agent 生图的本地工作台。",
   "license": "MIT",
   "extensions": {"com.openai": {

@@ -1,8 +1,9 @@
 # External reference sources
 
+- Portrait: https://ai-portrait-gallery.pages.dev/
 - Pose: https://ai-pose-depth-gallery.pages.dev/
 - Costume: https://ai-costume-gallery.pages.dev/
-- Source creator: ギア, https://x.com/giaaibusi
+- Pose and costume source creator: ギア, https://x.com/giaaibusi
 
 This project does not claim ownership of external images or metadata. The MIT license covers this project's code, not those external materials. The source adapters read public indexes at runtime; source availability and terms remain controlled by their owners. No source indexes, thumbnails, full-resolution references, uploaded portraits or generated outputs are included in the distributable plugin.
 

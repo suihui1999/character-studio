@@ -10,18 +10,17 @@ Use the tools actually exposed in the current session. The agent must be able to
 
 The local executor uses an existing ChatGPT login through Codex App Server. It does not ask for an OpenAI API key. A successful login check does not guarantee that the account/session has an available image-generation tool.
 
-本机需要可用的 Codex。登录、连接或生成失败会显示实际原因；当前任务完成或失败后，再领取下一项，并遵守样图确认、暂停和取消。
+本机需要可用的 Codex。登录、连接或生成失败会显示实际原因；当前任务完成或失败后，再领取下一项，并遵守暂停和取消。
 
 ## RunningHub China and Global / 国内站与国际站
 
 The two sites have separate keys and model presets. This integration uses personal AI application and ComfyUI workflow APIs, not enterprise model APIs.
 
-1. 在“生图设置”中选择国内站或国际站，填写自己的个人版 Key 并测试连接。
-2. 添加 AI 应用或工作流链接／ID，读取输入字段。
-3. 高级配置将主角、服装、姿势、提示词和比例对应到应用输入。也支持明确配置三图列表输入。
-4. 保存后在主界面选择该模型，再提交生成。
+1. 选择国内站或国际站，点「获取 Key 教程」，按图解注册并登录。
+2. 登录后点击右上角头像，进入「控制台」，在左侧打开「消费级-会员」。获取完整 API Key 后回到工作台验证并保存。
+3. 工作台自动选择内置的 Qwen 2.1 换装与姿势工作流。选好主角、服装和姿势后即可生成。
 
-Recommended presets are not yet bundled. Advanced users can import their own link and field mappings; future recommended presets will reduce this setup. A JSON/cURL example is parsed as data, never executed. Provide the target link/ID as well when importing an example.
+The bundled Qwen 2.1 workflow IDs are `2117565399293321218` for China and `2117590622597468162` for Global. Both require a portrait, outfit, and pose. Available aspect ratios are 1:1, 2:3, 3:2, 3:4, 4:3, 9:16, 16:9, and 21:9.
 
 Each submitted task keeps its original provider and preset snapshot. A remote task ID is retained when available. Cancellation stops local work and polling, but a task already submitted to RunningHub may still run; manage that task on the provider's site if necessary.
 

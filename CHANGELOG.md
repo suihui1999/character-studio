@@ -1,5 +1,15 @@
 # Changelog / 版本记录
 
+## 0.3.1 — 2026-11-03
+
+- 内置 RunningHub 国内站和国际站的 Qwen 2.1 换装与姿势工作流。添加消费级 Key 获取图解和图片比例选择。
+- 增加人像库选角，支持上传替换唯一主角。上传入口显示在预览图上方。
+- 简化生成区与组合预览。默认提示词使用浅灰色无缝影棚背景。
+
+- Bundle the Qwen 2.1 outfit and pose workflows for RunningHub China and Global. Add a personal API key guide and aspect ratio controls.
+- Add portrait selection from the gallery and keep one active character. The upload button sits above the preview.
+- Simplify the generation panel and combination preview. Use a light gray seamless studio backdrop by default.
+
 ## 0.3.0 — 2026-11-02
 
 ### 中文

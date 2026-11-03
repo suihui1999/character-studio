@@ -3,6 +3,7 @@ import {createServer} from 'node:http';
 import {setTimeout as delay} from 'node:timers/promises';
 export const PNG=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l9sAAAAASUVORK5CYII=','base64');
 export const KEYS={'runninghub-cn':'cn-personal-fixture','runninghub-global':'global-personal-fixture'};
+const QWEN_WORKFLOW_IDS={'runninghub-cn':'2117565399293321218','runninghub-global':'2117590622597468162'};
 export const NODES=[...['portrait','costume','pose'].map((kind,i)=>({nodeId:String(i+1),fieldName:'image',fieldValue:kind+'.png',description:kind})),{nodeId:'4',fieldName:'prompt',fieldValue:'fixture prompt',description:'任务提示词'},{nodeId:'5',fieldName:'aspect_ratio',fieldValue:'3:4',description:'输出比例',fieldData:JSON.stringify(['1:1','3:4','4:3','9:16','16:9'].map(value=>({name:value,index:value})))},{nodeId:'6',fieldName:'model',fieldValue:'fixture-v1',description:'模型版本',fieldData:JSON.stringify([{name:'fixture-v1',index:'fixture-v1'},{name:'fixture-v2',index:'fixture-v2'}])}];
 export async function fakeRunningHub({mode='success',accountDelayMs=0}={}){
   const requests=[],submitted=[],polls=new Map();let address;
@@ -21,7 +22,24 @@ export async function fakeRunningHub({mode='success',accountDelayMs=0}={}){
     if(route==='/api/webapp/apiCallDemo')return json({code:0,data:{curl:"curl --data-raw '"+JSON.stringify({apiKey:key,webappId:url.searchParams.get('webappId'),nodeInfoList:NODES})+"'"}});
     if(route==='/api/openapi/getJsonApiFormat')return json({code:0,data:{prompt:JSON.stringify(Object.fromEntries(NODES.map(n=>[n.nodeId,{inputs:{[n.fieldName]:n.fieldValue},class_type:'FixtureNode',_meta:{title:n.description}}])))}});
     if(route==='/task/openapi/upload')return json({code:0,data:{fileName:'api/upload-'+requests.filter(r=>r.path===route).length+'.png',fileType:'input'}});
-    if(route==='/openapi/v2/media/upload/binary')return json({code:0,data:{download_url:address+'/uploaded.png'}});
+    if(route==='/openapi/v2/media/upload/binary')return json({code:0,data:{fileName:'openapi/reference-'+requests.filter(r=>r.path===route).length+'.png',download_url:address+'/uploaded.png'}});
+    if(route==='/openapi/v2/run/workflow/'+QWEN_WORKFLOW_IDS[provider]){
+      const taskId='2117565399293321'+String(submitted.length+1).padStart(3,'0');
+      const ratio=body.nodeInfoList?.find(n=>n.nodeId==='4'&&n.fieldName==='aspect_ratio');
+      if(body.apiKey||body.addMetadata!==true||body.instanceType!=='default'||body.usePersonalQueue!=='false'||
+        !body.nodeInfoList?.find(n=>n.nodeId==='10'&&n.fieldName==='prompt'&&n.fieldValue)||
+        !/^\d+:\d+ \(.+\)$/.test(ratio?.fieldValue)||
+        !['1','2','3'].every(id=>body.nodeInfoList.some(n=>n.nodeId===id&&n.fieldName==='image'&&/^openapi\/reference-\d+\.png$/.test(n.fieldValue)))){
+        return json({errorCode:'INVALID_INPUT',errorMessage:'Invalid workflow fixture inputs'});
+      }
+      submitted.push({taskId,provider,body});
+      return json({taskId,status:'QUEUED'});
+    }
+    if(route==='/openapi/v2/query'){
+      const job=submitted.find(j=>j.taskId===body.taskId&&j.provider===provider);
+      if(!job)return json({errorCode:'UNKNOWN_TASK',errorMessage:'Invalid fixture task ID'});
+      return json({taskId:body.taskId,status:'SUCCESS',results:[{url:address+'/result.png',outputType:'png'}]});
+    }
     if(route==='/task/openapi/ai-app/run'||route==='/task/openapi/create'){
       const taskId='remote-'+(submitted.length+1);submitted.push({taskId,provider,body});return json({code:0,data:{taskId,taskStatus:'QUEUED'}});
     }

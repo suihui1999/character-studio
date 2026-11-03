@@ -2,6 +2,7 @@ import {spawn,execFileSync} from 'node:child_process';
 import {existsSync} from 'node:fs';
 import path from 'node:path';
 import {EventEmitter} from 'node:events';
+import {REFERENCE_LABELS} from './generation-models.mjs';
 
 export function codexCommand(){
   const flags=['app-server','--disable','shell_tool','--disable','unified_exec'];
@@ -116,9 +117,9 @@ export class GenerationRunner{
         const current=await this.store.refresh();if(current.batch?.id!==batchId)break;
         const next=await this.store.claimNext(batchId);
         if(next.batch?.id!==batchId)break;
-        if(!next.task){const finished=next.batch?.status==='done'&&next.batch.failedCount?'本批次已处理完成，已跳过 '+next.batch.failedCount+' 个失败任务。最近失败原因：'+next.batch.lastError:null;await this.execution(batchId,next.error?'failed':next.batch?.status||'done',next.error||finished||({'awaiting-approval':'样图已完成，请确认后继续。',paused:'批次已暂停。',cancelled:'批次已取消。',done:'本批次已全部完成。'}[next.batch?.status]||'暂无待执行任务。'));break;}
+        if(!next.task){const finished=next.batch?.status==='done'&&next.batch.failedCount?'本批次已处理完成，已跳过 '+next.batch.failedCount+' 个失败任务。最近失败原因：'+next.batch.lastError:null;await this.execution(batchId,next.error?'failed':next.batch?.status||'done',next.error||finished||({paused:'批次已暂停。',cancelled:'批次已取消。',done:'本批次已全部完成。'}[next.batch?.status]||'暂无待执行任务。'));break;}
         const task=next.task;activeTask=task.id;
-        await this.execution(batchId,'generating','正在生成：'+task.costumeId.replace('costume:','')+' × '+task.poseId.replace('pose:',''));
+        await this.execution(batchId,'generating','正在生成：'+([task.costumeId,task.poseId].filter(Boolean).map(id=>id.replace(/^(costume|pose):/,'')).join(' × ')||(task.outputStyle==='three-view'?'三视图＋特写':'人物图')));
         try{
         if(task.provider&&task.provider!=='codex'){
           const result=await this.runninghub.generate(task,{signal,onProgress:message=>this.execution(batchId,'generating',message),onRemote:patch=>this.store.updateRemoteTask(task.id,patch)});
@@ -129,7 +130,7 @@ export class GenerationRunner{
         const collect=m=>{if(m.params?.threadId===threadId&&m.method==='item/completed'){const i=m.params.item;if(i?.type==='imageGeneration')images.push(i);if(i?.type==='agentMessage')messages.push(i.text);}};
         client.on('notification',collect);
         try{
-          const text='立即使用内置生图工具完成以下任务，输出一张真实图片。不要只回复提示词。三张输入图片按顺序分别是：图1主角身份参考，图2完整服装参考，图3深度姿势参考。\n'+task.prompt+'\n如果工具不可用、需要额外权限或生成失败，直接说明具体原因；不要改用收费 API，也不要创建占位图。';
+          const text='立即使用内置生图工具完成以下任务，输出一张真实图片。不要只回复提示词。输入图片按顺序为 '+task.references.map((r,i)=>'图'+(i+1)+' '+REFERENCE_LABELS[r.kind]+'参考').join('、')+'。\n'+task.prompt+'\n如果工具不可用、需要额外权限或生成失败，直接说明具体原因；不要改用收费 API，也不要创建占位图。';
           const started=await client.request('turn/start',{threadId,input:[{type:'text',text,text_elements:[]},...task.references.map(r=>({type:'localImage',path:r.path}))]});
           const turn=await client.waitForTurn(threadId,started.turn.id,undefined,signal);
           if(signal.aborted)throw signal.reason;

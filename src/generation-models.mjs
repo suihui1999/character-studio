@@ -1,7 +1,40 @@
 export const PROVIDERS=[{id:'codex',name:'本机 Codex 生图'},{id:'agent',name:'当前 Agent 原生生图'},{id:'runninghub-cn',name:'RunningHub 国内站'},{id:'runninghub-global',name:'RunningHub 国际站'}];
 export const isNativeProvider=provider=>provider==='codex'||provider==='agent';
+export const REFERENCE_LABELS={portrait:'主角',costume:'服装',pose:'姿势'};
+const DEFAULT_RATIOS=['3:4','1:1','4:3','9:16','16:9'];
+export function outputRatios(preset){
+  const choices=preset?.nodes.find(n=>n.source==='ratio'&&n.options?.length)?.options;
+  return choices?choices.map(o=>o.value).filter(v=>typeof v==='string'&&/^\d{1,3}:\d{1,3}$/.test(v)):DEFAULT_RATIOS;
+}
+export function queueReferences(draft){
+  const costumes=draft.costumeIds.length?draft.costumeIds:[null];
+  const poses=draft.poseIds.length?draft.poseIds:[null];
+  return {costumes,poses,count:costumes[0]||poses[0]?costumes.length*poses.length:0};
+}
+export function queueInputs(draft,provider,preset){
+  // Keep saved single-image previews valid across the removal of sample mode.
+  return JSON.stringify([draft.portraitId,draft.costumeIds,draft.poseIds,draft.mode||'all',draft.ratio,draft.template,draft.notes,provider,preset||null]);
+}
+export function referenceCompatibility(preset,kinds,ratio){
+  if(!preset)return '';
+  const sources=new Set(preset.nodes.map(n=>n.source));
+  for(const kind of Object.keys(REFERENCE_LABELS)){
+    if(!kinds.includes(kind)&&(sources.has(kind)||sources.has('references')&&!preset.allowPartialReferences)){
+      return '当前模型需要'+REFERENCE_LABELS[kind]+'参考图，请先补齐再生成。';
+    }
+  }
+  if(preset.nodes.some(n=>n.source==='ratio'&&n.options?.length&&!n.options.some(o=>o.value===ratio))){
+    return '当前模型不支持 '+ratio+'，请更换模型或输出比例。';
+  }
+  return '';
+}
+export function selectedPreset(presets,provider,id){
+  if(isNativeProvider(provider))return null;
+  return presets.find(p=>p.provider===provider&&p.id===id)||
+    presets.find(p=>p.provider===provider&&p.builtin)||null;
+}
 export const RH_ORIGINS={'runninghub-cn':'https://www.runninghub.cn','runninghub-global':'https://www.runninghub.ai'};
-export const INPUT_SOURCES=[['fixed','保留原值'],['portrait','主角参考图'],['costume','服装参考图'],['pose','姿势参考图'],['references','三张参考图列表（JSON）'],['prompt','任务提示词'],['ratio','输出比例'],['width','输出宽度'],['height','输出高度']];
+export const INPUT_SOURCES=[['fixed','保留原值'],['portrait','主角参考图'],['costume','服装参考图'],['pose','姿势参考图'],['references','参考图列表（JSON）'],['prompt','任务提示词'],['ratio','输出比例'],['width','输出宽度'],['height','输出高度']];
 export function checkProvider(provider){if(!PROVIDERS.some(p=>p.id===provider))throw Error('未知生图渠道');return provider;}
 export function remoteId(provider,value){
   if(!RH_ORIGINS[provider])throw Error('请选择 RunningHub 站点');value=String(value).trim();if(/^\d{1,30}$/.test(value))return value;
@@ -51,19 +84,24 @@ export function validatePreset(preset){
     return {nodeId:n.nodeId,fieldName:n.fieldName,value:n.value??'',description:String(n.description||'').slice(0,200),source:n.source,format:n.format||'fileName',...(n.options?{options:n.options}: {})};
   });
   if(!sources.has('prompt'))throw Error('请指定一个“任务提示词”输入');
-  if(!sources.has('references')&&!['portrait','costume','pose'].every(s=>sources.has(s)))throw Error('请映射主角、服装、姿势三张图，或映射“三张参考图列表”输入');
-  return {id:preset.id,provider:preset.provider,kind:preset.kind,remoteId:id,name:preset.name.trim(),nodes};
+  if(!sources.has('references')&&!['portrait','costume','pose'].every(s=>sources.has(s)))throw Error('请映射主角、服装、姿势三张图，或映射“参考图列表”输入');
+  return {id:preset.id,provider:preset.provider,kind:preset.kind,remoteId:id,name:preset.name.trim(),nodes,...(preset.kind==='workflow'&&preset.apiVersion===2?{apiVersion:2}:{}),...(sources.has('references')&&preset.allowPartialReferences?{allowPartialReferences:true}:{})};
 }
 export function personalPayload(task,files){
   const preset=validatePreset(task.providerPreset);if(preset.provider!==task.provider)throw Error('任务渠道与模型预设不一致');
+  const kinds=Object.keys(REFERENCE_LABELS).filter(kind=>files.some(file=>file.kind===kind));
+  if(!kinds.includes('portrait'))throw Error('缺少主角参考图');
+  const problem=referenceCompatibility(preset,kinds,task.ratio);
+  if(problem)throw Error(problem);
   const [a,b]=task.ratio.split(':').map(Number),unit=Math.ceil(1024/Math.max(a,b)/8)*8;
   return {preset,nodeInfoList:preset.nodes.map(n=>{
     let value=n.value;const ref=s=>files.find(f=>f.kind===s)?.[n.format==='url'?'url':'fileName'];
     if(['portrait','costume','pose'].includes(n.source))value=ref(n.source);
-    if(n.source==='references'){const values=['portrait','costume','pose'].map(ref);if(values.some(v=>!v))throw Error('缺少三张参考图列表中的图片');value=JSON.stringify(values);}
-    if(n.source==='prompt')value=task.prompt;if(n.source==='ratio')value=task.ratio;if(n.source==='width')value=a*unit;if(n.source==='height')value=b*unit;
+    if(n.source==='references'){const values=kinds.map(ref);if(values.some(v=>!v))throw Error('参考图列表中的图片上传不完整');value=JSON.stringify(values);}
+    if(n.source==='prompt')value=task.prompt;
+    if(n.source==='ratio')value=n.options?.find(o=>o.value===task.ratio)?.fieldValue??task.ratio;
+    if(n.source==='width')value=a*unit;if(n.source==='height')value=b*unit;
     if(value===undefined)throw Error('缺少映射的参考图：'+n.source);
-    if(n.source==='ratio'&&n.options?.length&&!n.options.some(o=>o.value===value))throw Error('应用不支持所选输出比例：'+value);
     return {nodeId:n.nodeId,fieldName:n.fieldName,fieldValue:value};
   })};
 }

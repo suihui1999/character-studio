@@ -41,9 +41,12 @@ try:
         page=browser.new_page(viewport={'width':1280,'height':1050});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
         page.route('https://ai-pose-depth-gallery.pages.dev/thumbs/**',lambda r:r.fulfill(content_type='image/png',body=PNG))
         page.route('https://ai-costume-gallery.pages.dev/thumbs/**',lambda r:r.fulfill(content_type='image/png',body=PNG))
-        page.goto(URL);page.locator('#connection').get_by_text('测试 Agent 已连接',exact=True).wait_for()
-        assert not page.locator('#advanced-generation').evaluate('(e)=>e.open')
-        assert not page.locator('#build').is_visible()
+        page.goto(URL);page.locator('#channel-status').get_by_text('测试 Agent 已连接',exact=True).wait_for()
+        page.locator('#check-provider').click()
+        page.locator('#channel-status').get_by_text('测试 Agent 已连接',exact=True).wait_for()
+        assert tool('get_state')['batch'] is None
+        assert page.locator('#build').is_visible()
+        assert not page.locator('#combination-preview').is_visible()
         page.screenshot(path=str(RESULTS/'simple-workbench-ready.png'))
         page.locator('#submit').click()
         out,err=worker.communicate(timeout=12);assert worker.returncode==0,(out,err);task=json.loads(out)['task'];assert len(task['references'])==3
@@ -51,8 +54,8 @@ try:
         page.screenshot(path=str(RESULTS/'simple-workbench-generating.png'))
         cli('result','--task',task['id'],'--file',portrait['path'])
         page.locator('#success-count').get_by_text('1',exact=True).wait_for()
-        assert tool('get_state')['batch']['status']=='awaiting-approval'
-        worker=waiter();page.locator('#continue').click()
+        assert tool('get_state')['batch']['status']=='queued'
+        worker=subprocess.Popen(['node',CLI,'wait','--agent','测试 Agent','--image-tool','protocol-fixture-only','--timeout','10'],stdout=subprocess.PIPE,stderr=subprocess.PIPE,**FLAGS)
         out,err=worker.communicate(timeout=12);assert worker.returncode==0,(out,err);second=json.loads(out)['task'];assert second['id']!=task['id']
         cli('result','--task',second['id'],'--error','明确的协议测试失败，不是真实生图请求')
         page.locator('#execution-message').get_by_text('已跳过 1 个失败任务',exact=False).wait_for()
@@ -62,12 +65,12 @@ try:
         page.set_viewport_size({'width':1280,'height':1050})
         page.locator('#success-history>summary').click();page.screenshot(path=str(RESULTS/'simple-workbench-results.png'))
         page.locator('#submit').click()
-        page.locator('#execution-message').get_by_text('请回到 Agent 聊天',exact=False).wait_for()
+        page.locator('#execution-message').get_by_text('发送「重新连接人物工作台」',exact=False).wait_for()
         assert tool('get_state')['batch']['status']=='paused'
         assert all(t['attempts']==0 for t in tool('get_state')['tasks'] if t['batchId']==tool('get_state')['batch']['id'])
         page.screenshot(path=str(RESULTS/'simple-workbench-disconnected.png'))
         assert not errors,errors;page.unroute_all(behavior='wait');browser.close()
-    print('PASS CLI/browser: no MCP registration; one-click build/submit; 3 refs; sample approval; exact-byte result; failure skip; disconnect visible; responsive layout. No real image generation.')
+    print('PASS CLI/browser: no MCP registration; one-click build/submit; 3 refs; continuous batch; exact-byte result; failure skip; disconnect visible; responsive layout. No real image generation.')
 finally:
     if worker and worker.poll() is None:worker.terminate();worker.wait(timeout=10)
     try:os.kill(health['pid'],15)

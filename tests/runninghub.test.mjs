@@ -82,3 +82,23 @@ test('connection probes return a readable timeout instead of waiting indefinitel
   const credentials=new ProviderCredentials(store,{env:{RUNNINGHUB_CN_API_KEY:KEYS['runninghub-cn']}}),client=new RunningHubClient(credentials,{origins:remote.origins,probeTimeoutMs:30});
   const result=await client.probe('runninghub-cn');assert.equal(result.available,false);assert.match(result.reason,/超时/);assert.ok(!JSON.stringify(result).includes(KEYS['runninghub-cn']));
 });
+
+test('partial reference jobs require a compatible RunningHub preset before upload',async t=>{
+  const {store,remote,preset,runner}=await setup(t);
+  await store.batchAction('cancel');
+  await store.saveDraft({poseIds:[]});
+  await assert.rejects(store.buildQueue(),/需要姿势参考图/);
+  assert.equal(remote.submitted.length,0);
+  const nodes=preset.nodes.filter(n=>!['costume','pose'].includes(n.source))
+    .map(n=>n.source==='portrait'?{...n,source:'references'}:n);
+  const listPreset=await store.saveProviderPreset({...preset,id:undefined,name:'可变参考图列表',nodes,allowPartialReferences:true});
+  await store.saveDraft({providerPresetId:listPreset.id});
+  await store.buildQueue();
+  await store.batchAction('start');
+  await runner.start();
+  await runner.job;
+  assert.equal((await store.refresh()).batch.status,'done');
+  assert.equal(remote.submitted.length,1);
+  const sent=remote.submitted[0].body.nodeInfoList.find(n=>n.nodeId===nodes[0].nodeId);
+  assert.deepEqual(JSON.parse(sent.fieldValue),['api/upload-1.png','api/upload-2.png']);
+});

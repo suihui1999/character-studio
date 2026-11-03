@@ -44,6 +44,23 @@ with sync_playwright() as pw:
             page.route('https://ai-costume-gallery.pages.dev/thumbs/**',lambda r:r.fulfill(content_type='image/png',body=PNG))
             page.goto(URL);page.locator('#submit:not(:disabled)').wait_for()
             assert page.locator('#fallback').count()==0
+            assert page.locator('#provider [aria-pressed=true]').get_attribute('data-provider')=='agent'
+            if mode=='success':
+                prompt_entry=page.get_by_text('编辑默认提示词',exact=True)
+                assert prompt_entry.is_visible()
+                page.locator('.queue').screenshot(path=str(RESULTS/'generation-layout.png'))
+                prompt_entry.click()
+                assert '人像参考' in page.locator('#template').input_value()
+                page.locator('#template').fill(page.locator('#template').input_value()+'\n模板保存验证')
+                with page.expect_response(lambda r:r.url.endswith('/api/tool') and r.request.post_data_json.get('name')=='save_draft'):
+                    page.locator('#notes').focus()
+                page.reload()
+                page.wait_for_function("document.querySelector('#template').value.includes('模板保存验证')")
+                page.locator('#channel-status').get_by_text('本机 Codex 已登录',exact=False).wait_for()
+                page.locator('#check-provider').click()
+                page.locator('#channel-status').get_by_text('本机 Codex 已登录',exact=False).wait_for()
+                assert tool('get_state')['batch']['status']=='draft'
+            assert page.locator('#output-style, #mode').count()==0
             if mode=='hang-once':page.screenshot(path=str(RESULTS/'batch-replacement-ready.png'),full_page=True)
             page.locator('#submit').click()
             if mode=='hang-once':
@@ -51,8 +68,8 @@ with sync_playwright() as pw:
                 assert tool('get_state')['tasks'][0]['status']=='running'
                 page.screenshot(path=str(RESULTS/'batch-replacement-generating.png'),full_page=True)
                 page.locator('#cancel').click()
-                page.locator('#advanced-generation>summary').click()
                 page.locator('#build').click()
+                page.locator('#close-preview').click()
                 page.locator('#submit:not(:disabled)').wait_for()
                 page.screenshot(path=str(RESULTS/'batch-replacement-new-queue.png'),full_page=True)
                 page.locator('#submit').click()

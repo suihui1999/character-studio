@@ -16,7 +16,7 @@ export class ProviderCredentials{
   async load(){try{return JSON.parse(await readFile(this.file,'utf8'));}catch(e){if(e.code==='ENOENT')return {};throw Error('本机渠道密钥配置读取失败');}}
   async status(){const saved=await this.load();return Object.fromEntries(Object.keys(RH_ORIGINS).map(p=>[p,{configured:!!(this.env[envNames[p]]||saved[p]),source:this.env[envNames[p]]?'environment':saved[p]?'local':null}]));}
   async key(provider){if(!RH_ORIGINS[provider])throw Error('未知 RunningHub 站点');const env=this.env[envNames[provider]];if(env)return env;
-    const value=(await this.load())[provider];if(!value){const e=Error('尚未配置该站点的 RunningHub API Key，请在“渠道设置”中填写。');e.fatal=true;throw e;}
+    const value=(await this.load())[provider];if(!value){const e=Error('尚未配置本站 API Key，请点击「填写 API Key」。');e.fatal=true;throw e;}
     if(value.scheme==='dpapi')return dpapi(value.value,true);if(value.scheme==='file')return value.value;throw Error('不支持的本机密钥格式');
   }
   async save(keys){const unlock=await this.store.lock();try{const saved=await this.load();for(const [p,key]of Object.entries(keys)){

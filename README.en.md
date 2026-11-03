@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tests](https://github.com/web3suihuiji-ctrl/character-studio/actions/workflows/windows.yml/badge.svg)](https://github.com/web3suihuiji-ctrl/character-studio/actions/workflows/windows.yml)
 
-A local character image workbench for people new to AI. Upload a character, select outfits and poses, and generate images using an agent's existing image tools or your own RunningHub account.
+A local character image workbench for people new to AI. Pick a character from the portrait gallery or upload one, select outfits and poses, and generate images using an agent's existing image tools or your own RunningHub account.
 
 ## Install and open
 
@@ -18,15 +18,15 @@ The agent downloads a prebuilt Windows package and starts the workbench. The run
 
 [Download the Windows release](https://github.com/web3suihuiji-ctrl/character-studio/releases/latest). The download is approximately 35 MB and does not include the full external image libraries.
 
-**Version 0.3.0 is an early release. Local Windows installation, task handoff, and result persistence are tested. Doubao Work's native image generation and output-file compatibility still require testing in the target client. Installing a skill does not grant an agent new image-generation capabilities.** The current workbench UI is in Simplified Chinese.
+**Local Windows installation, task handoff, and result persistence are tested. Doubao Work's native image generation and output file compatibility still require testing in the target client.** The workbench UI is in Simplified Chinese.
 
 ## Create an image
 
-1. Upload your character reference.
+1. Pick a portrait or upload a character reference.
 2. Select one or more outfits and poses.
-3. Click Generate. By default, review the first sample before continuing the batch.
+3. Choose a generation provider and aspect ratio, then click Generate. You can also preview the combinations first.
 
-You can pause, cancel, retry an individual image, or expand the saved success history. Prompt editing and combination previews are available under expandable generation options.
+You can pause, cancel, retry an individual image, or expand the saved success history. The generation panel lets you edit the default prompt.
 
 The browser route requires a connected, running agent. It cannot wake a chat that has already ended. If native generation is unavailable, you can explicitly choose RunningHub China or Global and enter your personal API key in the local workbench. Automatic switching to paid providers is disabled.
 
@@ -37,16 +37,16 @@ The browser route requires a connected, running agent. It cannot wake a chat tha
 | Windows x64 | Bundled runtime; local installation, repair, startup, and reuse tested |
 | Codex | Local executor and MCP Apps entry point; generation depends on the account and available tools |
 | Doubao Work | CLI entry point without MCP registration; native image output still needs client acceptance |
-| RunningHub China / Global | Personal AI application and workflow APIs; requires your key and a model preset |
+| RunningHub China / Global | Includes the Qwen 2.1 outfit and pose workflow for each site. Enter your personal API key for the site you choose. |
 | macOS / Linux | No end-user distribution yet |
 
-Recommended RunningHub model presets are not bundled with this version. Advanced users can import their own applications or workflows. See [providers](docs/providers.md) and [troubleshooting](docs/troubleshooting.md).
+Select a RunningHub site, then use the guide and key buttons to register and enter your key. The built-in workflow requires a character, an outfit, and a pose. See [providers](docs/providers.md) and [troubleshooting](docs/troubleshooting.md).
 
 ## Local data and external libraries
 
 Character references, cached assets, tasks, results, and settings live in `~/.character-studio`. Upgrading the application does not replace this directory. Do not send API keys in chat; enter them in the local settings. Generation failures are reported rather than replaced with placeholder images.
 
-Pose references come from the [depth pose gallery](https://ai-pose-depth-gallery.pages.dev/), and outfits from the [costume gallery](https://ai-costume-gallery.pages.dev/). Catalog metadata is cached locally; thumbnails load while browsing, and full references download when needed. This project does not bundle those image collections.
+References come from the [portrait gallery](https://ai-portrait-gallery.pages.dev/), [depth pose gallery](https://ai-pose-depth-gallery.pages.dev/), and [costume gallery](https://ai-costume-gallery.pages.dev/). Thumbnails load while browsing, and full references download when needed.
 
 The code is licensed under [MIT](LICENSE). External images and metadata are not covered by the project's MIT license; see [NOTICE](NOTICE.md).
 
