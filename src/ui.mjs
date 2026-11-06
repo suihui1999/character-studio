@@ -7,6 +7,26 @@ import {IMAGE_API_SERVICES,isImageApi,imageApiService} from './image-api-presets
 const $=id=>document.getElementById(id);
 const downloadIcon=createElement(ArrowDown,{width:20,height:20,'stroke-width':1.5,'aria-hidden':'true',focusable:'false'}).outerHTML;
 for(const icon of document.querySelectorAll('[data-download-icon]'))icon.outerHTML=downloadIcon;
+let downloadFeedbackTimer;
+function downloadFeedback(phase,reason=''){
+  clearTimeout(downloadFeedbackTimer);
+  const popup=$('download-feedback');popup.dataset.state=phase;
+  const owner=document.activeElement?.closest('dialog[open]')||[...document.querySelectorAll('dialog:modal')].at(-1)||document.body;
+  // A popover outside an open modal is inert, even when drawn above it.
+  if(popup.parentElement!==owner){popup.hidePopover();owner.append(popup);}
+  $('download-feedback-title').textContent=phase==='pending'?'正在准备下载…':phase==='error'?'下载失败':'已发起下载';
+  $('download-feedback-message').textContent=phase==='pending'?'':phase==='error'?reason:'下载位置：浏览器设置的下载文件夹';
+  $('download-feedback-message').hidden=phase==='pending';
+  popup.showPopover();
+  downloadFeedbackTimer=setTimeout(()=>popup.hidePopover(),phase==='error'?5000:2400);
+}
+document.addEventListener('click',e=>{
+  const link=e.target.closest('a.result-download');
+  if(link?.hasAttribute('href')&&link.getAttribute('aria-disabled')!=='true'){
+    // Let the browser process the download link before presenting its feedback.
+    queueMicrotask(()=>downloadFeedback('started'));
+  }
+});
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let app,state,kind='costume',offset=0,pageSize=12,items=[],total=0,queryId=0,editing=null,referencePreview=null,saving=Promise.resolve(),referenceOps=Promise.resolve(),dispatching=false,preparing=false,submitting=false;
 let channels={providers:PROVIDERS,credentials:{}},probeId=0;
@@ -306,6 +326,7 @@ $('success-results').onclick=async e=>{
   const pending=action==='rename'?'正在保存…':'正在准备本批图片…';historyFeedback.set(id,{text:pending});
   feedback.hidden=false;feedback.classList.remove('error');feedback.textContent=pending;
   for(const control of section.querySelectorAll('button,input'))control.disabled=true;
+  if(action==='download')downloadFeedback('pending');
   try{
     let message;
     if(action==='rename'){
@@ -316,9 +337,10 @@ $('success-results').onclick=async e=>{
       if(app){const opened=await app.openLink({url:result.downloadUrl});if(opened?.isError)throw Error('无法打开下载链接，请重试。');}
       else{const a=document.createElement('a');a.href=result.downloadUrl;a.download=result.filename;a.click();}
       message='已准备 '+result.count+' 张图片的 ZIP 下载。';
+      downloadFeedback('started');
     }
     historyFeedback.set(id,{text:message});
-  }catch(error){historyFeedback.set(id,{text:error.message,error:true});}
+  }catch(error){historyFeedback.set(id,{text:error.message,error:true});if(action==='download')downloadFeedback('error',error.message);}
   finally{historyBusy.delete(id);renderState();}
 };
 $('open-success-history').onclick=()=>{showTaskDialog($('success-history'),$('open-success-history'));loadSuccessImages();};
@@ -450,11 +472,13 @@ $('reference-download').onclick=guarded(async()=>{
   const item=referencePreview;if(!item)return;
   const button=$('reference-download'),message=$('reference-image-status');
   button.disabled=true;button.setAttribute('aria-busy','true');message.textContent='正在下载原图…';
+  downloadFeedback('pending');
   try{
     const result=await call('download_catalog_image',{kind:item.kind,id:item.id});
     const a=document.createElement('a');a.href='data:'+result.mime+';base64,'+result.base64;a.download=result.filename;a.click();
     if(referencePreview===item)message.textContent='已开始下载原图。';
-  }catch(error){if(referencePreview===item)message.textContent=error.message;}
+    downloadFeedback('started');
+  }catch(error){if(referencePreview===item)message.textContent=error.message;downloadFeedback('error',error.message);}
   finally{button.disabled=false;button.removeAttribute('aria-busy');}
 });
 $('reference-confirm').onclick=guarded(async()=>{

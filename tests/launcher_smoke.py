@@ -3,6 +3,7 @@ from pathlib import Path
 import os,subprocess,tempfile,zipfile,json,urllib.request,time
 ROOT=Path(__file__).resolve().parents[1]
 DIST=ROOT/'.local/distribution'
+VERSION=json.loads((ROOT/'package.json').read_text(encoding='utf-8'))['version']
 base=Path(tempfile.mkdtemp(prefix='Character Studio 中文 启动 '))
 portable=base/'解压 后的工作台';portable.mkdir()
 with zipfile.ZipFile(DIST/'character-studio-windows-x64.zip') as archive:
@@ -17,7 +18,7 @@ for mode,exe in [('portable',portable/'Character Studio.exe'),('single',DIST/'Ch
     url='http://127.0.0.1:'+str(record['port'])
     try:
         health=json.load(urllib.request.urlopen(url+'/api/health'))
-        assert health['service']=='character-studio' and health['version']=='0.4.0'
+        assert health['service']=='character-studio' and health['version']==VERSION
         page=urllib.request.urlopen(url).read().decode('utf-8')
         assert 'reference-download' in page and '生图 API' in page
         assert json.loads((home/'state.json').read_text(encoding='utf-8'))['tasks']==[]

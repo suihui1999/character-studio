@@ -1,5 +1,11 @@
 # Changelog / 版本记录
 
+## 0.4.1 — 2026-11-06
+
+- 下载按钮立即显示简短浮层提示，约 2 秒自动消失；下载失败显示具体原因，停留 5 秒。
+- 人像、服装、姿势详情页、成功记录和批次 ZIP 下载共用反馈。下载提示注明由浏览器设置的下载文件夹保存。
+- Show compact download feedback immediately, dismiss it automatically, and report preparation failures. Cover all three galleries, generated images and batch ZIP downloads. Indicate that the browser's download settings control the save location.
+
 ## 0.4.0 — 2026-11-06
 
 - 新增可独立下载、双击自动准备并打开工作台的 Windows EXE，以及内含启动 EXE 的解压即用 ZIP。

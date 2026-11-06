@@ -33,11 +33,28 @@ try:
             download=transfer.value
             assert Path(download.path()).read_bytes()==PNG
             assert download.suggested_filename.startswith(kind+'_')
+            popup=page.locator('#download-feedback')
+            assert popup.is_visible()
+            assert popup.get_attribute('data-state')=='started'
+            assert '下载位置：浏览器设置的下载文件夹' in popup.inner_text()
+            assert popup.bounding_box()['height']<90
+            assert popup.locator('button').count()==0
             assert page.locator('#reference-viewer').is_visible()
             assert page.locator('#reference-download').evaluate("e=>getComputedStyle(e).borderRadius")=='50%'
             assert page.locator('#reference-download svg').get_attribute('stroke-width')=='1.5'
-            page.locator('#reference-viewer').screenshot(path=str(RESULTS/(kind+'-detail-download.png')))
+            page.screenshot(path=str(RESULTS/(kind+'-detail-download.png')))
+            popup.wait_for(state='hidden',timeout=4000)
+            assert not popup.is_visible()
             page.locator('#close-reference-viewer').click()
+        page.locator('#gallery [data-select]').first.click()
+        page.route('**/api/tool',lambda route:route.fulfill(json={'isError':True,'content':[{'type':'text','text':'原图源站暂时不可用，请稍后下载。'}]}) if route.request.post_data_json.get('name')=='download_catalog_image' else route.continue_())
+        page.locator('#reference-download').click()
+        page.locator('#download-feedback[data-state="error"]').wait_for()
+        assert '原图源站暂时不可用' in page.locator('#download-feedback-message').inner_text()
+        assert page.locator('#reference-download').is_enabled()
+        page.screenshot(path=str(RESULTS/'download-error-feedback.png'))
+        page.locator('#download-feedback').wait_for(state='hidden',timeout=6500)
+        page.locator('#close-reference-viewer').click()
         after=tool('get_state');assert after['draft']==before['draft'];assert after['tasks']==before['tasks']
         assert after['assets']==before['assets'];assert not errors,errors
         browser.close()

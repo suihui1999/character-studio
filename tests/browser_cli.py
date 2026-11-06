@@ -83,6 +83,8 @@ try:
             single.click()
         image_download=single_transfer.value
         assert Path(image_download.path()).read_bytes()==PNG
+        page.locator('#download-feedback[data-state="started"]').wait_for()
+        assert '下载位置：浏览器设置的下载文件夹' in page.locator('#download-feedback').inner_text()
         assert '通勤搭配' in image_download.suggested_filename and '服装_' in image_download.suggested_filename and '姿势_' in image_download.suggested_filename
         assert not page.locator('#viewer').is_visible()
         frame=record.locator('.result-frame').bounding_box();icon=single.bounding_box()
@@ -99,6 +101,8 @@ try:
             record.get_by_role('button',name='下载本批全部图片').click()
         archive=transfer.value
         assert '通勤搭配' in archive.suggested_filename
+        page.locator('#download-feedback[data-state="started"]').wait_for()
+        assert '下载位置：浏览器设置的下载文件夹' in page.locator('#download-feedback').inner_text()
         with zipfile.ZipFile(archive.path()) as z:
             assert len(z.namelist())==1
             for name in z.namelist():
@@ -106,6 +110,9 @@ try:
                 assert z.read(name)==PNG
         record.locator('[data-view]').first.click()
         assert '通勤搭配' in page.locator('#download').get_attribute('download')
+        with page.expect_download() as viewer_transfer:page.locator('#download').click()
+        assert Path(viewer_transfer.value.path()).read_bytes()==PNG
+        assert page.locator('#download-feedback').is_visible()
         page.locator('#close-viewer').click()
         page.screenshot(path=str(RESULTS/'batch-history-download.png'))
         page.locator('#close-success-history').click()

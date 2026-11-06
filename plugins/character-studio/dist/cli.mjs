@@ -8,8 +8,8 @@ import path from "node:path";
 import os from "node:os";
 
 // src/version.mjs
-var VERSION = false ? "0.4.0-dev" : "0.4.0";
-var BUILD_ID = false ? "development" : "f70797da02d7c4c9d136";
+var VERSION = false ? "0.4.1-dev" : "0.4.1";
+var BUILD_ID = false ? "development" : "3e17ff92b487d8b5de99";
 var SERVICE = "character-studio";
 
 // src/cli.mjs

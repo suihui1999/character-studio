@@ -99,6 +99,9 @@
 .result-download:hover{border-color:#cfcfcf;color:#111}
 .result-download:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .result-download[aria-disabled=true]{pointer-events:none;opacity:.45}
+#download-feedback{position:fixed;inset:auto auto 24px 50%;transform:translateX(-50%);width:max-content;max-width:min(420px,calc(100vw - 32px));margin:0;padding:10px 16px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);box-shadow:0 2px 10px #0002;font-size:13px;overflow-wrap:anywhere;text-align:center;pointer-events:none}
+#download-feedback[data-state=error]{color:var(--danger)}
+#download-feedback-message{margin-top:2px;font-size:12px;color:var(--muted)}
 .reference-image-frame{position:relative;width:fit-content;max-width:100%;margin:auto}
 .reference-image-frame .lightbox{display:block;max-width:100%;height:auto}
 #status:empty,#jobs:empty{display:none}
@@ -233,6 +236,9 @@
   </div>
 </main>
 
+<div id="download-feedback" popover="manual" role="status" aria-live="polite" aria-atomic="true">
+  <p id="download-feedback-title"></p><p id="download-feedback-message"></p>
+</div>
 <dialog id="onboarding-guide" aria-labelledby="onboarding-title">
   <div class="dialog-head"><h2 id="onboarding-title">使用指南</h2><button id="close-onboarding" type="button">关闭</button></div>
   <div class="guide-tabs" role="tablist" aria-label="渠道使用指南">
