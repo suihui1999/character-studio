@@ -16,7 +16,9 @@ async function setup(options={}){
   return {store,bridge:new AgentBridge(store,{pollMs:10,...options})};
 }
 test('an active waiter receives a newly submitted task with three local references',async()=>{
-  const {store,bridge}=await setup();const waiting=bridge.wait(input);await delay(20);assert.equal(bridge.status().connected,true);await store.batchAction('start');
+  const {store,bridge}=await setup();const waiting=bridge.wait(input);
+  for(let i=0;i<100&&!bridge.status().connected;i++)await delay(10);
+  assert.equal(bridge.status().connected,true);await store.batchAction('start');
   const result=await waiting;assert.equal(result.task.status,'running');assert.deepEqual(result.task.references.map(r=>r.kind),['portrait','costume','pose']);
   await assert.rejects(bridge.wait(input),/先回填/);await store.recordResult(result.task.id,{base64:PNG.toString('base64')});bridge.finish(result.task.id);assert.equal(bridge.status().connected,false);
 });
@@ -29,8 +31,22 @@ test('aborting a waiter releases the connection and never claims a draft task',a
   const {store,bridge}=await setup();const controller=new AbortController();const waiting=bridge.wait(input,controller.signal);await delay(20);controller.abort();await assert.rejects(waiting);assert.equal(bridge.status().connected,false);assert.equal((await store.refresh()).tasks[0].attempts,0);
 });
 test('a native generation that never returns becomes a visible paused failure',async()=>{
-  const {store,bridge}=await setup({processingMs:10});await store.batchAction('start');const next=await bridge.wait(input);await delay(25);await bridge.reconcile();
+  const {store,bridge}=await setup({processingMs:10});await store.batchAction('start');const next=await bridge.wait(input);await bridge.acknowledge(next.task.id);await delay(25);await bridge.reconcile();
   const state=await store.refresh();assert.equal(state.batch.status,'paused');assert.equal(state.tasks.find(t=>t.id===next.task.id).status,'failed');assert.match(state.execution.message,/超时未回填/);assert.equal(bridge.status().connected,false);
+});
+test('an unconfirmed claim expires and reconnect claims the remaining image without a manual Continue',async()=>{
+  const {store,bridge}=await setup();
+  await store.mutate(()=>store.state.tasks.push({...store.state.tasks[0],id:'next'}));
+  await store.batchAction('start');
+  const first=await bridge.wait(input);
+  assert.equal(bridge.status().phase,'claimed');
+  assert.equal((await store.refresh()).execution.phase,'claimed');
+  await store.mutate(()=>{store.state.tasks.find(t=>t.id===first.task.id).agentDeadline=Date.now()-1;});
+  const next=await bridge.wait({...input,sessionId:'new-session'});
+  assert.equal(next.task.id,'next');
+  const state=await store.refresh();
+  assert.match(state.tasks.find(t=>t.id===first.task.id).error,/未在限时内确认/);
+  assert.equal(state.batch.resumeOnReconnect,undefined);
 });
 test('idle and cancelled queues never claim; an unavailable tool is reported honestly',async()=>{
   const {store,bridge}=await setup();await store.batchAction('cancel');assert.equal((await bridge.wait({...input,timeoutMs:50})).reason,'idle');assert.equal((await store.refresh()).tasks[0].attempts,0);

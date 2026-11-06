@@ -10,9 +10,12 @@ Character Studio is a local-first workbench. The same business service supplies 
 | `src/catalog.mjs` | Read approved gallery metadata, filter references, cache the catalog |
 | `src/server.mjs` | Shared tool operations, loopback HTTP service, optional stdio MCP service |
 | `src/cli.mjs` | Start/reuse the local service and expose fixed commands to agents |
+| `src/launcher/` | Console-free Windows GUI launchers for the portable ZIP and embedded-package single EXE |
+| `scripts/build-launcher.ps1` | Compile launchers using the Windows .NET Framework compiler; embed the verified ZIP and installer |
 | `src/agent-bridge.mjs` | An actual active-agent wait request, task handoff, connection state, timeout handling |
 | `src/codex-executor.mjs` | Local Codex App Server execution using an existing login |
-| `src/runninghub-client.mjs` | Personal RunningHub app/workflow upload, submission, polling, and output retrieval |
+| `src/image-api-client.mjs` | OpenAI, Gemini, Seedream and custom image API requests, multi-reference upload, connection checks and real result retrieval |
+| `src/image-api-presets.mjs` | Shared service/model presets, supported ratios and official API Key guide links |
 | `src/provider-credentials.mjs` | Provider-specific local key storage and redaction boundaries |
 | `src/ui.mjs` / `src/workbench.html` | Selection, direct generation, progress, settings, and result history |
 

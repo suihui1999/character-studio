@@ -8,8 +8,8 @@ import path from "node:path";
 import os from "node:os";
 
 // src/version.mjs
-var VERSION = false ? "0.3.1-dev" : "0.3.1";
-var BUILD_ID = false ? "development" : "6f575dcc3574854baf3a";
+var VERSION = false ? "0.4.0-dev" : "0.4.0";
+var BUILD_ID = false ? "development" : "f70797da02d7c4c9d136";
 var SERVICE = "character-studio";
 
 // src/cli.mjs
@@ -190,13 +190,15 @@ async function main() {
     const service2 = await discover();
     return output({ service: SERVICE, version: VERSION, ready: !!service2, home: root, runtime: process.version, ...service2 ? { url: endpoint(service2.port), buildId: service2.buildId } : { message: "\u5C1A\u672A\u542F\u52A8\uFF0C\u8FD0\u884C open \u4F1A\u81EA\u52A8\u542F\u52A8\u3002" } });
   }
-  if (!["open", "state", "wait", "claim", "result", "disconnect", "unavailable"].includes(command)) throw Error("\u672A\u77E5\u547D\u4EE4\uFF0C\u8BF7\u8FD0\u884C help\u3002");
+  if (!["open", "state", "wait", "claim", "ack", "result", "disconnect", "unavailable"].includes(command)) throw Error("\u672A\u77E5\u547D\u4EE4\uFF0C\u8BF7\u8FD0\u884C help\u3002");
   const service = await ensure();
   if (command === "open") {
-    const executor = flags.executor || "agent";
+    const current = await call(service, "get_state");
+    const executor = flags.executor || (current.channelSetup ? "keep" : "agent");
     if (!["agent", "codex", "keep"].includes(executor)) throw Error("executor \u53EA\u80FD\u4E3A agent\u3001codex \u6216 keep");
+    if (flags.host !== void 0 && flags.host !== "doubao") throw Error("host \u76EE\u524D\u53EA\u652F\u6301 doubao");
     await call(service, "open_workbench", executor === "keep" ? {} : { executor });
-    const url = endpoint(service.port);
+    const url = endpoint(service.port) + (flags.host === "doubao" ? "/?host=doubao" : "");
     if (!flags["no-browser"]) {
       try {
         await openBrowser(url);
@@ -204,10 +206,15 @@ async function main() {
         throw Error("\u5DE5\u4F5C\u53F0\u5DF2\u542F\u52A8\uFF0C\u4F46\u65E0\u6CD5\u81EA\u52A8\u6253\u5F00\u6D4F\u89C8\u5668\u3002\u8BF7\u6253\u5F00 " + url);
       }
     }
-    return output({ opened: true, url, browserRequested: !flags["no-browser"], version: VERSION, buildId: service.buildId, agentStep: "\u786E\u8BA4\u672C\u4F1A\u8BDD\u6709\u770B\u56FE\u3001\u751F\u56FE\u548C\u7ED3\u679C\u6587\u4EF6\u5DE5\u5177\u540E\uFF0C\u8FD0\u884C wait --agent \u5BBF\u4E3B\u540D --image-tool \u5B9E\u9645\u5DE5\u5177\u540D\uFF0C\u4FDD\u6301\u7B49\u5F85\u7528\u6237\u63D0\u4EA4\u3002\u6CA1\u6709\u76F8\u5E94\u5DE5\u5177\u5219\u8FD0\u884C unavailable --reason \u5177\u4F53\u539F\u56E0\u3002" });
+    const agentStep = flags.host === "doubao" ? "\u6309\u5B89\u88C5\u76EE\u5F55\u4E2D\u7684\u6280\u80FD\u5148\u5F15\u5BFC\u8FDE\u63A5\u6E20\u9053\u3002\u4F7F\u7528\u8C46\u5305\u65F6\u5148\u68C0\u67E5\u672C\u4F1A\u8BDD\u770B\u56FE\u3001\u751F\u56FE\u548C\u771F\u5B9E\u6587\u4EF6\u56DE\u586B\u80FD\u529B\uFF0C\u5EFA\u7ACB\u771F\u5B9E\u7B49\u5F85\uFF1B\u7F3A\u5C11\u5DE5\u5177\u7528 unavailable \u62A5\u544A\u539F\u56E0\u3002\u5DF2\u4FDD\u5B58\u7684\u5176\u4ED6\u6E20\u9053\u4FDD\u6301\u539F\u9009\u62E9\u3002\u63D0\u4EA4\u540E\u53EF\u53D1\u9001\u300C\u5904\u7406\u5DE5\u4F5C\u53F0\u91CC\u5F85\u751F\u6210\u7684\u56FE\u7247\u300D\u63A5\u624B\u6574\u6279\uFF1B\u6D4B\u8BD5\u56FE\u4F7F\u7528\u540C\u6837\u7684 wait/ack/result \u6D41\u7A0B\u3002" : "\u786E\u8BA4\u672C\u4F1A\u8BDD\u6709\u770B\u56FE\u3001\u751F\u56FE\u548C\u7ED3\u679C\u6587\u4EF6\u5DE5\u5177\u540E\uFF0C\u8FD0\u884C wait --follow --agent \u5BBF\u4E3B\u540D --image-tool \u5B9E\u9645\u5DE5\u5177\u540D\uFF0C\u4FDD\u6301\u7B49\u5F85\u7528\u6237\u63D0\u4EA4\u3002\u6CA1\u6709\u76F8\u5E94\u5DE5\u5177\u5219\u8FD0\u884C unavailable --reason \u5177\u4F53\u539F\u56E0\u3002";
+    return output({ opened: true, url, browserRequested: !flags["no-browser"], version: VERSION, buildId: service.buildId, agentStep });
   }
   if (command === "state") return output(await call(service, "get_state"));
   if (command === "claim") return output(await call(service, "claim_next_task"));
+  if (command === "ack") {
+    if (typeof flags.task !== "string") throw Error("ack \u9700\u8981 --task \u4EFB\u52A1ID");
+    return output(await call(service, "agent_ack_task", { taskId: flags.task }));
+  }
   if (command === "result") {
     if (typeof flags.task !== "string" || typeof flags.file === "string" === (typeof flags.error === "string")) throw Error("result \u9700\u8981 --task\uFF0C\u4EE5\u53CA --file \u6216 --error \u4E2D\u7684\u4E00\u9879");
     return output(await call(service, "record_result", { taskId: flags.task, ...flags.file ? { filePath: path.resolve(flags.file) } : { error: flags.error } }));
@@ -220,7 +227,11 @@ async function main() {
   }
   if (typeof flags.agent !== "string" || typeof flags["image-tool"] !== "string") throw Error("\u7B49\u5F85\u524D\u9700\u586B\u5199 --agent \u548C\u672C\u4F1A\u8BDD\u5B9E\u9645\u53EF\u7528\u7684 --image-tool \u540D\u79F0\uFF1B\u4E0D\u80FD\u51ED\u5BA2\u6237\u7AEF\u6709\u751F\u56FE\u6309\u94AE\u5BA3\u79F0\u5DF2\u63A5\u901A\u3002");
   const timeoutMs = flags.timeout ? Number(flags.timeout) * 1e3 : 45e3;
-  return output(await call(service, "agent_wait", { sessionId: id, agentName: flags.agent, imageTool: flags["image-tool"], timeoutMs }, timeoutMs + 7e3));
+  const renew = flags.follow === true;
+  for (; ; ) {
+    const result = await call(service, "agent_wait", { sessionId: id, agentName: flags.agent, imageTool: flags["image-tool"], timeoutMs, renew }, timeoutMs + 1e5);
+    if (!renew || result.reason !== "idle") return output(result);
+  }
 }
 main().catch((error) => {
   output({ ok: false, error: error.message });

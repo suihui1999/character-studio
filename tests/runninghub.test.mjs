@@ -8,6 +8,8 @@ import {RunningHubClient} from '../src/runninghub-client.mjs';
 import {GenerationRunner} from '../src/codex-executor.mjs';
 import {remoteId,parseExample,importedNodes,validatePreset} from '../src/generation-models.mjs';
 import {fakeRunningHub,PNG,KEYS,NODES} from './fixtures/fake-runninghub.mjs';
+import {GenerationChecks} from '../src/generation-checks.mjs';
+import {AgentBridge} from '../src/agent-bridge.mjs';
 async function setup(t,provider='runninghub-cn',kind='app',mode='success'){
   const root=await mkdtemp(path.join(os.tmpdir(),'studio-personal-')),store=await new Store(root).init();const remote=await fakeRunningHub({mode});t.after(()=>remote.close());
   const credentials=new ProviderCredentials(store,{env:{}});await credentials.save({[provider]:KEYS[provider]});
@@ -35,6 +37,21 @@ test('consumer AI apps and workflows upload three references and persist actual 
 });
 test('consumer task rejection is visible and skips forward to the next independent task',async t=>{
   const {store,runner,remote}=await setup(t,'runninghub-cn','app','reject-first');await runner.start();await runner.job;const s=await store.refresh();assert.equal(s.batch.failedCount,1);assert.match(s.batch.lastError,/moderation_blocked.*remote-1/);assert.equal(s.tasks[0].status,'done');assert.equal(remote.submitted.length,2);
+});
+test('confirmed paid capability test runs one combination and leaves the pending user batch intact',async t=>{
+  const {store,runner,client,remote}=await setup(t);
+  const before=await store.refresh();
+  const checks=new GenerationChecks(store,runner,client,new AgentBridge(store));
+  await checks.start({provider:'runninghub-cn',costConfirmed:true});
+  for(let i=0;i<150;i++){
+    if((await store.refresh()).generationChecks?.['runninghub-cn']?.status==='verified')break;
+    await new Promise(resolve=>setTimeout(resolve,25));
+  }
+  const after=await store.refresh(),check=after.generationChecks['runninghub-cn'];
+  assert.equal(check.status,'verified');assert.equal(remote.submitted.length,1);
+  assert.equal(after.batch.id,before.batch.id);assert.equal(after.batch.status,'queued');
+  assert.deepEqual(after.draft,before.draft);assert.deepEqual(after.tasks,before.tasks);
+  assert.deepEqual(await readFile(after.assets[check.resultId].path),PNG);
 });
 test('personal credentials survive reopening, never enter snapshots, and remain separated by site',async t=>{
   const {store,credentials}=await setup(t);assert.equal(await new ProviderCredentials(store,{env:{}}).key('runninghub-cn'),KEYS['runninghub-cn']);

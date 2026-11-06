@@ -1,8 +1,14 @@
-export const PROVIDERS=[{id:'codex',name:'本机 Codex 生图'},{id:'agent',name:'当前 Agent 原生生图'},{id:'runninghub-cn',name:'RunningHub 国内站'},{id:'runninghub-global',name:'RunningHub 国际站'}];
+import {IMAGE_API_SERVICES,isImageApi,validateImageApiPreset} from './image-api-presets.mjs';
+export const PROVIDERS=[{id:'codex',name:'本机 Codex 生图'},{id:'agent',name:'当前 Agent 原生生图'},...IMAGE_API_SERVICES.map(({id,name})=>({id,name}))];
 export const isNativeProvider=provider=>provider==='codex'||provider==='agent';
+export function matchesAgentHost(host,name){
+  if(!host)return true;
+  return host==='doubao'?/豆包|doubao/i.test(name||''):/codex/i.test(name||'');
+}
 export const REFERENCE_LABELS={portrait:'主角',costume:'服装',pose:'姿势'};
 const DEFAULT_RATIOS=['3:4','1:1','4:3','9:16','16:9'];
 export function outputRatios(preset){
+  if(preset?.kind==='image-api')return preset.ratios;
   const choices=preset?.nodes.find(n=>n.source==='ratio'&&n.options?.length)?.options;
   return choices?choices.map(o=>o.value).filter(v=>typeof v==='string'&&/^\d{1,3}:\d{1,3}$/.test(v)):DEFAULT_RATIOS;
 }
@@ -17,6 +23,7 @@ export function queueInputs(draft,provider,preset){
 }
 export function referenceCompatibility(preset,kinds,ratio){
   if(!preset)return '';
+  if(preset.kind==='image-api')return preset.ratios.includes(ratio)?'':'当前模型不支持 '+ratio+'，请更换模型或输出比例。';
   const sources=new Set(preset.nodes.map(n=>n.source));
   for(const kind of Object.keys(REFERENCE_LABELS)){
     if(!kinds.includes(kind)&&(sources.has(kind)||sources.has('references')&&!preset.allowPartialReferences)){
@@ -35,7 +42,7 @@ export function selectedPreset(presets,provider,id){
 }
 export const RH_ORIGINS={'runninghub-cn':'https://www.runninghub.cn','runninghub-global':'https://www.runninghub.ai'};
 export const INPUT_SOURCES=[['fixed','保留原值'],['portrait','主角参考图'],['costume','服装参考图'],['pose','姿势参考图'],['references','参考图列表（JSON）'],['prompt','任务提示词'],['ratio','输出比例'],['width','输出宽度'],['height','输出高度']];
-export function checkProvider(provider){if(!PROVIDERS.some(p=>p.id===provider))throw Error('未知生图渠道');return provider;}
+export function checkProvider(provider){if(!PROVIDERS.some(p=>p.id===provider)&&!RH_ORIGINS[provider])throw Error('未知生图渠道');return provider;}
 export function remoteId(provider,value){
   if(!RH_ORIGINS[provider])throw Error('请选择 RunningHub 站点');value=String(value).trim();if(/^\d{1,30}$/.test(value))return value;
   let url;try{url=new URL(value);}catch{throw Error('请输入应用/工作流链接或数字 ID');}
@@ -72,6 +79,7 @@ export function importedNodes(example,kind){
   });
 }
 export function validatePreset(preset){
+  if(isImageApi(preset?.provider))return validateImageApiPreset(preset);
   checkProvider(preset.provider);if(!RH_ORIGINS[preset.provider]||!['app','workflow'].includes(preset.kind))throw Error('请选择个人版 AI 应用或工作流');
   const id=remoteId(preset.provider,preset.remoteId);if(!preset.name?.trim()||preset.name.length>150)throw Error('请填写模型预设名称');
   if(!Array.isArray(preset.nodes)||!preset.nodes.length||preset.nodes.length>300)throw Error('请先导入输入字段');

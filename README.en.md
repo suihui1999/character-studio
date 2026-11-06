@@ -6,29 +6,38 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tests](https://github.com/web3suihuiji-ctrl/character-studio/actions/workflows/windows.yml/badge.svg)](https://github.com/web3suihuiji-ctrl/character-studio/actions/workflows/windows.yml)
 
-A local character image workbench for people new to AI. Pick a character from the portrait gallery or upload one, select outfits and poses, and generate images using an agent's existing image tools or your own RunningHub account.
+A local character image workbench for people new to AI. Pick a character from the portrait gallery or upload one, select outfits and poses, and generate images using an agent's existing image tools or a supported image API.
 
 ## Install and open
+
+**Open directly on your Windows computer:**
+
+- [Download the EXE](https://github.com/web3suihuiji-ctrl/character-studio/releases/latest/download/Character-Studio-Windows-x64.exe) and double-click it. The first launch prepares the application and opens the workbench in your browser.
+- [Download the ZIP](https://github.com/web3suihuiji-ctrl/character-studio/releases/latest/download/character-studio-windows-x64.zip), extract everything, and double-click **Character Studio.exe**. Keep the adjacent `runtime`, `dist`, and other folders together.
+
+Both downloads are approximately 40 MB and include the runtime. Node.js installation and administrator access are not required. Images and settings stay in the same local data directory. The EXE is currently unsigned. API generation uses the selected service's key; native agent generation still requires the relevant agent and executor.
+
+**Open through an agent:**
 
 Send this message to an agent that can run programs on your Windows computer:
 
 > Install and open https://github.com/web3suihuiji-ctrl/character-studio . Follow INSTALL.en.md, connect your existing image-generation tools, and wait for me to submit a task in the workbench.
 
-The agent downloads a prebuilt Windows package and starts the workbench. The runtime is included: users do not need to install Node.js, configure an MCP connector, or download reference images individually. Compatible hosts can display the workbench inside the chat; otherwise it opens in the local browser.
+The agent downloads a prebuilt Windows package and starts the workbench. The runtime is included: users do not need to install Node.js, configure an MCP connector, or download reference images individually. Doubao Work on desktop tries Doubao’s built-in browser first. Other compatible hosts can display the workbench inside the chat. If the built-in option cannot open the page, the agent uses the system browser.
 
-[Download the Windows release](https://github.com/web3suihuiji-ctrl/character-studio/releases/latest). The download is approximately 35 MB and does not include the full external image libraries.
+[Download the Windows release](https://github.com/web3suihuiji-ctrl/character-studio/releases/latest). The download is approximately 40 MB and does not include the full external image libraries.
 
 **Local Windows installation, task handoff, and result persistence are tested. Doubao Work's native image generation and output file compatibility still require testing in the target client.** The workbench UI is in Simplified Chinese.
 
 ## Create an image
 
 1. Pick a portrait or upload a character reference.
-2. Select one or more outfits and poses.
-3. Choose a generation provider and aspect ratio, then click Generate. You can also preview the combinations first.
+2. Open an outfit or pose to preview it, then confirm your selection. You can select multiple references and show 6, 9, or 12 images per page.
+3. Choose a generation provider and aspect ratio, then click Generate to submit the whole batch. You can preview the combinations first.
 
-You can pause, cancel, retry an individual image, or expand the saved success history. The generation panel lets you edit the default prompt.
+You can pause, cancel, or retry an individual image. The successful results dialog groups images by batch, with names, counts and ZIP downloads. Each result has a download icon in its lower-right corner for saving the original image. The generation panel lets you edit the default prompt.
 
-The browser route requires a connected, running agent. It cannot wake a chat that has already ended. If native generation is unavailable, you can explicitly choose RunningHub China or Global and enter your personal API key in the local workbench. Automatic switching to paid providers is disabled.
+The browser route requires an active agent. Alternatively, select Image API and choose OpenAI, Google Gemini, Volcengine Seedream, or a custom compatible endpoint. Use the small Key guide and Manage API Key buttons to configure the selected service in a dialog. The app never switches to a paid API automatically.
 
 ## Compatibility
 
@@ -37,10 +46,10 @@ The browser route requires a connected, running agent. It cannot wake a chat tha
 | Windows x64 | Bundled runtime; local installation, repair, startup, and reuse tested |
 | Codex | Local executor and MCP Apps entry point; generation depends on the account and available tools |
 | Doubao Work | CLI entry point without MCP registration; native image output still needs client acceptance |
-| RunningHub China / Global | Includes the Qwen 2.1 outfit and pose workflow for each site. Enter your personal API key for the site you choose. |
+| Image APIs | Three built-in services and model presets, plus custom OpenAI image-edit, Gemini, and Seedream endpoints. Protocols and UI are tested against isolated fixtures; live access and quotas depend on the provider account. |
 | macOS / Linux | No end-user distribution yet |
 
-Select a RunningHub site, then use the guide and key buttons to register and enter your key. The built-in workflow requires a character, an outfit, and a pose. See [providers](docs/providers.md) and [troubleshooting](docs/troubleshooting.md).
+Choose one character, then an outfit, a pose, or both. Generated images return to the local successful results history. See [providers](docs/providers.md) and [troubleshooting](docs/troubleshooting.md).
 
 ## Local data and external libraries
 

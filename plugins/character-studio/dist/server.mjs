@@ -5,7 +5,13 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __commonJS = (cb, mod) => function __require() {
+var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
+  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
+}) : x)(function(x) {
+  if (typeof require !== "undefined") return require.apply(this, arguments);
+  throw Error('Dynamic require of "' + x + '" is not supported');
+});
+var __commonJS = (cb, mod) => function __require2() {
   try {
     return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
   } catch (e) {
@@ -3262,8 +3268,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path6) {
-      let input2 = path6;
+    function removeDotSegments(path8) {
+      let input2 = path8;
       const output2 = [];
       let nextSlash = -1;
       let len = 0;
@@ -3337,11 +3343,11 @@ var require_utils = __commonJS({
       }
       return output2.join("");
     }
-    function removeDotSegmentsRelative(path6) {
-      if (path6 === "" || path6[0] === "/") {
-        return removeDotSegments(path6);
+    function removeDotSegmentsRelative(path8) {
+      if (path8 === "" || path8[0] === "/") {
+        return removeDotSegments(path8);
       }
-      const segments = path6.split("/");
+      const segments = path8.split("/");
       const last = segments.length - 1;
       const output2 = [];
       let trailingDirectory = false;
@@ -3704,8 +3710,8 @@ var require_schemes = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path6 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path6 && path6 !== "/" ? path6 : void 0;
+        const path8 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path8 && path8 !== "/" ? path8 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -7255,6 +7261,954 @@ var require_dist = __commonJS({
   }
 });
 
+// node_modules/buffer-crc32/dist/index.cjs
+var require_dist2 = __commonJS({
+  "node_modules/buffer-crc32/dist/index.cjs"(exports, module) {
+    "use strict";
+    function getDefaultExportFromCjs(x) {
+      return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
+    }
+    var CRC_TABLE = new Int32Array([
+      0,
+      1996959894,
+      3993919788,
+      2567524794,
+      124634137,
+      1886057615,
+      3915621685,
+      2657392035,
+      249268274,
+      2044508324,
+      3772115230,
+      2547177864,
+      162941995,
+      2125561021,
+      3887607047,
+      2428444049,
+      498536548,
+      1789927666,
+      4089016648,
+      2227061214,
+      450548861,
+      1843258603,
+      4107580753,
+      2211677639,
+      325883990,
+      1684777152,
+      4251122042,
+      2321926636,
+      335633487,
+      1661365465,
+      4195302755,
+      2366115317,
+      997073096,
+      1281953886,
+      3579855332,
+      2724688242,
+      1006888145,
+      1258607687,
+      3524101629,
+      2768942443,
+      901097722,
+      1119000684,
+      3686517206,
+      2898065728,
+      853044451,
+      1172266101,
+      3705015759,
+      2882616665,
+      651767980,
+      1373503546,
+      3369554304,
+      3218104598,
+      565507253,
+      1454621731,
+      3485111705,
+      3099436303,
+      671266974,
+      1594198024,
+      3322730930,
+      2970347812,
+      795835527,
+      1483230225,
+      3244367275,
+      3060149565,
+      1994146192,
+      31158534,
+      2563907772,
+      4023717930,
+      1907459465,
+      112637215,
+      2680153253,
+      3904427059,
+      2013776290,
+      251722036,
+      2517215374,
+      3775830040,
+      2137656763,
+      141376813,
+      2439277719,
+      3865271297,
+      1802195444,
+      476864866,
+      2238001368,
+      4066508878,
+      1812370925,
+      453092731,
+      2181625025,
+      4111451223,
+      1706088902,
+      314042704,
+      2344532202,
+      4240017532,
+      1658658271,
+      366619977,
+      2362670323,
+      4224994405,
+      1303535960,
+      984961486,
+      2747007092,
+      3569037538,
+      1256170817,
+      1037604311,
+      2765210733,
+      3554079995,
+      1131014506,
+      879679996,
+      2909243462,
+      3663771856,
+      1141124467,
+      855842277,
+      2852801631,
+      3708648649,
+      1342533948,
+      654459306,
+      3188396048,
+      3373015174,
+      1466479909,
+      544179635,
+      3110523913,
+      3462522015,
+      1591671054,
+      702138776,
+      2966460450,
+      3352799412,
+      1504918807,
+      783551873,
+      3082640443,
+      3233442989,
+      3988292384,
+      2596254646,
+      62317068,
+      1957810842,
+      3939845945,
+      2647816111,
+      81470997,
+      1943803523,
+      3814918930,
+      2489596804,
+      225274430,
+      2053790376,
+      3826175755,
+      2466906013,
+      167816743,
+      2097651377,
+      4027552580,
+      2265490386,
+      503444072,
+      1762050814,
+      4150417245,
+      2154129355,
+      426522225,
+      1852507879,
+      4275313526,
+      2312317920,
+      282753626,
+      1742555852,
+      4189708143,
+      2394877945,
+      397917763,
+      1622183637,
+      3604390888,
+      2714866558,
+      953729732,
+      1340076626,
+      3518719985,
+      2797360999,
+      1068828381,
+      1219638859,
+      3624741850,
+      2936675148,
+      906185462,
+      1090812512,
+      3747672003,
+      2825379669,
+      829329135,
+      1181335161,
+      3412177804,
+      3160834842,
+      628085408,
+      1382605366,
+      3423369109,
+      3138078467,
+      570562233,
+      1426400815,
+      3317316542,
+      2998733608,
+      733239954,
+      1555261956,
+      3268935591,
+      3050360625,
+      752459403,
+      1541320221,
+      2607071920,
+      3965973030,
+      1969922972,
+      40735498,
+      2617837225,
+      3943577151,
+      1913087877,
+      83908371,
+      2512341634,
+      3803740692,
+      2075208622,
+      213261112,
+      2463272603,
+      3855990285,
+      2094854071,
+      198958881,
+      2262029012,
+      4057260610,
+      1759359992,
+      534414190,
+      2176718541,
+      4139329115,
+      1873836001,
+      414664567,
+      2282248934,
+      4279200368,
+      1711684554,
+      285281116,
+      2405801727,
+      4167216745,
+      1634467795,
+      376229701,
+      2685067896,
+      3608007406,
+      1308918612,
+      956543938,
+      2808555105,
+      3495958263,
+      1231636301,
+      1047427035,
+      2932959818,
+      3654703836,
+      1088359270,
+      936918e3,
+      2847714899,
+      3736837829,
+      1202900863,
+      817233897,
+      3183342108,
+      3401237130,
+      1404277552,
+      615818150,
+      3134207493,
+      3453421203,
+      1423857449,
+      601450431,
+      3009837614,
+      3294710456,
+      1567103746,
+      711928724,
+      3020668471,
+      3272380065,
+      1510334235,
+      755167117
+    ]);
+    function ensureBuffer(input2) {
+      if (Buffer.isBuffer(input2)) {
+        return input2;
+      }
+      if (typeof input2 === "number") {
+        return Buffer.alloc(input2);
+      } else if (typeof input2 === "string") {
+        return Buffer.from(input2);
+      } else {
+        throw new Error("input must be buffer, number, or string, received " + typeof input2);
+      }
+    }
+    function bufferizeInt(num) {
+      const tmp = ensureBuffer(4);
+      tmp.writeInt32BE(num, 0);
+      return tmp;
+    }
+    function _crc32(buf, previous) {
+      buf = ensureBuffer(buf);
+      if (Buffer.isBuffer(previous)) {
+        previous = previous.readUInt32BE(0);
+      }
+      let crc = ~~previous ^ -1;
+      for (var n = 0; n < buf.length; n++) {
+        crc = CRC_TABLE[(crc ^ buf[n]) & 255] ^ crc >>> 8;
+      }
+      return crc ^ -1;
+    }
+    function crc32() {
+      return bufferizeInt(_crc32.apply(null, arguments));
+    }
+    crc32.signed = function() {
+      return _crc32.apply(null, arguments);
+    };
+    crc32.unsigned = function() {
+      return _crc32.apply(null, arguments) >>> 0;
+    };
+    var bufferCrc32 = crc32;
+    var index = /* @__PURE__ */ getDefaultExportFromCjs(bufferCrc32);
+    module.exports = index;
+  }
+});
+
+// node_modules/yazl/index.js
+var require_yazl = __commonJS({
+  "node_modules/yazl/index.js"(exports) {
+    var fs = __require("fs");
+    var Transform = __require("stream").Transform;
+    var PassThrough = __require("stream").PassThrough;
+    var zlib = __require("zlib");
+    var util2 = __require("util");
+    var EventEmitter2 = __require("events").EventEmitter;
+    var errorMonitor = __require("events").errorMonitor;
+    var crc32 = require_dist2();
+    exports.ZipFile = ZipFile;
+    exports.dateToDosDateTime = dateToDosDateTime;
+    util2.inherits(ZipFile, EventEmitter2);
+    function ZipFile() {
+      this.outputStream = new PassThrough();
+      this.entries = [];
+      this.outputStreamCursor = 0;
+      this.ended = false;
+      this.allDone = false;
+      this.forceZip64Eocd = false;
+      this.errored = false;
+      this.on(errorMonitor, function() {
+        this.errored = true;
+      });
+    }
+    ZipFile.prototype.addFile = function(realPath, metadataPath, options) {
+      var self = this;
+      metadataPath = validateMetadataPath(metadataPath, false);
+      if (options == null) options = {};
+      if (shouldIgnoreAdding(self)) return;
+      var entry = new Entry(metadataPath, false, options);
+      self.entries.push(entry);
+      fs.stat(realPath, function(err, stats) {
+        if (err) return self.emit("error", err);
+        if (!stats.isFile()) return self.emit("error", new Error("not a file: " + realPath));
+        entry.uncompressedSize = stats.size;
+        if (options.mtime == null) entry.setLastModDate(stats.mtime);
+        if (options.mode == null) entry.setFileAttributesMode(stats.mode);
+        entry.setFileDataPumpFunction(function() {
+          var readStream = fs.createReadStream(realPath);
+          entry.state = Entry.FILE_DATA_IN_PROGRESS;
+          readStream.on("error", function(err2) {
+            self.emit("error", err2);
+          });
+          pumpFileDataReadStream(self, entry, readStream);
+        });
+        pumpEntries(self);
+      });
+    };
+    ZipFile.prototype.addReadStream = function(readStream, metadataPath, options) {
+      this.addReadStreamLazy(metadataPath, options, function(cb) {
+        cb(null, readStream);
+      });
+    };
+    ZipFile.prototype.addReadStreamLazy = function(metadataPath, options, getReadStreamFunction) {
+      var self = this;
+      if (typeof options === "function") {
+        getReadStreamFunction = options;
+        options = null;
+      }
+      if (options == null) options = {};
+      metadataPath = validateMetadataPath(metadataPath, false);
+      if (shouldIgnoreAdding(self)) return;
+      var entry = new Entry(metadataPath, false, options);
+      self.entries.push(entry);
+      entry.setFileDataPumpFunction(function() {
+        entry.state = Entry.FILE_DATA_IN_PROGRESS;
+        getReadStreamFunction(function(err, readStream) {
+          if (err) return self.emit("error", err);
+          pumpFileDataReadStream(self, entry, readStream);
+        });
+      });
+      pumpEntries(self);
+    };
+    ZipFile.prototype.addBuffer = function(buffer, metadataPath, options) {
+      var self = this;
+      metadataPath = validateMetadataPath(metadataPath, false);
+      if (buffer.length > 1073741823) throw new Error("buffer too large: " + buffer.length + " > 1073741823");
+      if (options == null) options = {};
+      if (options.size != null) throw new Error("options.size not allowed");
+      if (shouldIgnoreAdding(self)) return;
+      var entry = new Entry(metadataPath, false, options);
+      entry.uncompressedSize = buffer.length;
+      entry.crc32 = crc32.unsigned(buffer);
+      entry.crcAndFileSizeKnown = true;
+      self.entries.push(entry);
+      if (entry.compressionLevel === 0) {
+        setCompressedBuffer(buffer);
+      } else {
+        zlib.deflateRaw(buffer, { level: entry.compressionLevel }, function(err, compressedBuffer) {
+          setCompressedBuffer(compressedBuffer);
+        });
+      }
+      function setCompressedBuffer(compressedBuffer) {
+        entry.compressedSize = compressedBuffer.length;
+        entry.setFileDataPumpFunction(function() {
+          writeToOutputStream(self, compressedBuffer);
+          writeToOutputStream(self, entry.getDataDescriptor());
+          entry.state = Entry.FILE_DATA_DONE;
+          setImmediate(function() {
+            pumpEntries(self);
+          });
+        });
+        pumpEntries(self);
+      }
+    };
+    ZipFile.prototype.addEmptyDirectory = function(metadataPath, options) {
+      var self = this;
+      metadataPath = validateMetadataPath(metadataPath, true);
+      if (options == null) options = {};
+      if (options.size != null) throw new Error("options.size not allowed");
+      if (options.compress != null) throw new Error("options.compress not allowed");
+      if (options.compressionLevel != null) throw new Error("options.compressionLevel not allowed");
+      if (shouldIgnoreAdding(self)) return;
+      var entry = new Entry(metadataPath, true, options);
+      self.entries.push(entry);
+      entry.setFileDataPumpFunction(function() {
+        writeToOutputStream(self, entry.getDataDescriptor());
+        entry.state = Entry.FILE_DATA_DONE;
+        pumpEntries(self);
+      });
+      pumpEntries(self);
+    };
+    var eocdrSignatureBuffer = bufferFrom([80, 75, 5, 6]);
+    ZipFile.prototype.end = function(options, calculatedTotalSizeCallback) {
+      if (typeof options === "function") {
+        calculatedTotalSizeCallback = options;
+        options = null;
+      }
+      if (options == null) options = {};
+      if (this.ended) return;
+      this.ended = true;
+      if (this.errored) return;
+      this.calculatedTotalSizeCallback = calculatedTotalSizeCallback;
+      this.forceZip64Eocd = !!options.forceZip64Format;
+      if (options.comment) {
+        if (typeof options.comment === "string") {
+          this.comment = encodeCp437(options.comment);
+        } else {
+          this.comment = options.comment;
+        }
+        if (this.comment.length > 65535) throw new Error("comment is too large");
+        if (bufferIncludes(this.comment, eocdrSignatureBuffer)) throw new Error("comment contains end of central directory record signature");
+      } else {
+        this.comment = EMPTY_BUFFER;
+      }
+      pumpEntries(this);
+    };
+    function writeToOutputStream(self, buffer) {
+      self.outputStream.write(buffer);
+      self.outputStreamCursor += buffer.length;
+    }
+    function pumpFileDataReadStream(self, entry, readStream) {
+      var crc32Watcher = new Crc32Watcher();
+      var uncompressedSizeCounter = new ByteCounter();
+      var compressor = entry.compressionLevel !== 0 ? new zlib.DeflateRaw({ level: entry.compressionLevel }) : new PassThrough();
+      var compressedSizeCounter = new ByteCounter();
+      readStream.pipe(crc32Watcher).pipe(uncompressedSizeCounter).pipe(compressor).pipe(compressedSizeCounter).pipe(self.outputStream, { end: false });
+      compressedSizeCounter.on("end", function() {
+        entry.crc32 = crc32Watcher.crc32;
+        if (entry.uncompressedSize == null) {
+          entry.uncompressedSize = uncompressedSizeCounter.byteCount;
+        } else {
+          if (entry.uncompressedSize !== uncompressedSizeCounter.byteCount) return self.emit("error", new Error("file data stream has unexpected number of bytes"));
+        }
+        entry.compressedSize = compressedSizeCounter.byteCount;
+        self.outputStreamCursor += entry.compressedSize;
+        writeToOutputStream(self, entry.getDataDescriptor());
+        entry.state = Entry.FILE_DATA_DONE;
+        pumpEntries(self);
+      });
+    }
+    function determineCompressionLevel(options) {
+      if (options.compress != null && options.compressionLevel != null) {
+        if (!!options.compress !== !!options.compressionLevel) throw new Error("conflicting settings for compress and compressionLevel");
+      }
+      if (options.compressionLevel != null) return options.compressionLevel;
+      if (options.compress === false) return 0;
+      return 6;
+    }
+    function pumpEntries(self) {
+      if (self.allDone || self.errored) return;
+      if (self.ended && self.calculatedTotalSizeCallback != null) {
+        var calculatedTotalSize = calculateTotalSize(self);
+        if (calculatedTotalSize != null) {
+          self.calculatedTotalSizeCallback(calculatedTotalSize);
+          self.calculatedTotalSizeCallback = null;
+        }
+      }
+      var entry = getFirstNotDoneEntry();
+      function getFirstNotDoneEntry() {
+        for (var i = 0; i < self.entries.length; i++) {
+          var entry2 = self.entries[i];
+          if (entry2.state < Entry.FILE_DATA_DONE) return entry2;
+        }
+        return null;
+      }
+      if (entry != null) {
+        if (entry.state < Entry.READY_TO_PUMP_FILE_DATA) return;
+        if (entry.state === Entry.FILE_DATA_IN_PROGRESS) return;
+        entry.relativeOffsetOfLocalHeader = self.outputStreamCursor;
+        var localFileHeader = entry.getLocalFileHeader();
+        writeToOutputStream(self, localFileHeader);
+        entry.doFileDataPump();
+      } else {
+        if (self.ended) {
+          self.offsetOfStartOfCentralDirectory = self.outputStreamCursor;
+          self.entries.forEach(function(entry2) {
+            var centralDirectoryRecord = entry2.getCentralDirectoryRecord();
+            writeToOutputStream(self, centralDirectoryRecord);
+          });
+          writeToOutputStream(self, getEndOfCentralDirectoryRecord(self));
+          self.outputStream.end();
+          self.allDone = true;
+        }
+      }
+    }
+    function calculateTotalSize(self) {
+      var pretendOutputCursor = 0;
+      var centralDirectorySize = 0;
+      for (var i = 0; i < self.entries.length; i++) {
+        var entry = self.entries[i];
+        if (entry.compressionLevel !== 0) return -1;
+        if (entry.state >= Entry.READY_TO_PUMP_FILE_DATA) {
+          if (entry.uncompressedSize == null) return -1;
+        } else {
+          if (entry.uncompressedSize == null) return null;
+        }
+        entry.relativeOffsetOfLocalHeader = pretendOutputCursor;
+        var useZip64Format = entry.useZip64Format();
+        pretendOutputCursor += LOCAL_FILE_HEADER_FIXED_SIZE + entry.utf8FileName.length;
+        pretendOutputCursor += entry.uncompressedSize;
+        if (!entry.crcAndFileSizeKnown) {
+          if (useZip64Format) {
+            pretendOutputCursor += ZIP64_DATA_DESCRIPTOR_SIZE;
+          } else {
+            pretendOutputCursor += DATA_DESCRIPTOR_SIZE;
+          }
+        }
+        centralDirectorySize += CENTRAL_DIRECTORY_RECORD_FIXED_SIZE + entry.utf8FileName.length + entry.fileComment.length;
+        if (!entry.forceDosTimestamp) {
+          centralDirectorySize += INFO_ZIP_UNIVERSAL_TIMESTAMP_EXTRA_FIELD_SIZE;
+        }
+        if (useZip64Format) {
+          centralDirectorySize += ZIP64_EXTENDED_INFORMATION_EXTRA_FIELD_SIZE;
+        }
+      }
+      var endOfCentralDirectorySize = 0;
+      if (self.forceZip64Eocd || self.entries.length >= 65535 || centralDirectorySize >= 65535 || pretendOutputCursor >= 4294967295) {
+        endOfCentralDirectorySize += ZIP64_END_OF_CENTRAL_DIRECTORY_RECORD_SIZE + ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR_SIZE;
+      }
+      endOfCentralDirectorySize += END_OF_CENTRAL_DIRECTORY_RECORD_SIZE + self.comment.length;
+      return pretendOutputCursor + centralDirectorySize + endOfCentralDirectorySize;
+    }
+    function shouldIgnoreAdding(self) {
+      if (self.ended) throw new Error("cannot add entries after calling end()");
+      if (self.errored) return true;
+      return false;
+    }
+    var ZIP64_END_OF_CENTRAL_DIRECTORY_RECORD_SIZE = 56;
+    var ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR_SIZE = 20;
+    var END_OF_CENTRAL_DIRECTORY_RECORD_SIZE = 22;
+    function getEndOfCentralDirectoryRecord(self, actuallyJustTellMeHowLongItWouldBe) {
+      var needZip64Format = false;
+      var normalEntriesLength = self.entries.length;
+      if (self.forceZip64Eocd || self.entries.length >= 65535) {
+        normalEntriesLength = 65535;
+        needZip64Format = true;
+      }
+      var sizeOfCentralDirectory = self.outputStreamCursor - self.offsetOfStartOfCentralDirectory;
+      var normalSizeOfCentralDirectory = sizeOfCentralDirectory;
+      if (self.forceZip64Eocd || sizeOfCentralDirectory >= 4294967295) {
+        normalSizeOfCentralDirectory = 4294967295;
+        needZip64Format = true;
+      }
+      var normalOffsetOfStartOfCentralDirectory = self.offsetOfStartOfCentralDirectory;
+      if (self.forceZip64Eocd || self.offsetOfStartOfCentralDirectory >= 4294967295) {
+        normalOffsetOfStartOfCentralDirectory = 4294967295;
+        needZip64Format = true;
+      }
+      if (actuallyJustTellMeHowLongItWouldBe) {
+        if (needZip64Format) {
+          return ZIP64_END_OF_CENTRAL_DIRECTORY_RECORD_SIZE + ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR_SIZE + END_OF_CENTRAL_DIRECTORY_RECORD_SIZE;
+        } else {
+          return END_OF_CENTRAL_DIRECTORY_RECORD_SIZE;
+        }
+      }
+      var eocdrBuffer = bufferAlloc(END_OF_CENTRAL_DIRECTORY_RECORD_SIZE + self.comment.length);
+      eocdrBuffer.writeUInt32LE(101010256, 0);
+      eocdrBuffer.writeUInt16LE(0, 4);
+      eocdrBuffer.writeUInt16LE(0, 6);
+      eocdrBuffer.writeUInt16LE(normalEntriesLength, 8);
+      eocdrBuffer.writeUInt16LE(normalEntriesLength, 10);
+      eocdrBuffer.writeUInt32LE(normalSizeOfCentralDirectory, 12);
+      eocdrBuffer.writeUInt32LE(normalOffsetOfStartOfCentralDirectory, 16);
+      eocdrBuffer.writeUInt16LE(self.comment.length, 20);
+      self.comment.copy(eocdrBuffer, 22);
+      if (!needZip64Format) return eocdrBuffer;
+      var zip64EocdrBuffer = bufferAlloc(ZIP64_END_OF_CENTRAL_DIRECTORY_RECORD_SIZE);
+      zip64EocdrBuffer.writeUInt32LE(101075792, 0);
+      writeUInt64LE(zip64EocdrBuffer, ZIP64_END_OF_CENTRAL_DIRECTORY_RECORD_SIZE - 12, 4);
+      zip64EocdrBuffer.writeUInt16LE(VERSION_MADE_BY, 12);
+      zip64EocdrBuffer.writeUInt16LE(VERSION_NEEDED_TO_EXTRACT_ZIP64, 14);
+      zip64EocdrBuffer.writeUInt32LE(0, 16);
+      zip64EocdrBuffer.writeUInt32LE(0, 20);
+      writeUInt64LE(zip64EocdrBuffer, self.entries.length, 24);
+      writeUInt64LE(zip64EocdrBuffer, self.entries.length, 32);
+      writeUInt64LE(zip64EocdrBuffer, sizeOfCentralDirectory, 40);
+      writeUInt64LE(zip64EocdrBuffer, self.offsetOfStartOfCentralDirectory, 48);
+      var zip64EocdlBuffer = bufferAlloc(ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR_SIZE);
+      zip64EocdlBuffer.writeUInt32LE(117853008, 0);
+      zip64EocdlBuffer.writeUInt32LE(0, 4);
+      writeUInt64LE(zip64EocdlBuffer, self.outputStreamCursor, 8);
+      zip64EocdlBuffer.writeUInt32LE(1, 16);
+      return Buffer.concat([
+        zip64EocdrBuffer,
+        zip64EocdlBuffer,
+        eocdrBuffer
+      ]);
+    }
+    function validateMetadataPath(metadataPath, isDirectory) {
+      if (metadataPath === "") throw new Error("empty metadataPath");
+      metadataPath = metadataPath.replace(/\\/g, "/");
+      if (/^[a-zA-Z]:/.test(metadataPath) || /^\//.test(metadataPath)) throw new Error("absolute path: " + metadataPath);
+      if (metadataPath.split("/").indexOf("..") !== -1) throw new Error("invalid relative path: " + metadataPath);
+      var looksLikeDirectory = /\/$/.test(metadataPath);
+      if (isDirectory) {
+        if (!looksLikeDirectory) metadataPath += "/";
+      } else {
+        if (looksLikeDirectory) throw new Error("file path cannot end with '/': " + metadataPath);
+      }
+      return metadataPath;
+    }
+    var EMPTY_BUFFER = bufferAlloc(0);
+    function Entry(metadataPath, isDirectory, options) {
+      this.utf8FileName = bufferFrom(metadataPath);
+      if (this.utf8FileName.length > 65535) throw new Error("utf8 file name too long. " + utf8FileName.length + " > 65535");
+      this.isDirectory = isDirectory;
+      this.state = Entry.WAITING_FOR_METADATA;
+      this.setLastModDate(options.mtime != null ? options.mtime : /* @__PURE__ */ new Date());
+      this.forceDosTimestamp = !!options.forceDosTimestamp;
+      if (options.mode != null) {
+        this.setFileAttributesMode(options.mode);
+      } else {
+        this.setFileAttributesMode(isDirectory ? 16893 : 33204);
+      }
+      if (isDirectory) {
+        this.crcAndFileSizeKnown = true;
+        this.crc32 = 0;
+        this.uncompressedSize = 0;
+        this.compressedSize = 0;
+      } else {
+        this.crcAndFileSizeKnown = false;
+        this.crc32 = null;
+        this.uncompressedSize = null;
+        this.compressedSize = null;
+        if (options.size != null) this.uncompressedSize = options.size;
+      }
+      if (isDirectory) {
+        this.compressionLevel = 0;
+      } else {
+        this.compressionLevel = determineCompressionLevel(options);
+      }
+      this.forceZip64Format = !!options.forceZip64Format;
+      if (options.fileComment) {
+        if (typeof options.fileComment === "string") {
+          this.fileComment = bufferFrom(options.fileComment, "utf-8");
+        } else {
+          this.fileComment = options.fileComment;
+        }
+        if (this.fileComment.length > 65535) throw new Error("fileComment is too large");
+      } else {
+        this.fileComment = EMPTY_BUFFER;
+      }
+    }
+    Entry.WAITING_FOR_METADATA = 0;
+    Entry.READY_TO_PUMP_FILE_DATA = 1;
+    Entry.FILE_DATA_IN_PROGRESS = 2;
+    Entry.FILE_DATA_DONE = 3;
+    Entry.prototype.setLastModDate = function(date5) {
+      this.mtime = date5;
+      var dosDateTime = dateToDosDateTime(date5);
+      this.lastModFileTime = dosDateTime.time;
+      this.lastModFileDate = dosDateTime.date;
+    };
+    Entry.prototype.setFileAttributesMode = function(mode) {
+      if ((mode & 65535) !== mode) throw new Error("invalid mode. expected: 0 <= " + mode + " <= 65535");
+      this.externalFileAttributes = mode << 16 >>> 0;
+    };
+    Entry.prototype.setFileDataPumpFunction = function(doFileDataPump) {
+      this.doFileDataPump = doFileDataPump;
+      this.state = Entry.READY_TO_PUMP_FILE_DATA;
+    };
+    Entry.prototype.useZip64Format = function() {
+      return this.forceZip64Format || this.uncompressedSize != null && this.uncompressedSize > 4294967294 || this.compressedSize != null && this.compressedSize > 4294967294 || this.relativeOffsetOfLocalHeader != null && this.relativeOffsetOfLocalHeader > 4294967294;
+    };
+    var LOCAL_FILE_HEADER_FIXED_SIZE = 30;
+    var VERSION_NEEDED_TO_EXTRACT_UTF8 = 20;
+    var VERSION_NEEDED_TO_EXTRACT_ZIP64 = 45;
+    var VERSION_MADE_BY = 3 << 8 | 63;
+    var FILE_NAME_IS_UTF8 = 1 << 11;
+    var UNKNOWN_CRC32_AND_FILE_SIZES = 1 << 3;
+    Entry.prototype.getLocalFileHeader = function() {
+      var crc322 = 0;
+      var compressedSize = 0;
+      var uncompressedSize = 0;
+      if (this.crcAndFileSizeKnown) {
+        crc322 = this.crc32;
+        compressedSize = this.compressedSize;
+        uncompressedSize = this.uncompressedSize;
+      }
+      var fixedSizeStuff = bufferAlloc(LOCAL_FILE_HEADER_FIXED_SIZE);
+      var generalPurposeBitFlag = FILE_NAME_IS_UTF8;
+      if (!this.crcAndFileSizeKnown) generalPurposeBitFlag |= UNKNOWN_CRC32_AND_FILE_SIZES;
+      fixedSizeStuff.writeUInt32LE(67324752, 0);
+      fixedSizeStuff.writeUInt16LE(VERSION_NEEDED_TO_EXTRACT_UTF8, 4);
+      fixedSizeStuff.writeUInt16LE(generalPurposeBitFlag, 6);
+      fixedSizeStuff.writeUInt16LE(this.getCompressionMethod(), 8);
+      fixedSizeStuff.writeUInt16LE(this.lastModFileTime, 10);
+      fixedSizeStuff.writeUInt16LE(this.lastModFileDate, 12);
+      fixedSizeStuff.writeUInt32LE(crc322, 14);
+      fixedSizeStuff.writeUInt32LE(compressedSize, 18);
+      fixedSizeStuff.writeUInt32LE(uncompressedSize, 22);
+      fixedSizeStuff.writeUInt16LE(this.utf8FileName.length, 26);
+      fixedSizeStuff.writeUInt16LE(0, 28);
+      return Buffer.concat([
+        fixedSizeStuff,
+        // file name (variable size)
+        this.utf8FileName
+        // extra field (variable size)
+        // no extra fields
+      ]);
+    };
+    var DATA_DESCRIPTOR_SIZE = 16;
+    var ZIP64_DATA_DESCRIPTOR_SIZE = 24;
+    Entry.prototype.getDataDescriptor = function() {
+      if (this.crcAndFileSizeKnown) {
+        return EMPTY_BUFFER;
+      }
+      if (!this.useZip64Format()) {
+        var buffer = bufferAlloc(DATA_DESCRIPTOR_SIZE);
+        buffer.writeUInt32LE(134695760, 0);
+        buffer.writeUInt32LE(this.crc32, 4);
+        buffer.writeUInt32LE(this.compressedSize, 8);
+        buffer.writeUInt32LE(this.uncompressedSize, 12);
+        return buffer;
+      } else {
+        var buffer = bufferAlloc(ZIP64_DATA_DESCRIPTOR_SIZE);
+        buffer.writeUInt32LE(134695760, 0);
+        buffer.writeUInt32LE(this.crc32, 4);
+        writeUInt64LE(buffer, this.compressedSize, 8);
+        writeUInt64LE(buffer, this.uncompressedSize, 16);
+        return buffer;
+      }
+    };
+    var CENTRAL_DIRECTORY_RECORD_FIXED_SIZE = 46;
+    var INFO_ZIP_UNIVERSAL_TIMESTAMP_EXTRA_FIELD_SIZE = 9;
+    var ZIP64_EXTENDED_INFORMATION_EXTRA_FIELD_SIZE = 28;
+    Entry.prototype.getCentralDirectoryRecord = function() {
+      var fixedSizeStuff = bufferAlloc(CENTRAL_DIRECTORY_RECORD_FIXED_SIZE);
+      var generalPurposeBitFlag = FILE_NAME_IS_UTF8;
+      if (!this.crcAndFileSizeKnown) generalPurposeBitFlag |= UNKNOWN_CRC32_AND_FILE_SIZES;
+      var izutefBuffer = EMPTY_BUFFER;
+      if (!this.forceDosTimestamp) {
+        izutefBuffer = bufferAlloc(INFO_ZIP_UNIVERSAL_TIMESTAMP_EXTRA_FIELD_SIZE);
+        izutefBuffer.writeUInt16LE(21589, 0);
+        izutefBuffer.writeUInt16LE(INFO_ZIP_UNIVERSAL_TIMESTAMP_EXTRA_FIELD_SIZE - 4, 2);
+        var EB_UT_FL_MTIME = 1 << 0;
+        var EB_UT_FL_ATIME = 1 << 1;
+        izutefBuffer.writeUInt8(EB_UT_FL_MTIME | EB_UT_FL_ATIME, 4);
+        var timestamp = Math.floor(this.mtime.getTime() / 1e3);
+        if (timestamp < -2147483648) timestamp = -2147483648;
+        if (timestamp > 2147483647) timestamp = 2147483647;
+        izutefBuffer.writeUInt32LE(timestamp, 5);
+      }
+      var normalCompressedSize = this.compressedSize;
+      var normalUncompressedSize = this.uncompressedSize;
+      var normalRelativeOffsetOfLocalHeader = this.relativeOffsetOfLocalHeader;
+      var versionNeededToExtract = VERSION_NEEDED_TO_EXTRACT_UTF8;
+      var zeiefBuffer = EMPTY_BUFFER;
+      if (this.useZip64Format()) {
+        normalCompressedSize = 4294967295;
+        normalUncompressedSize = 4294967295;
+        normalRelativeOffsetOfLocalHeader = 4294967295;
+        versionNeededToExtract = VERSION_NEEDED_TO_EXTRACT_ZIP64;
+        zeiefBuffer = bufferAlloc(ZIP64_EXTENDED_INFORMATION_EXTRA_FIELD_SIZE);
+        zeiefBuffer.writeUInt16LE(1, 0);
+        zeiefBuffer.writeUInt16LE(ZIP64_EXTENDED_INFORMATION_EXTRA_FIELD_SIZE - 4, 2);
+        writeUInt64LE(zeiefBuffer, this.uncompressedSize, 4);
+        writeUInt64LE(zeiefBuffer, this.compressedSize, 12);
+        writeUInt64LE(zeiefBuffer, this.relativeOffsetOfLocalHeader, 20);
+      }
+      fixedSizeStuff.writeUInt32LE(33639248, 0);
+      fixedSizeStuff.writeUInt16LE(VERSION_MADE_BY, 4);
+      fixedSizeStuff.writeUInt16LE(versionNeededToExtract, 6);
+      fixedSizeStuff.writeUInt16LE(generalPurposeBitFlag, 8);
+      fixedSizeStuff.writeUInt16LE(this.getCompressionMethod(), 10);
+      fixedSizeStuff.writeUInt16LE(this.lastModFileTime, 12);
+      fixedSizeStuff.writeUInt16LE(this.lastModFileDate, 14);
+      fixedSizeStuff.writeUInt32LE(this.crc32, 16);
+      fixedSizeStuff.writeUInt32LE(normalCompressedSize, 20);
+      fixedSizeStuff.writeUInt32LE(normalUncompressedSize, 24);
+      fixedSizeStuff.writeUInt16LE(this.utf8FileName.length, 28);
+      fixedSizeStuff.writeUInt16LE(izutefBuffer.length + zeiefBuffer.length, 30);
+      fixedSizeStuff.writeUInt16LE(this.fileComment.length, 32);
+      fixedSizeStuff.writeUInt16LE(0, 34);
+      fixedSizeStuff.writeUInt16LE(0, 36);
+      fixedSizeStuff.writeUInt32LE(this.externalFileAttributes, 38);
+      fixedSizeStuff.writeUInt32LE(normalRelativeOffsetOfLocalHeader, 42);
+      return Buffer.concat([
+        fixedSizeStuff,
+        // file name (variable size)
+        this.utf8FileName,
+        // extra field (variable size)
+        izutefBuffer,
+        zeiefBuffer,
+        // file comment (variable size)
+        this.fileComment
+      ]);
+    };
+    Entry.prototype.getCompressionMethod = function() {
+      var NO_COMPRESSION = 0;
+      var DEFLATE_COMPRESSION = 8;
+      return this.compressionLevel === 0 ? NO_COMPRESSION : DEFLATE_COMPRESSION;
+    };
+    var minDosDate = new Date(1980, 0, 1);
+    var maxDosDate = new Date(2107, 11, 31, 23, 59, 58);
+    function dateToDosDateTime(jsDate) {
+      if (jsDate < minDosDate) jsDate = minDosDate;
+      else if (jsDate > maxDosDate) jsDate = maxDosDate;
+      var date5 = 0;
+      date5 |= jsDate.getDate() & 31;
+      date5 |= (jsDate.getMonth() + 1 & 15) << 5;
+      date5 |= (jsDate.getFullYear() - 1980 & 127) << 9;
+      var time3 = 0;
+      time3 |= Math.floor(jsDate.getSeconds() / 2);
+      time3 |= (jsDate.getMinutes() & 63) << 5;
+      time3 |= (jsDate.getHours() & 31) << 11;
+      return { date: date5, time: time3 };
+    }
+    function writeUInt64LE(buffer, n, offset) {
+      var high = Math.floor(n / 4294967296);
+      var low = n % 4294967296;
+      buffer.writeUInt32LE(low, offset);
+      buffer.writeUInt32LE(high, offset + 4);
+    }
+    util2.inherits(ByteCounter, Transform);
+    function ByteCounter(options) {
+      Transform.call(this, options);
+      this.byteCount = 0;
+    }
+    ByteCounter.prototype._transform = function(chunk, encoding, cb) {
+      this.byteCount += chunk.length;
+      cb(null, chunk);
+    };
+    util2.inherits(Crc32Watcher, Transform);
+    function Crc32Watcher(options) {
+      Transform.call(this, options);
+      this.crc32 = 0;
+    }
+    Crc32Watcher.prototype._transform = function(chunk, encoding, cb) {
+      this.crc32 = crc32.unsigned(chunk, this.crc32);
+      cb(null, chunk);
+    };
+    var cp437 = "\0\u263A\u263B\u2665\u2666\u2663\u2660\u2022\u25D8\u25CB\u25D9\u2642\u2640\u266A\u266B\u263C\u25BA\u25C4\u2195\u203C\xB6\xA7\u25AC\u21A8\u2191\u2193\u2192\u2190\u221F\u2194\u25B2\u25BC !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\u2302\xC7\xFC\xE9\xE2\xE4\xE0\xE5\xE7\xEA\xEB\xE8\xEF\xEE\xEC\xC4\xC5\xC9\xE6\xC6\xF4\xF6\xF2\xFB\xF9\xFF\xD6\xDC\xA2\xA3\xA5\u20A7\u0192\xE1\xED\xF3\xFA\xF1\xD1\xAA\xBA\xBF\u2310\xAC\xBD\xBC\xA1\xAB\xBB\u2591\u2592\u2593\u2502\u2524\u2561\u2562\u2556\u2555\u2563\u2551\u2557\u255D\u255C\u255B\u2510\u2514\u2534\u252C\u251C\u2500\u253C\u255E\u255F\u255A\u2554\u2569\u2566\u2560\u2550\u256C\u2567\u2568\u2564\u2565\u2559\u2558\u2552\u2553\u256B\u256A\u2518\u250C\u2588\u2584\u258C\u2590\u2580\u03B1\xDF\u0393\u03C0\u03A3\u03C3\xB5\u03C4\u03A6\u0398\u03A9\u03B4\u221E\u03C6\u03B5\u2229\u2261\xB1\u2265\u2264\u2320\u2321\xF7\u2248\xB0\u2219\xB7\u221A\u207F\xB2\u25A0\xA0";
+    if (cp437.length !== 256) throw new Error("assertion failure");
+    var reverseCp437 = null;
+    function encodeCp437(string4) {
+      if (/^[\x20-\x7e]*$/.test(string4)) {
+        return bufferFrom(string4, "utf-8");
+      }
+      if (reverseCp437 == null) {
+        reverseCp437 = {};
+        for (var i = 0; i < cp437.length; i++) {
+          reverseCp437[cp437[i]] = i;
+        }
+      }
+      var result = bufferAlloc(string4.length);
+      for (var i = 0; i < string4.length; i++) {
+        var b = reverseCp437[string4[i]];
+        if (b == null) throw new Error("character not encodable in CP437: " + JSON.stringify(string4[i]));
+        result[i] = b;
+      }
+      return result;
+    }
+    function bufferAlloc(size) {
+      bufferAlloc = modern;
+      try {
+        return bufferAlloc(size);
+      } catch (e) {
+        bufferAlloc = legacy;
+        return bufferAlloc(size);
+      }
+      function modern(size2) {
+        return Buffer.allocUnsafe(size2);
+      }
+      function legacy(size2) {
+        return new Buffer(size2);
+      }
+    }
+    function bufferFrom(something, encoding) {
+      bufferFrom = modern;
+      try {
+        return bufferFrom(something, encoding);
+      } catch (e) {
+        bufferFrom = legacy;
+        return bufferFrom(something, encoding);
+      }
+      function modern(something2, encoding2) {
+        return Buffer.from(something2, encoding2);
+      }
+      function legacy(something2, encoding2) {
+        return new Buffer(something2, encoding2);
+      }
+    }
+    function bufferIncludes(buffer, content) {
+      bufferIncludes = modern;
+      try {
+        return bufferIncludes(buffer, content);
+      } catch (e) {
+        bufferIncludes = legacy;
+        return bufferIncludes(buffer, content);
+      }
+      function modern(buffer2, content2) {
+        return buffer2.includes(content2);
+      }
+      function legacy(buffer2, content2) {
+        for (var i = 0; i <= buffer2.length - content2.length; i++) {
+          for (var j = 0; ; j++) {
+            if (j === content2.length) return true;
+            if (buffer2[i + j] !== content2[j]) break;
+          }
+        }
+        return false;
+      }
+    }
+  }
+});
+
 // node_modules/zod/v3/helpers/util.js
 var util;
 (function(util2) {
@@ -7629,8 +8583,8 @@ function getErrorMap() {
 
 // node_modules/zod/v3/helpers/parseUtil.js
 var makeIssue = (params) => {
-  const { data, path: path6, errorMaps, issueData } = params;
-  const fullPath = [...path6, ...issueData.path || []];
+  const { data, path: path8, errorMaps, issueData } = params;
+  const fullPath = [...path8, ...issueData.path || []];
   const fullIssue = {
     ...issueData,
     path: fullPath
@@ -7745,11 +8699,11 @@ var errorUtil;
 
 // node_modules/zod/v3/types.js
 var ParseInputLazyPath = class {
-  constructor(parent, value, path6, key) {
+  constructor(parent, value, path8, key) {
     this._cachedPath = [];
     this.parent = parent;
     this.data = value;
-    this._path = path6;
+    this._path = path8;
     this._key = key;
   }
   get path() {
@@ -11704,10 +12658,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path6) {
-  if (!path6)
+function getElementAtPath(obj, path8) {
+  if (!path8)
     return obj;
-  return path6.reduce((acc, key) => acc?.[key], obj);
+  return path8.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -12047,11 +13001,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path6, issues) {
+function prefixIssues(path8, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path6);
+    iss.path.unshift(path8);
     return iss;
   });
 }
@@ -12513,16 +13467,16 @@ function flattenError(error62, mapper = (issue2) => issue2.message) {
 }
 function formatError(error62, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error63, path6 = []) => {
+  const processError = (error63, path8 = []) => {
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path6, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path8, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path6, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path8, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path6, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path8, ...issue2.path]);
       } else {
-        const fullpath = [...path6, ...issue2.path];
+        const fullpath = [...path8, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -12561,17 +13515,17 @@ function formatError(error62, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error62, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error63, path6 = []) => {
+  const processError = (error63, path8 = []) => {
     var _a3;
     for (const issue2 of error63.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path6, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path8, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path6, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path8, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path6, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path8, ...issue2.path]);
       } else {
-        const fullpath = [...path6, ...issue2.path];
+        const fullpath = [...path8, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -12610,8 +13564,8 @@ function treeifyError(error62, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path6 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path6) {
+  const path8 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path8) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -28162,11 +29116,11 @@ function normalizeObjectSchema(schema) {
   }
   return void 0;
 }
-function getDotPath(path6) {
-  if (path6.length === 0) {
+function getDotPath(path8) {
+  if (path8.length === 0) {
     return "object root";
   }
-  return path6.reduce((acc, seg, index) => {
+  return path8.reduce((acc, seg, index) => {
     if (index === 0) {
       return String(seg);
     }
@@ -30393,13 +31347,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path6 = ref.slice(1).split("/").filter(Boolean);
-  if (path6.length === 0) {
+  const path8 = ref.slice(1).split("/").filter(Boolean);
+  if (path8.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path6[0] === defsKey) {
-    const key = path6[1] === void 0 ? void 0 : decodeJSONPointerSegment(path6[1]);
+  if (path8[0] === defsKey) {
+    const key = path8[1] === void 0 ? void 0 : decodeJSONPointerSegment(path8[1]);
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -36658,7 +37612,7 @@ var StdioServerTransport = class {
 import { readFile as readFile5 } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { createServer } from "node:http";
-import path5 from "node:path";
+import path7 from "node:path";
 
 // src/store.mjs
 import { mkdir as mkdir2, readFile as readFile2, writeFile as writeFile2, rename, rm, realpath, access } from "node:fs/promises";
@@ -36666,13 +37620,66 @@ import path2 from "node:path";
 import os from "node:os";
 import { randomUUID, createHash } from "node:crypto";
 
+// src/image-api-presets.mjs
+var IMAGE_API_SERVICES = [
+  { id: "image-openai", name: "OpenAI", baseUrl: "https://api.openai.com/v1", protocol: "openai-json", keyUrl: "https://platform.openai.com/api-keys", docsUrl: "https://developers.openai.com/api/docs/guides/image-generation", steps: ["\u767B\u5F55 OpenAI \u5F00\u53D1\u8005\u5E73\u53F0\uFF0C\u6253\u5F00 API keys\u3002", "\u70B9\u51FB Create new secret key\uFF0C\u590D\u5236\u5B8C\u6574 Key\uFF1B\u5728 Billing \u4E2D\u914D\u7F6E API \u4F59\u989D\u3002", "\u56DE\u5DE5\u4F5C\u53F0\u70B9\u51FB\u300C\u7BA1\u7406 API Key\u300D\uFF0C\u7C98\u8D34\u540E\u9A8C\u8BC1\u5E76\u4FDD\u5B58\u3002"], note: "ChatGPT \u8BA2\u9605\u548C API \u4F59\u989D\u5206\u5F00\u8BA1\u8D39\u3002" },
+  { id: "image-gemini", name: "Google Gemini", baseUrl: "https://generativelanguage.googleapis.com/v1beta", protocol: "gemini", keyUrl: "https://aistudio.google.com/api-keys", docsUrl: "https://ai.google.dev/gemini-api/docs/generate-content/image-generation", steps: ["\u767B\u5F55 Google AI Studio\uFF0C\u6253\u5F00 API keys\u3002", "\u521B\u5EFA\u6216\u9009\u62E9\u4E00\u4E2A\u9879\u76EE\uFF0C\u521B\u5EFA API Key \u5E76\u590D\u5236\uFF1B\u6309\u6240\u9009\u6A21\u578B\u8981\u6C42\u914D\u7F6E\u7ED3\u7B97\u3002", "\u56DE\u5DE5\u4F5C\u53F0\u70B9\u51FB\u300C\u7BA1\u7406 API Key\u300D\uFF0C\u7C98\u8D34\u540E\u9A8C\u8BC1\u5E76\u4FDD\u5B58\u3002"], note: "\u6A21\u578B\u53EF\u7528\u5730\u533A\u3001\u989D\u5EA6\u548C\u8D39\u7528\u4EE5 Google \u8D26\u53F7\u9875\u9762\u4E3A\u51C6\u3002" },
+  { id: "image-seedream", name: "\u706B\u5C71\u65B9\u821F Seedream", baseUrl: "https://ark.cn-beijing.volces.com/api/v3", protocol: "seedream", keyUrl: "https://ark.volcengine.com/region:cn-beijing/apikey", docsUrl: "https://docs.volcengine.com/docs/ark/image-generation-tutorial?lang=zh", steps: ["\u6CE8\u518C\u5E76\u767B\u5F55\u706B\u5C71\u65B9\u821F\uFF0C\u6253\u5F00 API Key \u7BA1\u7406\u3002", "\u521B\u5EFA\u5E76\u590D\u5236 API Key\uFF0C\u5728\u6A21\u578B\u670D\u52A1\u4E2D\u5F00\u901A\u8981\u4F7F\u7528\u7684 Seedream \u6A21\u578B\u3002", "\u56DE\u5DE5\u4F5C\u53F0\u9009\u62E9\u5DF2\u5F00\u901A\u7684\u6A21\u578B\uFF0C\u70B9\u51FB\u300C\u7BA1\u7406 API Key\u300D\u7C98\u8D34\u3001\u9A8C\u8BC1\u5E76\u4FDD\u5B58\u3002"], note: "\u706B\u5C71\u65B9\u821F API Key \u548C\u8C46\u5305\u804A\u5929\u8D26\u53F7\u7684\u751F\u56FE\u989D\u5EA6\u5206\u5F00\u7BA1\u7406\u3002" },
+  { id: "image-custom", name: "\u81EA\u5B9A\u4E49\u517C\u5BB9 API", baseUrl: "", protocol: "openai-multipart", keyUrl: null, docsUrl: null, steps: ["\u5728\u4F60\u7684 API \u670D\u52A1\u5546\u540E\u53F0\u521B\u5EFA\u5E76\u590D\u5236 API Key\u3002", "\u56DE\u5DE5\u4F5C\u53F0\u70B9\u51FB\u300C\u7BA1\u7406 API Key\u300D\uFF0C\u586B\u5199\u670D\u52A1\u5546\u63D0\u4F9B\u7684\u63A5\u53E3\u5730\u5740\u3001\u534F\u8BAE\u548C\u6A21\u578B ID\u3002", "\u7C98\u8D34 Key\uFF0C\u9A8C\u8BC1\u5E76\u4FDD\u5B58\u3002\u670D\u52A1\u5546\u9700\u8981\u652F\u6301\u591A\u56FE\u53C2\u8003\u8F93\u5165\u3002"], note: "\u63A5\u53E3\u5730\u5740\u586B\u5199\u5230 /v1 \u7B49\u7248\u672C\u524D\u7F00\uFF0C\u4E0D\u7528\u586B\u5199 /images/edits\u3002" }
+];
+var isImageApi = (provider) => IMAGE_API_SERVICES.some((s) => s.id === provider);
+var imageApiService = (provider) => IMAGE_API_SERVICES.find((s) => s.id === provider);
+var ratios = ["3:4", "1:1", "4:3", "2:3", "3:2", "9:16", "16:9"];
+var preset = (provider, model, name, extra = {}) => ({ id: provider + ":" + model, provider, kind: "image-api", model, name, nodes: [], allowPartialReferences: true, ratios, ...extra });
+var IMAGE_API_PRESETS = [
+  preset("image-openai", "gpt-image-2", "GPT Image 2"),
+  preset("image-openai", "gpt-image-2.5-sunburst", "GPT Image 2.5 Sunburst"),
+  preset("image-openai", "gpt-image-1.5", "GPT Image 1.5", { ratios: ["2:3", "1:1", "3:2"] }),
+  preset("image-gemini", "gemini-3.1-flash-image", "Nano Banana 2 \xB7 Gemini 3.1 Flash Image"),
+  preset("image-gemini", "gemini-3-pro-image", "Nano Banana Pro \xB7 Gemini 3 Pro Image"),
+  preset("image-gemini", "gemini-2.5-flash-image", "Nano Banana \xB7 Gemini 2.5 Flash Image"),
+  preset("image-seedream", "doubao-seedream-4-5-251128", "Seedream 4.5"),
+  preset("image-seedream", "doubao-seedream-5-0-260128", "Seedream 5.0 Lite"),
+  preset("image-seedream", "doubao-seedream-4-0-250828", "Seedream 4.0"),
+  preset("image-custom", "custom", "\u81EA\u5B9A\u4E49\u6A21\u578B", { id: "image-custom:default", model: "", baseUrl: "", protocol: "openai-multipart" })
+];
+function validateImageApiPreset(value, { requireConfigured = false } = {}) {
+  const service = imageApiService(value?.provider);
+  if (!service) throw Error("\u672A\u77E5\u751F\u56FE API \u670D\u52A1");
+  const builtin = IMAGE_API_PRESETS.find((p) => p.id === value.id && p.provider === value.provider);
+  if (value.provider !== "image-custom") {
+    if (!builtin || value.model !== builtin.model) throw Error("\u8BF7\u9009\u62E9\u9884\u8BBE\u4E2D\u7684\u751F\u56FE\u6A21\u578B");
+    return structuredClone({ ...builtin, builtin: true });
+  }
+  const model = String(value.model || "").trim(), baseUrl = String(value.baseUrl || "").trim().replace(/\/+$/, "");
+  if (model.length > 150 || /[\x00-\x20/\\?#]/.test(model)) throw Error("\u6A21\u578B ID \u683C\u5F0F\u65E0\u6548");
+  if (baseUrl) {
+    let url2;
+    try {
+      url2 = new URL(baseUrl);
+    } catch {
+      throw Error("\u8BF7\u586B\u5199\u5B8C\u6574\u7684 API \u63A5\u53E3\u5730\u5740");
+    }
+    if (url2.protocol !== "https:" || url2.username || url2.password || url2.search || url2.hash) throw Error("API \u5730\u5740\u9700\u4F7F\u7528 HTTPS\uFF0C\u4E14\u4E0D\u5305\u542B\u8D26\u53F7\u3001\u5BC6\u94A5\u6216\u67E5\u8BE2\u53C2\u6570");
+    if (/\/(images\/(?:edits|generations)|models\/[^/]+:generateContent)$/.test(url2.pathname)) throw Error("\u63A5\u53E3\u5730\u5740\u586B\u5199\u5230\u7248\u672C\u524D\u7F00\uFF0C\u4F8B\u5982 https://\u670D\u52A1\u5546\u57DF\u540D/v1");
+  }
+  if (!["openai-json", "openai-multipart", "gemini", "seedream"].includes(value.protocol)) throw Error("\u8BF7\u9009\u62E9\u652F\u6301\u7684 API \u534F\u8BAE");
+  if (requireConfigured && (!model || !baseUrl)) throw Error("\u8BF7\u5728\u300C\u7BA1\u7406 API Key\u300D\u4E2D\u586B\u5199\u63A5\u53E3\u5730\u5740\u548C\u6A21\u578B ID");
+  return { ...IMAGE_API_PRESETS.at(-1), model, baseUrl, protocol: value.protocol, ...model === "gpt-image-1.5" ? { ratios: ["2:3", "1:1", "3:2"] } : {} };
+}
+
 // src/generation-models.mjs
-var PROVIDERS = [{ id: "codex", name: "\u672C\u673A Codex \u751F\u56FE" }, { id: "agent", name: "\u5F53\u524D Agent \u539F\u751F\u751F\u56FE" }, { id: "runninghub-cn", name: "RunningHub \u56FD\u5185\u7AD9" }, { id: "runninghub-global", name: "RunningHub \u56FD\u9645\u7AD9" }];
+var PROVIDERS = [{ id: "codex", name: "\u672C\u673A Codex \u751F\u56FE" }, { id: "agent", name: "\u5F53\u524D Agent \u539F\u751F\u751F\u56FE" }, ...IMAGE_API_SERVICES.map(({ id, name }) => ({ id, name }))];
 var isNativeProvider = (provider) => provider === "codex" || provider === "agent";
+function matchesAgentHost(host, name) {
+  if (!host) return true;
+  return host === "doubao" ? /豆包|doubao/i.test(name || "") : /codex/i.test(name || "");
+}
 var REFERENCE_LABELS = { portrait: "\u4E3B\u89D2", costume: "\u670D\u88C5", pose: "\u59FF\u52BF" };
 var DEFAULT_RATIOS = ["3:4", "1:1", "4:3", "9:16", "16:9"];
-function outputRatios(preset) {
-  const choices = preset?.nodes.find((n) => n.source === "ratio" && n.options?.length)?.options;
+function outputRatios(preset2) {
+  if (preset2?.kind === "image-api") return preset2.ratios;
+  const choices = preset2?.nodes.find((n) => n.source === "ratio" && n.options?.length)?.options;
   return choices ? choices.map((o) => o.value).filter((v) => typeof v === "string" && /^\d{1,3}:\d{1,3}$/.test(v)) : DEFAULT_RATIOS;
 }
 function queueReferences(draft) {
@@ -36680,18 +37687,19 @@ function queueReferences(draft) {
   const poses = draft.poseIds.length ? draft.poseIds : [null];
   return { costumes, poses, count: costumes[0] || poses[0] ? costumes.length * poses.length : 0 };
 }
-function queueInputs(draft, provider, preset) {
-  return JSON.stringify([draft.portraitId, draft.costumeIds, draft.poseIds, draft.mode || "all", draft.ratio, draft.template, draft.notes, provider, preset || null]);
+function queueInputs(draft, provider, preset2) {
+  return JSON.stringify([draft.portraitId, draft.costumeIds, draft.poseIds, draft.mode || "all", draft.ratio, draft.template, draft.notes, provider, preset2 || null]);
 }
-function referenceCompatibility(preset, kinds, ratio) {
-  if (!preset) return "";
-  const sources = new Set(preset.nodes.map((n) => n.source));
+function referenceCompatibility(preset2, kinds, ratio) {
+  if (!preset2) return "";
+  if (preset2.kind === "image-api") return preset2.ratios.includes(ratio) ? "" : "\u5F53\u524D\u6A21\u578B\u4E0D\u652F\u6301 " + ratio + "\uFF0C\u8BF7\u66F4\u6362\u6A21\u578B\u6216\u8F93\u51FA\u6BD4\u4F8B\u3002";
+  const sources = new Set(preset2.nodes.map((n) => n.source));
   for (const kind of Object.keys(REFERENCE_LABELS)) {
-    if (!kinds.includes(kind) && (sources.has(kind) || sources.has("references") && !preset.allowPartialReferences)) {
+    if (!kinds.includes(kind) && (sources.has(kind) || sources.has("references") && !preset2.allowPartialReferences)) {
       return "\u5F53\u524D\u6A21\u578B\u9700\u8981" + REFERENCE_LABELS[kind] + "\u53C2\u8003\u56FE\uFF0C\u8BF7\u5148\u8865\u9F50\u518D\u751F\u6210\u3002";
     }
   }
-  if (preset.nodes.some((n) => n.source === "ratio" && n.options?.length && !n.options.some((o) => o.value === ratio))) {
+  if (preset2.nodes.some((n) => n.source === "ratio" && n.options?.length && !n.options.some((o) => o.value === ratio))) {
     return "\u5F53\u524D\u6A21\u578B\u4E0D\u652F\u6301 " + ratio + "\uFF0C\u8BF7\u66F4\u6362\u6A21\u578B\u6216\u8F93\u51FA\u6BD4\u4F8B\u3002";
   }
   return "";
@@ -36703,7 +37711,7 @@ function selectedPreset(presets, provider, id) {
 var RH_ORIGINS = { "runninghub-cn": "https://www.runninghub.cn", "runninghub-global": "https://www.runninghub.ai" };
 var INPUT_SOURCES = [["fixed", "\u4FDD\u7559\u539F\u503C"], ["portrait", "\u4E3B\u89D2\u53C2\u8003\u56FE"], ["costume", "\u670D\u88C5\u53C2\u8003\u56FE"], ["pose", "\u59FF\u52BF\u53C2\u8003\u56FE"], ["references", "\u53C2\u8003\u56FE\u5217\u8868\uFF08JSON\uFF09"], ["prompt", "\u4EFB\u52A1\u63D0\u793A\u8BCD"], ["ratio", "\u8F93\u51FA\u6BD4\u4F8B"], ["width", "\u8F93\u51FA\u5BBD\u5EA6"], ["height", "\u8F93\u51FA\u9AD8\u5EA6"]];
 function checkProvider(provider) {
-  if (!PROVIDERS.some((p) => p.id === provider)) throw Error("\u672A\u77E5\u751F\u56FE\u6E20\u9053");
+  if (!PROVIDERS.some((p) => p.id === provider) && !RH_ORIGINS[provider]) throw Error("\u672A\u77E5\u751F\u56FE\u6E20\u9053");
   return provider;
 }
 function remoteId(provider, value) {
@@ -36722,73 +37730,15 @@ function remoteId(provider, value) {
   if (!id || !/^\d{1,30}$/.test(id)) throw Error("\u94FE\u63A5\u4E2D\u672A\u627E\u5230\u5E94\u7528\u6216\u5DE5\u4F5C\u6D41 ID");
   return id;
 }
-function parseJSON(text) {
-  return JSON.parse(text.replace(/("(?:webappId|workflowId)"\s*:\s*)(\d{15,})(?=\s*[,}])/g, '$1"$2"'));
-}
-function parseExample(value) {
-  if (typeof value !== "string") return value;
-  const text = value.trim();
-  try {
-    return parseJSON(text);
-  } catch {
-  }
-  for (let start = text.indexOf("{"); start >= 0; start = text.indexOf("{", start + 1)) {
-    let depth = 0, quoted = false, escaped = false;
-    for (let n = start; n < text.length; n++) {
-      const c = text[n];
-      if (quoted) {
-        if (escaped) escaped = false;
-        else if (c === "\\") escaped = true;
-        else if (c === '"') quoted = false;
-        continue;
-      }
-      if (c === '"') {
-        quoted = true;
-        continue;
-      }
-      if (c === "{") depth++;
-      else if (c === "}" && --depth === 0) {
-        try {
-          return parseJSON(text.slice(start, n + 1));
-        } catch {
-          break;
-        }
-      }
-    }
-  }
-  throw Error("\u65E0\u6CD5\u8BFB\u53D6\u8C03\u7528\u793A\u4F8B\uFF0C\u8BF7\u7C98\u8D34\u8BF7\u6C42\u4F53 JSON\u3001cURL \u6216\u5DE5\u4F5C\u6D41 API JSON");
-}
-function importedNodes(example, kind) {
-  let data = parseExample(example);
-  if (data?.data) data = data.data;
-  if (data?.curl) data = parseExample(data.curl);
-  if (data?.prompt) data = parseExample(data.prompt);
-  let nodes = data?.nodeInfoList;
-  if (!nodes && kind === "workflow") {
-    const graph = typeof data === "string" ? parseExample(data) : data;
-    nodes = Object.entries(graph || {}).flatMap(([nodeId, n]) => Object.entries(n?.inputs || {}).filter(([, v]) => v === null || ["string", "number", "boolean"].includes(typeof v)).map(([fieldName, fieldValue]) => ({ nodeId, fieldName, fieldValue, description: n._meta?.title || n.class_type || "" })));
-  }
-  if (!Array.isArray(nodes) || !nodes.length) throw Error("\u672A\u627E\u5230 nodeInfoList\uFF1B\u8BF7\u5BFC\u5165\u5E94\u7528 API \u8C03\u7528\u793A\u4F8B\u6216\u5DE5\u4F5C\u6D41\u7684 API \u683C\u5F0F JSON");
-  if (nodes.length > 300) throw Error("\u53EF\u914D\u7F6E\u8F93\u5165\u8FC7\u591A\uFF0C\u8BF7\u5148\u7CBE\u7B80\u5DE5\u4F5C\u6D41");
-  return nodes.map((n) => {
-    if (!n || !n.nodeId || !n.fieldName || /api.?key|secret|token|password/i.test(n.fieldName)) throw Error("\u8F93\u5165\u5B57\u6BB5\u65E0\u6548\u6216\u5305\u542B\u5BC6\u94A5\u5B57\u6BB5\uFF1B\u8BF7\u5C06\u9274\u6743\u4FE1\u606F\u7559\u5728\u6E20\u9053\u8BBE\u7F6E");
-    let options;
-    try {
-      const f = typeof n.fieldData === "string" ? JSON.parse(n.fieldData) : n.fieldData;
-      if (Array.isArray(f)) options = f.filter((x) => x.index !== void 0 || x.name !== void 0).map((x) => ({ value: x.index ?? x.name, label: x.description || x.name || String(x.index) }));
-    } catch {
-    }
-    return { nodeId: String(n.nodeId), fieldName: String(n.fieldName), value: n.fieldValue ?? "", description: String(n.description || n.fieldName).slice(0, 200), ...options?.length ? { options } : {}, source: "fixed", format: "fileName" };
-  });
-}
-function validatePreset(preset) {
-  checkProvider(preset.provider);
-  if (!RH_ORIGINS[preset.provider] || !["app", "workflow"].includes(preset.kind)) throw Error("\u8BF7\u9009\u62E9\u4E2A\u4EBA\u7248 AI \u5E94\u7528\u6216\u5DE5\u4F5C\u6D41");
-  const id = remoteId(preset.provider, preset.remoteId);
-  if (!preset.name?.trim() || preset.name.length > 150) throw Error("\u8BF7\u586B\u5199\u6A21\u578B\u9884\u8BBE\u540D\u79F0");
-  if (!Array.isArray(preset.nodes) || !preset.nodes.length || preset.nodes.length > 300) throw Error("\u8BF7\u5148\u5BFC\u5165\u8F93\u5165\u5B57\u6BB5");
+function validatePreset(preset2) {
+  if (isImageApi(preset2?.provider)) return validateImageApiPreset(preset2);
+  checkProvider(preset2.provider);
+  if (!RH_ORIGINS[preset2.provider] || !["app", "workflow"].includes(preset2.kind)) throw Error("\u8BF7\u9009\u62E9\u4E2A\u4EBA\u7248 AI \u5E94\u7528\u6216\u5DE5\u4F5C\u6D41");
+  const id = remoteId(preset2.provider, preset2.remoteId);
+  if (!preset2.name?.trim() || preset2.name.length > 150) throw Error("\u8BF7\u586B\u5199\u6A21\u578B\u9884\u8BBE\u540D\u79F0");
+  if (!Array.isArray(preset2.nodes) || !preset2.nodes.length || preset2.nodes.length > 300) throw Error("\u8BF7\u5148\u5BFC\u5165\u8F93\u5165\u5B57\u6BB5");
   const seen = /* @__PURE__ */ new Set(), sources = /* @__PURE__ */ new Set();
-  const nodes = preset.nodes.map((n) => {
+  const nodes = preset2.nodes.map((n) => {
     if (!/^[\w:.\-]{1,100}$/.test(n.nodeId) || !n.fieldName || n.fieldName.length > 150 || /api.?key|secret|token|password/i.test(n.fieldName)) throw Error("\u8282\u70B9\u5B57\u6BB5\u65E0\u6548");
     const key = n.nodeId + "##" + n.fieldName;
     if (seen.has(key)) throw Error("\u540C\u4E00\u8282\u70B9\u5B57\u6BB5\u4E0D\u80FD\u91CD\u590D\u6620\u5C04");
@@ -36801,63 +37751,8 @@ function validatePreset(preset) {
   });
   if (!sources.has("prompt")) throw Error("\u8BF7\u6307\u5B9A\u4E00\u4E2A\u201C\u4EFB\u52A1\u63D0\u793A\u8BCD\u201D\u8F93\u5165");
   if (!sources.has("references") && !["portrait", "costume", "pose"].every((s) => sources.has(s))) throw Error("\u8BF7\u6620\u5C04\u4E3B\u89D2\u3001\u670D\u88C5\u3001\u59FF\u52BF\u4E09\u5F20\u56FE\uFF0C\u6216\u6620\u5C04\u201C\u53C2\u8003\u56FE\u5217\u8868\u201D\u8F93\u5165");
-  return { id: preset.id, provider: preset.provider, kind: preset.kind, remoteId: id, name: preset.name.trim(), nodes, ...preset.kind === "workflow" && preset.apiVersion === 2 ? { apiVersion: 2 } : {}, ...sources.has("references") && preset.allowPartialReferences ? { allowPartialReferences: true } : {} };
+  return { id: preset2.id, provider: preset2.provider, kind: preset2.kind, remoteId: id, name: preset2.name.trim(), nodes, ...preset2.kind === "workflow" && preset2.apiVersion === 2 ? { apiVersion: 2 } : {}, ...sources.has("references") && preset2.allowPartialReferences ? { allowPartialReferences: true } : {} };
 }
-function personalPayload(task, files) {
-  const preset = validatePreset(task.providerPreset);
-  if (preset.provider !== task.provider) throw Error("\u4EFB\u52A1\u6E20\u9053\u4E0E\u6A21\u578B\u9884\u8BBE\u4E0D\u4E00\u81F4");
-  const kinds = Object.keys(REFERENCE_LABELS).filter((kind) => files.some((file2) => file2.kind === kind));
-  if (!kinds.includes("portrait")) throw Error("\u7F3A\u5C11\u4E3B\u89D2\u53C2\u8003\u56FE");
-  const problem = referenceCompatibility(preset, kinds, task.ratio);
-  if (problem) throw Error(problem);
-  const [a, b] = task.ratio.split(":").map(Number), unit = Math.ceil(1024 / Math.max(a, b) / 8) * 8;
-  return { preset, nodeInfoList: preset.nodes.map((n) => {
-    let value = n.value;
-    const ref = (s) => files.find((f) => f.kind === s)?.[n.format === "url" ? "url" : "fileName"];
-    if (["portrait", "costume", "pose"].includes(n.source)) value = ref(n.source);
-    if (n.source === "references") {
-      const values = kinds.map(ref);
-      if (values.some((v) => !v)) throw Error("\u53C2\u8003\u56FE\u5217\u8868\u4E2D\u7684\u56FE\u7247\u4E0A\u4F20\u4E0D\u5B8C\u6574");
-      value = JSON.stringify(values);
-    }
-    if (n.source === "prompt") value = task.prompt;
-    if (n.source === "ratio") value = n.options?.find((o) => o.value === task.ratio)?.fieldValue ?? task.ratio;
-    if (n.source === "width") value = a * unit;
-    if (n.source === "height") value = b * unit;
-    if (value === void 0) throw Error("\u7F3A\u5C11\u6620\u5C04\u7684\u53C2\u8003\u56FE\uFF1A" + n.source);
-    return { nodeId: n.nodeId, fieldName: n.fieldName, fieldValue: value };
-  }) };
-}
-
-// src/runninghub-defaults.mjs
-var resolutionOptions = [
-  "1:1 (Square)",
-  "2:3 (Portrait Photo)",
-  "3:2 (Photo)",
-  "3:4 (Portrait Standard)",
-  "4:3 (Standard)",
-  "9:16 (Portrait Widescreen)",
-  "16:9 (Widescreen)",
-  "21:9 (Ultrawide)"
-].map((fieldValue) => ({ value: fieldValue.split(" ")[0], fieldValue }));
-var RUNNINGHUB_DEFAULTS = [
-  ["cn", "2117565399293321218"],
-  ["global", "2117590622597468162"]
-].map(([site, remoteId2]) => ({
-  id: "rh-" + site + "-qwen21-three-reference",
-  provider: "runninghub-" + site,
-  kind: "workflow",
-  apiVersion: 2,
-  remoteId: remoteId2,
-  name: "Qwen 2.1 \u6362\u88C5\u4E0E\u59FF\u52BF",
-  nodes: [
-    { nodeId: "1", fieldName: "image", source: "portrait" },
-    { nodeId: "2", fieldName: "image", source: "costume" },
-    { nodeId: "3", fieldName: "image", source: "pose" },
-    { nodeId: "10", fieldName: "prompt", source: "prompt" },
-    { nodeId: "4", fieldName: "aspect_ratio", source: "ratio", value: "3:4", options: resolutionOptions }
-  ]
-}));
 
 // src/catalog.mjs
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -36936,6 +37831,58 @@ var Catalog = class {
   }
 };
 
+// src/batch-history.mjs
+function updateBatchHistory(state) {
+  state.batches ??= {};
+  const groups = /* @__PURE__ */ new Map();
+  for (const task of state.tasks) {
+    if (!task.batchId) continue;
+    if (!groups.has(task.batchId)) groups.set(task.batchId, []);
+    groups.get(task.batchId).push(task);
+  }
+  if (state.batch && !groups.has(state.batch.id)) groups.set(state.batch.id, []);
+  for (const [id, tasks] of groups) {
+    const previous = Object.hasOwn(state.batches, id) ? state.batches[id] : null;
+    const current = state.batch?.id === id ? state.batch : null;
+    const dates = tasks.map((t) => t.createdAt || t.startedAt || t.finishedAt).filter(Boolean).sort();
+    const failed = tasks.filter((t) => ["failed", "interrupted"].includes(t.status)).length;
+    const failedCount = Math.max(previous?.failedCount || 0, current?.failedCount || 0, failed);
+    const successCount = tasks.filter((t) => t.status === "done").length;
+    state.batches[id] = {
+      id,
+      name: previous?.name || "",
+      createdAt: previous?.createdAt || current?.createdAt || dates[0] || null,
+      portraitId: previous?.portraitId || current?.portraitId || tasks[0]?.portraitId || null,
+      status: current?.status || previous?.status || "done",
+      successCount,
+      failedCount,
+      totalCount: current?.status === "draft" ? tasks.length : Math.max(previous?.totalCount || 0, tasks.length, successCount + failedCount),
+      countsIncomplete: previous?.countsIncomplete ?? !current
+    };
+  }
+}
+function batchLabel(batch) {
+  return batch.name || "\u6279\u6B21 " + batch.id.slice(0, 8);
+}
+function safeFilePart(value, fallback, maxLength = 32) {
+  let text = String(value || fallback).normalize("NFC").replace(/[<>:"/\\|?*\x00-\x1f\x7f\u202a-\u202e\u2066-\u2069]/g, "_").trim().replace(/[. ]+$/g, "");
+  text = Array.from(text).slice(0, maxLength).join("").replace(/[. ]+$/g, "") || fallback;
+  if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(text)) text = "_" + text;
+  return text;
+}
+function resultFilename(batch, task, assets, index = 0) {
+  const code = (id, kind) => assets[id]?.sourceId || id?.replace(new RegExp("^" + kind + ":"), "") || (kind === "costume" ? "\u539F\u670D\u88C5" : "\u539F\u59FF\u52BF");
+  const asset = assets[task.resultId];
+  const ext = { "image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp" }[asset?.mime] || asset?.path?.match(/\.(png|jpe?g|webp)$/i)?.[0] || ".png";
+  return [
+    safeFilePart(batchLabel(batch), "\u6279\u6B21", 28),
+    safeFilePart(batch.id, "batch", 8),
+    "\u670D\u88C5_" + safeFilePart(code(task.costumeId, "costume"), "\u539F\u670D\u88C5"),
+    "\u59FF\u52BF_" + safeFilePart(code(task.poseId, "pose"), "\u539F\u59FF\u52BF", 40),
+    String(index + 1).padStart(3, "0")
+  ].join("__") + ext;
+}
+
 // src/store.mjs
 var PREVIOUS_DEFAULT_TEMPLATE = `\u8BF7\u7ED3\u5408\u63D0\u4F9B\u7684\u53C2\u8003\u56FE\uFF0C\u878D\u5408\u6210\u4E00\u5F20\u5B8C\u6574\u7684\u4EBA\u7269\u56FE\u50CF\uFF1A
 \u2022 \u3010\u56FE1\uFF08\u4EBA\u50CF\u53C2\u8003\uFF09\u3011\uFF1A\u4FDD\u6301\u4E0A\u4F20\u4E3B\u89D2\u7684\u4E94\u5B98\u8138\u578B\u3001\u8EAB\u4EFD\u3001\u53D1\u8272\u4E0E\u53D1\u578B\u6C14\u8D28\u4E00\u81F4\uFF0C\u4E0D\u6DFB\u52A0\u672A\u51FA\u73B0\u5728\u53C2\u8003\u56FE\u4E2D\u7684\u56FA\u5B9A\u53D1\u578B\u63CF\u8FF0\u3002
@@ -36952,8 +37899,19 @@ function initialState() {
   return { version: 1, revision: 0, assets: {}, providerPresets: [], draft: { portraitId: null, costumeIds: [], poseIds: [], ratio: "3:4", template: DEFAULT_TEMPLATE, notes: "", provider: "codex", providerPresetId: null }, tasks: [], batch: null };
 }
 var uid = () => randomUUID();
+function referenceNetworkError(error62) {
+  const causes = [error62, error62.cause, ...error62.cause?.errors || []].filter(Boolean);
+  const codes = [...new Set(causes.map((c) => c.code).filter((c) => typeof c === "string"))];
+  let reason = "\u4E0E\u56FE\u5E93\u7684\u7F51\u7EDC\u8BF7\u6C42\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5\u7F51\u7EDC\u540E\u91CD\u8BD5\u3002";
+  if (causes.some((c) => c.name === "TimeoutError") || codes.some((c) => /TIMEOUT|ETIMEDOUT/.test(c))) reason = "\u8FDE\u63A5\u56FE\u5E93\u8D85\u65F6\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5\u3002";
+  else if (codes.some((c) => c === "ENOTFOUND" || c === "EAI_AGAIN")) reason = "\u65E0\u6CD5\u89E3\u6790\u56FE\u5E93\u57DF\u540D\uFF08DNS\uFF09\uFF0C\u8BF7\u68C0\u67E5\u7F51\u7EDC\u540E\u91CD\u8BD5\u3002";
+  else if (codes.some((c) => /CERT|TLS|SSL/.test(c))) reason = "\u65E0\u6CD5\u5EFA\u7ACB\u5230\u56FE\u5E93\u7684 HTTPS \u5B89\u5168\u8FDE\u63A5\u3002";
+  else if (codes.some((c) => ["ECONNRESET", "UND_ERR_SOCKET"].includes(c))) reason = "\u4E0B\u8F7D\u65F6\u7F51\u7EDC\u8FDE\u63A5\u4E2D\u65AD\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5\u3002";
+  else if (codes.includes("ECONNREFUSED")) reason = "\u56FE\u5E93\u670D\u52A1\u5668\u62D2\u7EDD\u4E86\u7F51\u7EDC\u8FDE\u63A5\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5\u3002";
+  return Error(reason + (codes.length ? "\n\u7F51\u7EDC\u9519\u8BEF\u7801\uFF1A" + codes.join("\u3001") : ""), { cause: error62 });
+}
 function retainedTasks(state) {
-  const active = state.batch && ["draft", "queued", "running", "paused", "awaiting-approval"].includes(state.batch.status);
+  const active = state.batch && ["draft", "queued", "running", "paused"].includes(state.batch.status);
   return state.tasks.filter((t) => t.status !== "failed" || active && t.batchId === state.batch.id);
 }
 function imageType(b) {
@@ -36963,7 +37921,7 @@ function imageType(b) {
   throw Error("\u4EC5\u652F\u6301\u6709\u6548\u7684 PNG\u3001JPEG\u3001WebP \u56FE\u7247");
 }
 var Store = class {
-  constructor(root = process.env.CHARACTER_STUDIO_HOME || path2.join(os.homedir(), ".character-studio"), { builtinPresets = RUNNINGHUB_DEFAULTS } = {}) {
+  constructor(root = process.env.CHARACTER_STUDIO_HOME || path2.join(os.homedir(), ".character-studio"), { builtinPresets = IMAGE_API_PRESETS } = {}) {
     this.builtinPresets = builtinPresets.map((p) => ({ ...validatePreset(p), builtin: true }));
     this.root = path2.resolve(root);
     this.file = path2.join(this.root, "state.json");
@@ -36992,26 +37950,29 @@ var Store = class {
       }
     };
     if (this.state.tasks.some((t) => t.status === "running" && !alive(t.workerPid))) await this.mutate(() => {
-      this.state.tasks.filter((t) => t.status === "running" && !alive(t.workerPid)).forEach((t) => {
-        t.status = "interrupted";
-        t.error = "\u4E0A\u6B21\u6267\u884C\u4E2D\u65AD\uFF0C\u8BF7\u786E\u8BA4\u540E\u91CD\u8BD5";
-      });
-      if (this.state.batch) this.state.batch.status = "paused";
+      const { tasks, batch } = this.state;
+      const interrupted = tasks.filter((t) => t.status === "running" && !alive(t.workerPid));
+      for (const task of interrupted) {
+        task.status = "interrupted";
+        task.error = "\u4E0A\u6B21\u6267\u884C\u4E2D\u65AD\uFF0C\u53EF\u5728\u4EFB\u52A1\u5361\u91CD\u505A\u3002";
+      }
+      if (batch && interrupted.some((t) => t.batchId === batch.id) && ["queued", "running"].includes(batch.status)) {
+        batch.status = "paused";
+        if (batch.provider === "agent") batch.resumeOnReconnect = true;
+      }
     });
     if (this.state.batch?.status === "awaiting-approval") await this.mutate(() => {
       const { batch, execution } = this.state;
       if (batch?.status !== "awaiting-approval") return;
-      batch.status = "paused";
-      if (execution?.batchId === batch.id) {
-        execution.phase = "paused";
-        execution.message = "\u4EFB\u52A1\u5DF2\u6682\u505C\uFF0C\u70B9\u51FB\u300C\u7EE7\u7EED\u5269\u4F59\u4EFB\u52A1\u300D\u53EF\u6062\u590D\u3002";
-      }
+      batch.status = this.state.tasks.some((t) => t.batchId === batch.id && t.status === "pending") ? "queued" : "done";
+      if (execution?.batchId === batch.id) delete this.state.execution;
     });
-    if (retainedTasks(this.state).length !== this.state.tasks.length) await this.mutate(() => {
+    if (!this.state.batches || retainedTasks(this.state).length !== this.state.tasks.length) await this.mutate(() => {
     });
     return this;
   }
   async persist() {
+    updateBatchHistory(this.state);
     this.state.tasks = retainedTasks(this.state);
     this.state.revision++;
     const tmp = this.file + "." + uid() + ".tmp";
@@ -37070,9 +38031,27 @@ var Store = class {
     return run;
   }
   availablePresets() {
-    return [...this.builtinPresets, ...this.state.providerPresets || []];
+    return [...this.builtinPresets.map((p) => p.provider === "image-custom" && this.state.imageApiCustom ? { ...validateImageApiPreset({ ...p, ...this.state.imageApiCustom }), builtin: true } : p), ...this.state.providerPresets || []];
+  }
+  saveImageApiConfig(config2) {
+    const validated = validateImageApiPreset({ ...config2, id: "image-custom:default", provider: "image-custom" }, { requireConfigured: true });
+    return this.mutate(() => {
+      this.state.imageApiCustom = { baseUrl: validated.baseUrl, model: validated.model, protocol: validated.protocol };
+      return this.snapshot();
+    });
+  }
+  renameBatch(id, name) {
+    return this.mutate(() => {
+      updateBatchHistory(this.state);
+      const batch = Object.hasOwn(this.state.batches, id) ? this.state.batches[id] : null;
+      if (!batch) throw Error("\u627E\u4E0D\u5230\u8FD9\u4E2A\u6279\u6B21\uFF0C\u8BF7\u5237\u65B0\u540E\u91CD\u8BD5\u3002");
+      if (typeof name !== "string" || name.trim().length > 80 || /[\x00-\x1f\x7f]/.test(name)) throw Error("\u6279\u6B21\u540D\u79F0\u6700\u591A 80 \u4E2A\u5B57\u7B26\uFF0C\u4E0D\u80FD\u5305\u542B\u63A7\u5236\u5B57\u7B26\u3002");
+      batch.name = name.trim();
+      return this.snapshot();
+    });
   }
   snapshot() {
+    updateBatchHistory(this.state);
     return structuredClone({ ...this.state, providerPresets: this.availablePresets(), tasks: retainedTasks(this.state) });
   }
   async putImage(bytes, name, kind = "portrait", sourceId) {
@@ -37130,6 +38109,7 @@ var Store = class {
         d.provider = checkProvider(patch.provider);
         if (isNativeProvider(d.provider) || !this.availablePresets().some((p) => p.id === d.providerPresetId && p.provider === d.provider)) d.providerPresetId = null;
       }
+      if (patch.agentHost !== void 0) d.agentHost = patch.agentHost;
       if (patch.providerPresetId !== void 0) {
         if (patch.providerPresetId !== null && !this.availablePresets().some((p) => p.id === patch.providerPresetId && p.provider === (d.provider || "codex"))) throw Error("\u8BE5\u6A21\u578B\u9884\u8BBE\u4E0D\u5C5E\u4E8E\u6240\u9009\u6E20\u9053");
         d.providerPresetId = patch.providerPresetId;
@@ -37142,12 +38122,12 @@ var Store = class {
         if (patch.portraitId !== null && this.state.assets[patch.portraitId]?.kind !== "portrait") throw Error("\u4E3B\u89D2\u56FE\u7247\u65E0\u6548");
         d.portraitId = patch.portraitId;
       }
-      const ratios = outputRatios(selectedPreset(this.availablePresets(), d.provider || "codex", d.providerPresetId));
+      const ratios2 = outputRatios(selectedPreset(this.availablePresets(), d.provider || "codex", d.providerPresetId));
       if (patch.ratio !== void 0) {
-        if (!ratios.includes(patch.ratio)) throw Error("\u5F53\u524D\u6A21\u578B\u4E0D\u652F\u6301\u8FD9\u4E2A\u56FE\u7247\u6BD4\u4F8B");
+        if (!ratios2.includes(patch.ratio)) throw Error("\u5F53\u524D\u6A21\u578B\u4E0D\u652F\u6301\u8FD9\u4E2A\u56FE\u7247\u6BD4\u4F8B");
         d.ratio = patch.ratio;
-      } else if ((patch.provider !== void 0 || patch.providerPresetId !== void 0) && ratios.length && !ratios.includes(d.ratio)) {
-        d.ratio = ratios.includes("3:4") ? "3:4" : ratios[0];
+      } else if ((patch.provider !== void 0 || patch.providerPresetId !== void 0) && ratios2.length && !ratios2.includes(d.ratio)) {
+        d.ratio = ratios2.includes("3:4") ? "3:4" : ratios2[0];
       }
       for (const key of ["template", "notes"]) if (patch[key] !== void 0) {
         if (typeof patch[key] !== "string" || patch[key].length > 12e3) throw Error("\u63D0\u793A\u8BCD\u8FC7\u957F");
@@ -37156,8 +38136,41 @@ var Store = class {
       return this.snapshot();
     });
   }
-  saveProviderPreset(preset) {
-    const validated = validatePreset(preset);
+  useLocalCodex(expectedBatchId) {
+    return this.mutate(() => {
+      const { batch, draft, tasks } = this.state;
+      if ((batch?.id ?? null) !== expectedBatchId) throw Error("\u5F53\u524D\u6279\u6B21\u5DF2\u53D8\u5316\uFF0C\u8BF7\u5237\u65B0\u540E\u518D\u8BD5\u3002");
+      if (!isNativeProvider(draft.provider || "codex")) throw Error("\u8BF7\u5148\u9009\u62E9\u5F53\u524D Agent \u751F\u56FE\u3002");
+      const active = batch && ["queued", "running", "paused"].includes(batch.status);
+      if (active && batch.provider !== "agent" && batch.provider !== "codex") throw Error("\u5F53\u524D\u6279\u6B21\u6B63\u5728\u4F7F\u7528\u5176\u4ED6\u751F\u56FE\u6E20\u9053\u3002");
+      if (active && tasks.some((task) => task.batchId === batch.id && task.status === "running")) throw Error("\u5F53\u524D\u56FE\u7247\u5DF2\u88AB\u9886\u53D6\uFF0C\u8BF7\u7B49\u5B83\u5B8C\u6210\u518D\u5207\u6362\u3002");
+      const matchingPreview = batch?.status === "draft" && batch.provider === "agent" && batch.inputs === queueInputs(draft, "agent", null);
+      draft.provider = "codex";
+      draft.agentHost = "codex";
+      draft.providerPresetId = null;
+      if (active || matchingPreview) {
+        batch.provider = "codex";
+        delete batch.agentHost;
+        batch.providerPreset = null;
+        for (const task of tasks) {
+          if (task.batchId === batch.id && task.status === "pending") {
+            task.provider = "codex";
+            task.providerPreset = null;
+            delete task.agentHost;
+          }
+        }
+        if (matchingPreview) batch.inputs = queueInputs(draft, "codex", null);
+        if (batch.resumeOnReconnect) {
+          batch.status = "queued";
+          delete batch.resumeOnReconnect;
+        }
+        if (batch.status === "queued") delete this.state.execution;
+      }
+      return this.snapshot();
+    });
+  }
+  saveProviderPreset(preset2) {
+    const validated = validatePreset(preset2);
     return this.mutate(() => {
       const presets = this.state.providerPresets ??= [];
       if (validated.id && !presets.some((p) => p.id === validated.id)) throw Error("\u627E\u4E0D\u5230\u8BE5\u6A21\u578B\u9884\u8BBE");
@@ -37204,19 +38217,20 @@ var Store = class {
     return this.mutate(() => {
       const s = this.state, d = s.draft;
       const provider = d.provider || "codex", providerPreset = selectedPreset(this.availablePresets(), provider, d.providerPresetId);
-      if (!isNativeProvider(provider) && !providerPreset) throw Error("\u6B64\u7AD9\u7684\u9ED8\u8BA4\u5DE5\u4F5C\u6D41\u5C1A\u672A\u4E0A\u7EBF");
+      if (!isNativeProvider(provider) && !providerPreset) throw Error("\u8BF7\u9009\u62E9\u53EF\u7528\u7684\u751F\u56FE\u6A21\u578B");
+      if (providerPreset?.kind === "image-api") validateImageApiPreset(providerPreset, { requireConfigured: true });
       if (!d.portraitId) throw Error("\u8BF7\u5148\u4E0A\u4F20\u4E3B\u89D2\u56FE\u7247");
       const { costumes, poses, count } = queueReferences(d), ratio = d.ratio;
       if (!count) throw Error("\u8BF7\u81F3\u5C11\u9009\u62E9\u4E00\u5957\u670D\u88C5\u6216\u4E00\u4E2A\u59FF\u52BF");
       const kinds = ["portrait", ...costumes[0] ? ["costume"] : [], ...poses[0] ? ["pose"] : []];
       const problem = referenceCompatibility(providerPreset, kinds, ratio);
       if (problem) throw Error(problem);
-      if (s.batch && ["queued", "running", "paused", "awaiting-approval"].includes(s.batch.status)) throw Error("\u8BF7\u5148\u5B8C\u6210\u6216\u53D6\u6D88\u5F53\u524D\u6279\u6B21");
+      if (s.batch && ["queued", "running", "paused"].includes(s.batch.status)) throw Error("\u8BF7\u5148\u5B8C\u6210\u6216\u53D6\u6D88\u5F53\u524D\u6279\u6B21");
       if (count > 200) throw Error("\u6BCF\u6279\u6700\u591A 200 \u4E2A\u4EFB\u52A1\uFF0C\u8BF7\u51CF\u5C11\u9009\u62E9");
-      const batchId = uid();
+      const batchId = uid(), agentTarget = provider === "agent" && d.agentHost ? { agentHost: d.agentHost } : {};
       s.tasks = s.tasks.filter((t) => t.status === "done" || t.status === "failed" || t.status === "interrupted");
-      for (const c of costumes) for (const p of poses) s.tasks.push({ id: uid(), batchId, portraitId: d.portraitId, costumeId: c, poseId: p, prompt: this.prompt(s.assets[c], s.assets[p]), ratio, provider, providerPreset: providerPreset ? structuredClone(providerPreset) : null, status: "pending", createdAt: (/* @__PURE__ */ new Date()).toISOString(), attempts: 0 });
-      s.batch = { id: batchId, status: "draft", inputs: queueInputs(d, provider, providerPreset), provider, providerPreset: providerPreset ? structuredClone(providerPreset) : null, createdAt: (/* @__PURE__ */ new Date()).toISOString() };
+      for (const c of costumes) for (const p of poses) s.tasks.push({ id: uid(), batchId, portraitId: d.portraitId, costumeId: c, poseId: p, prompt: this.prompt(s.assets[c], s.assets[p]), ratio, provider, ...agentTarget, providerPreset: providerPreset ? structuredClone(providerPreset) : null, status: "pending", createdAt: (/* @__PURE__ */ new Date()).toISOString(), attempts: 0 });
+      s.batch = { id: batchId, status: "draft", portraitId: d.portraitId, inputs: queueInputs(d, provider, providerPreset), provider, ...agentTarget, providerPreset: providerPreset ? structuredClone(providerPreset) : null, createdAt: (/* @__PURE__ */ new Date()).toISOString() };
       delete s.execution;
       return this.snapshot();
     });
@@ -37261,12 +38275,19 @@ var Store = class {
         if (pending.some((t) => t.outputStyle === "three-view")) throw Error("\u8BF7\u91CD\u65B0\u9884\u89C8\u5F53\u524D\u642D\u914D\u540E\u751F\u6210");
         b.status = "queued";
       } else if (action === "pause") {
-        if (["queued", "running", "awaiting-approval"].includes(b.status)) b.status = "paused";
+        if (["queued", "running", "paused"].includes(b.status)) {
+          b.status = "paused";
+          delete b.resumeOnReconnect;
+        }
       } else if (action === "continue") {
-        if (!["awaiting-approval", "paused"].includes(b.status)) throw Error("\u5F53\u524D\u6279\u6B21\u65E0\u9700\u7EE7\u7EED");
+        if (b.status !== "paused") throw Error("\u5F53\u524D\u6279\u6B21\u65E0\u9700\u7EE7\u7EED");
         b.status = "queued";
+        delete b.resumeOnReconnect;
+        delete this.state.execution;
       } else if (action === "cancel") {
         b.status = "cancelled";
+        delete b.resumeOnReconnect;
+        delete this.state.execution;
         this.state.tasks.filter((t) => t.batchId === b.id && ["pending", "running"].includes(t.status)).forEach((t) => t.status = "cancelled");
       } else throw Error("\u672A\u77E5\u6279\u6B21\u64CD\u4F5C");
       return this.snapshot();
@@ -37287,20 +38308,36 @@ var Store = class {
       }
     }
     if (!a.url) throw Error("\u53C2\u8003\u56FE\u6CA1\u6709\u6765\u6E90");
-    const r = await fetch(a.url, { headers: { "User-Agent": "CharacterStudio/0.1 reference-fetch" }, signal: AbortSignal.timeout(3e4), redirect: "error" });
-    if (!r.ok) throw Error("\u8BFB\u53D6\u53C2\u8003\u56FE\u5931\u8D25 " + r.status + ": " + a.sourceId);
-    const bytes = Buffer.from(await r.arrayBuffer());
-    if (bytes.length > 20 * 1024 * 1024) throw Error("\u53C2\u8003\u56FE\u8D85\u8FC7\u5927\u5C0F\u9650\u5236");
+    let r, bytes;
+    const host = new URL(a.url).hostname;
+    try {
+      r = await fetch(a.url, { headers: { "User-Agent": "CharacterStudio/0.1 reference-fetch" }, signal: AbortSignal.timeout(3e4), redirect: "error" });
+      if (r.ok) bytes = Buffer.from(await r.arrayBuffer());
+    } catch (e) {
+      const failure2 = referenceNetworkError(e);
+      throw Error(failure2.message + "\n\u56FE\u5E93\u6765\u6E90\uFF1A" + host, { cause: failure2 });
+    }
+    if (!r.ok) {
+      const reason = r.status === 404 ? "\u56FE\u5E93\u4E2D\u627E\u4E0D\u5230\u8FD9\u5F20\u539F\u56FE\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u3002" : "\u56FE\u5E93\u672A\u8FD4\u56DE\u539F\u56FE\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5\u6216\u91CD\u65B0\u9009\u62E9\u3002";
+      throw Error(reason + "\uFF08HTTP " + r.status + "\uFF09\n\u56FE\u5E93\u6765\u6E90\uFF1A" + host);
+    }
+    if (bytes.length > 20 * 1024 * 1024) throw Error("\u53C2\u8003\u56FE\u8D85\u8FC7 20 MB\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u3002");
     const type = imageType(bytes), f = path2.join(this.root, "assets", createHash("sha256").update(bytes).digest("hex") + type.ext);
     await writeFile2(f, bytes);
     a.path = f;
     a.mime = type.mime;
     return f;
   }
-  claimNext(expectedBatchId) {
+  claimNext(expectedBatchId, agentClaim) {
     return this.mutate(async () => {
       const s = this.state, b = s.batch;
       if (expectedBatchId && b?.id !== expectedBatchId) return { task: null, batch: b };
+      if (b?.provider === "agent" && !matchesAgentHost(b.agentHost, agentClaim?.agentName)) return { task: null, batch: b, reason: "different_agent" };
+      if (agentClaim?.reconnect && b?.provider === "agent" && b.status === "paused" && b.resumeOnReconnect) {
+        b.status = "queued";
+        delete b.resumeOnReconnect;
+        delete s.execution;
+      }
       if (!b || !["queued", "running"].includes(b.status)) return { task: null, batch: b };
       if (s.tasks.some((t) => t.batchId === b.id && t.status === "running")) throw Error("\u5DF2\u6709\u4EFB\u52A1\u6267\u884C\u4E2D\uFF0C\u8BF7\u5148\u56DE\u586B\u7ED3\u679C");
       while (true) {
@@ -37310,14 +38347,24 @@ var Store = class {
           return { task: null, batch: b };
         }
         const refs = [];
-        try {
-          for (const id of [t.portraitId, t.costumeId, t.poseId].filter(Boolean)) refs.push({ kind: s.assets[id].kind, path: await this.downloadAsset(id), id });
-        } catch (e) {
+        let referenceError;
+        for (const [kind, id] of [["portrait", t.portraitId], ["costume", t.costumeId], ["pose", t.poseId]]) {
+          if (!id) continue;
+          try {
+            refs.push({ kind, path: await this.downloadAsset(id), id });
+          } catch (e) {
+            const asset = s.assets[id], label = REFERENCE_LABELS[kind] + "\u53C2\u8003\u56FE";
+            const identifier = asset?.sourceId || (kind === "portrait" ? asset?.name : id);
+            referenceError = "\u51C6\u5907" + label + (identifier ? "\u300C" + identifier + "\u300D" : "") + "\u5931\u8D25\uFF1A" + e.message;
+            break;
+          }
+        }
+        if (referenceError) {
           t.status = "failed";
-          t.error = e.message;
+          t.error = referenceError;
           t.finishedAt = (/* @__PURE__ */ new Date()).toISOString();
           b.failedCount = (b.failedCount || 0) + 1;
-          b.lastError = e.message;
+          b.lastError = referenceError.split("\n")[0];
           continue;
         }
         t.status = "running";
@@ -37325,15 +38372,36 @@ var Store = class {
         t.attempts++;
         t.startedAt = (/* @__PURE__ */ new Date()).toISOString();
         b.status = "running";
+        if (agentClaim) {
+          t.agentDeadline = Date.now() + agentClaim.receiptMs;
+          delete t.agentAcknowledgedAt;
+          s.execution = { batchId: b.id, phase: "claimed", message: "\u5DF2\u9886\u53D6\u4EFB\u52A1\uFF0C\u7B49\u5F85 Agent \u786E\u8BA4\u6536\u5230\u5E76\u5F00\u59CB\u751F\u6210\u3002" };
+        }
         return { task: { ...t, references: refs }, batch: b };
       }
     });
   }
+  acknowledgeAgentTask(taskId, processingMs) {
+    return this.mutate(() => {
+      const s = this.state, t = s.tasks.find((t2) => t2.id === taskId && t2.status === "running");
+      if (!t?.agentDeadline || t.agentDeadline <= Date.now() || s.batch?.id !== t.batchId) throw Error("\u4EFB\u52A1\u672A\u9886\u53D6\u6216\u5DF2\u8D85\u65F6\uFF0C\u8BF7\u91CD\u65B0\u8FDE\u63A5\u5DE5\u4F5C\u53F0\u3002");
+      if (!t.agentAcknowledgedAt) {
+        t.agentAcknowledgedAt = (/* @__PURE__ */ new Date()).toISOString();
+        t.agentDeadline = Date.now() + processingMs;
+        s.execution = { batchId: t.batchId, phase: "generating", message: "Agent \u5DF2\u786E\u8BA4\u6536\u5230\u4EFB\u52A1\uFF0C\u6B63\u5728\u751F\u6210\u3002" };
+      }
+      return { taskId, deadline: t.agentDeadline };
+    });
+  }
   async recordResult(taskId, { filePath, base64: base643, error: error62 }) {
+    const supplied = [filePath, base643, error62].filter((v) => typeof v === "string" && v.trim());
+    if (supplied.length !== 1) throw Error("\u56DE\u586B\u65F6\u8BF7\u63D0\u4F9B\u4E00\u9879\uFF1A\u771F\u5B9E\u56FE\u7247\u7EDD\u5BF9\u8DEF\u5F84\u3001\u56FE\u7247 base64 \u6216\u5931\u8D25\u539F\u56E0\u3002");
     let asset;
     if (!error62) {
+      if (filePath && !path2.isAbsolute(filePath)) throw Error("\u8BF7\u63D0\u4F9B\u771F\u5B9E\u751F\u6210\u56FE\u7247\u7684\u672C\u673A\u7EDD\u5BF9\u8DEF\u5F84\u3002");
+      if (base643 && !/^[A-Za-z0-9+/]+={0,2}$/.test(base643)) throw Error("\u8BF7\u4F20\u7EAF base64 \u56FE\u7247\u5185\u5BB9\uFF0C\u4E0D\u542B data: \u524D\u7F00\u3002");
       const bytes = base643 ? Buffer.from(base643, "base64") : await readFile2(await realpath(filePath));
-      asset = await this.putImage(bytes, path2.basename(filePath || "generated.png"), "result");
+      asset = await this.putImage(bytes, path2.basename(filePath || "generated" + imageType(bytes).ext), "result");
     }
     return this.mutate(() => {
       const s = this.state, t = s.tasks.find((t2) => t2.id === taskId);
@@ -37360,9 +38428,9 @@ var Store = class {
       if (!t || !["done", "failed", "interrupted"].includes(t.status)) throw Error("\u8BE5\u4EFB\u52A1\u65E0\u6CD5\u91CD\u505A");
       if (t.outputStyle === "three-view") throw Error("\u8BE5\u8BB0\u5F55\u4EC5\u4F9B\u67E5\u770B\uFF0C\u8BF7\u521B\u5EFA\u65B0\u7684\u5355\u5F20\u4EBA\u7269\u56FE\u4EFB\u52A1");
       if (s.batch && s.tasks.some((t2) => t2.batchId === s.batch.id && ["pending", "running"].includes(t2.status)) && s.batch.status !== "cancelled") throw Error("\u8BF7\u5148\u5904\u7406\u5F53\u524D\u6279\u6B21");
-      const id = uid();
-      s.tasks.push({ ...t, id, batchId: id, status: "pending", resultId: null, error: null, attempts: 0, remoteTaskId: null, providerStatus: null, outputUrl: null });
-      s.batch = { id, status: "queued", provider: t.provider || "codex", providerPreset: t.providerPreset || null };
+      const id = uid(), createdAt = (/* @__PURE__ */ new Date()).toISOString();
+      s.tasks.push({ ...t, id, batchId: id, status: "pending", resultId: null, error: null, attempts: 0, remoteTaskId: null, providerStatus: null, outputUrl: null, createdAt });
+      s.batch = { id, status: "queued", portraitId: t.portraitId, createdAt, provider: t.provider || "codex", ...t.agentHost ? { agentHost: t.agentHost } : {}, providerPreset: t.providerPreset || null };
       delete s.execution;
       return this.snapshot();
     });
@@ -37380,6 +38448,7 @@ import { spawn, execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import path3 from "node:path";
 import { EventEmitter } from "node:events";
+import { createHash as createHash2 } from "node:crypto";
 function codexCommand() {
   const flags = ["app-server", "--disable", "shell_tool", "--disable", "unified_exec"];
   const override = process.env.CHARACTER_STUDIO_CODEX_BIN;
@@ -37556,29 +38625,40 @@ var GenerationRunner = class {
     this.activeRun = null;
     this.starting = false;
   }
-  async probe(provider, inputKey) {
+  async probe(provider, inputKey, preset2) {
     provider ??= (await this.store.refresh()).draft.provider || "codex";
-    if (provider === "agent") return { available: false, engine: "agent", reason: "\u5F53\u524D Agent \u9700\u5728\u652F\u6301\u5DE5\u4F5C\u53F0\u6D88\u606F\u7684\u5BBF\u4E3B\u4E2D\u6267\u884C\uFF1B\u672C\u673A\u670D\u52A1\u65E0\u6CD5\u68C0\u6D4B\u5BBF\u4E3B\u662F\u5426\u5F00\u653E\u751F\u56FE\u5DE5\u5177\u3002" };
-    if (provider !== "codex") return this.runninghub.probe(provider, inputKey);
+    if (provider === "agent") return { available: false, engine: "agent", account: "unknown", executor: false, capability: "unknown", reason: "\u56DE\u5230\u6253\u5F00\u5DE5\u4F5C\u53F0\u7684\u539F\u804A\u5929\uFF0C\u53D1\u9001\u300C\u91CD\u65B0\u8FDE\u63A5\u4EBA\u7269\u5DE5\u4F5C\u53F0\u300D\u3002" };
+    if (provider !== "codex") {
+      if (!preset2) {
+        const s = await this.store.refresh();
+        preset2 = selectedPreset(s.providerPresets, provider, s.draft.providerPresetId);
+      }
+      const result = await this.runninghub.probe(provider, inputKey, preset2);
+      return { ...result, account: result.available ? "confirmed" : "unknown", executor: result.available, capability: "unknown" };
+    }
     const client = this.clientFactory();
+    let connected = false;
     try {
       await client.connect();
+      connected = true;
       const r = await client.request("account/read", { refreshToken: false });
-      if (r.account?.type !== "chatgpt") return { available: false, reason: "\u8BF7\u5148\u5728 Codex CLI \u4F7F\u7528 ChatGPT \u8D26\u53F7\u767B\u5F55\uFF0C\u672C\u5DE5\u4F5C\u53F0\u4E0D\u5207\u6362\u5230 API Key \u751F\u56FE\u3002" };
-      return { available: true, engine: "codex", message: "\u672C\u673A Codex \u5DF2\u767B\u5F55\uFF0C\u53EF\u81EA\u52A8\u63D0\u4EA4\u4EFB\u52A1" };
+      if (r.account?.type !== "chatgpt") return { available: false, engine: "codex", account: "unknown", executor: true, capability: "unknown", reason: "\u5C1A\u672A\u767B\u5F55 ChatGPT \u8D26\u53F7\u3002\u8BF7\u6253\u5F00 Codex \u5B8C\u6210\u767B\u5F55\uFF0C\u518D\u70B9\u300C\u68C0\u6D4B\u8FDE\u63A5\u300D\u3002" };
+      const accountId = createHash2("sha256").update(JSON.stringify(r.account)).digest("hex");
+      return { available: true, engine: "codex", account: "confirmed", executor: true, capability: "unknown", accountId, message: "\u672C\u673A Codex \u5DF2\u767B\u5F55\uFF0C\u6267\u884C\u5668\u5DF2\u8FDE\u63A5\u3002\u5C1A\u672A\u9A8C\u8BC1\u751F\u56FE\u80FD\u529B\u3002" };
     } catch (e) {
-      return { available: false, reason: e.message };
+      return { available: false, engine: "codex", account: "unknown", executor: connected, capability: "unknown", reason: e.message, solution: "\u6253\u5F00 Codex\uFF0C\u786E\u8BA4\u5DF2\u5B89\u88C5\u5E76\u5B8C\u6210\u767B\u5F55\uFF0C\u518D\u70B9\u300C\u68C0\u6D4B\u8FDE\u63A5\u300D\u3002\u4E5F\u53EF\u9009\u62E9\u8C46\u5305\u5DE5\u4F5C\u6216\u751F\u56FE API\u3002" };
     } finally {
       await client.close();
     }
   }
-  async start() {
+  async start(expectedBatchId) {
     if (this.starting) return { started: true, alreadyRunning: true };
     this.starting = true;
     try {
       const state = await this.store.refresh();
       if (!state.batch || !["queued", "running"].includes(state.batch.status)) throw Error("\u6CA1\u6709\u5DF2\u63D0\u4EA4\u4E14\u53EF\u6267\u884C\u7684\u6279\u6B21");
-      if (state.batch.provider === "agent") throw Error("\u5F53\u524D Agent \u6E20\u9053\u987B\u7531\u5BBF\u4E3B\u63A5\u6536\u5DE5\u4F5C\u53F0\u6D88\u606F\u540E\u6267\u884C\uFF1B\u4E0D\u4F1A\u81EA\u52A8\u5207\u6362\u5230\u672C\u673A Codex \u6216 RunningHub\u3002");
+      if (expectedBatchId && state.batch.id !== expectedBatchId) throw Error("\u5F53\u524D\u6279\u6B21\u5DF2\u53D8\u5316\uFF0C\u8BF7\u5237\u65B0\u540E\u518D\u8BD5\u3002");
+      if (state.batch.provider === "agent") throw Error("\u5F53\u524D Agent \u6E20\u9053\u987B\u7531\u5BBF\u4E3B\u63A5\u6536\u5DE5\u4F5C\u53F0\u6D88\u606F\u540E\u6267\u884C\uFF1B\u4E0D\u4F1A\u81EA\u52A8\u5207\u6362\u5230\u5176\u4ED6\u6E20\u9053\u3002");
       if (this.job && this.activeRun?.batchId === state.batch.id && !this.activeRun.controller.signal.aborted) return { started: true, alreadyRunning: true, batchId: state.batch.id };
       if (this.job) {
         this.stop(this.activeRun);
@@ -37650,7 +38730,7 @@ var GenerationRunner = class {
     watcher.unref();
     try {
       const batch = (await this.store.refresh()).batch, provider = batch.provider || "codex";
-      await this.execution(batchId, "connecting", provider === "codex" ? "\u6B63\u5728\u8FDE\u63A5\u672C\u673A Codex\u2026" : "\u6B63\u5728\u8FDE\u63A5 RunningHub \u4E2A\u4EBA\u7248\u2026");
+      await this.execution(batchId, "connecting", provider === "codex" ? "\u6B63\u5728\u8FDE\u63A5\u672C\u673A Codex\u2026" : "\u6B63\u5728\u8FDE\u63A5\u751F\u56FE API\u2026");
       if (provider !== "codex") await this.runninghub.preflight(provider, batch.providerPreset);
       else {
         client = this.clientFactory();
@@ -37725,7 +38805,8 @@ import { readFile as readFile3, writeFile as writeFile3, rename as rename2 } fro
 import { spawn as spawn2 } from "node:child_process";
 import { randomUUID as randomUUID2 } from "node:crypto";
 import path4 from "node:path";
-var envNames = { "runninghub-cn": "RUNNINGHUB_CN_API_KEY", "runninghub-global": "RUNNINGHUB_GLOBAL_API_KEY" };
+var knownProviders = [...Object.keys(RH_ORIGINS), ...IMAGE_API_SERVICES.map((s) => s.id)];
+var envNames = { "runninghub-cn": "RUNNINGHUB_CN_API_KEY", "runninghub-global": "RUNNINGHUB_GLOBAL_API_KEY", "image-openai": "OPENAI_API_KEY", "image-gemini": "GEMINI_API_KEY", "image-seedream": "ARK_API_KEY", "image-custom": "CHARACTER_STUDIO_IMAGE_API_KEY" };
 function dpapi(value, decrypt) {
   return new Promise((resolve, reject) => {
     const script = "$ErrorActionPreference='Stop';[Console]::InputEncoding=[System.Text.Encoding]::UTF8;[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;[void][System.Reflection.Assembly]::LoadWithPartialName('System.Security');$v=[Console]::In.ReadToEnd();" + (decrypt ? "$bytes=[System.Security.Cryptography.ProtectedData]::Unprotect([Convert]::FromBase64String($v),$null,[System.Security.Cryptography.DataProtectionScope]::CurrentUser);[Console]::Write([System.Text.Encoding]::UTF8.GetString($bytes))" : "$bytes=[System.Security.Cryptography.ProtectedData]::Protect([System.Text.Encoding]::UTF8.GetBytes($v),$null,[System.Security.Cryptography.DataProtectionScope]::CurrentUser);[Console]::Write([Convert]::ToBase64String($bytes))");
@@ -37767,10 +38848,10 @@ var ProviderCredentials = class {
   }
   async status() {
     const saved = await this.load();
-    return Object.fromEntries(Object.keys(RH_ORIGINS).map((p) => [p, { configured: !!(this.env[envNames[p]] || saved[p]), source: this.env[envNames[p]] ? "environment" : saved[p] ? "local" : null }]));
+    return Object.fromEntries(knownProviders.map((p) => [p, { configured: !!(this.env[envNames[p]] || saved[p]), source: this.env[envNames[p]] ? "environment" : saved[p] ? "local" : null }]));
   }
   async key(provider) {
-    if (!RH_ORIGINS[provider]) throw Error("\u672A\u77E5 RunningHub \u7AD9\u70B9");
+    if (!knownProviders.includes(provider)) throw Error("\u672A\u77E5 API \u670D\u52A1");
     const env = this.env[envNames[provider]];
     if (env) return env;
     const value = (await this.load())[provider];
@@ -37788,7 +38869,7 @@ var ProviderCredentials = class {
     try {
       const saved = await this.load();
       for (const [p, key] of Object.entries(keys)) {
-        if (!RH_ORIGINS[p] || typeof key !== "string" || key.length > 2048 || /[\r\n]/.test(key)) throw Error("\u6E20\u9053\u6216 Key \u683C\u5F0F\u65E0\u6548");
+        if (!knownProviders.includes(p) || typeof key !== "string" || key.length > 2048 || /[\r\n]/.test(key)) throw Error("\u6E20\u9053\u6216 Key \u683C\u5F0F\u65E0\u6548");
         if (!key.trim()) {
           delete saved[p];
           continue;
@@ -37806,174 +38887,162 @@ var ProviderCredentials = class {
   }
 };
 
-// src/runninghub-client.mjs
+// src/image-api-client.mjs
 import { readFile as readFile4 } from "node:fs/promises";
-import { setTimeout as delay } from "node:timers/promises";
-var RunningHubClient = class {
-  constructor(credentials, { origins = RH_ORIGINS, pollMs = 5e3, timeoutMs = 15 * 60 * 1e3, probeTimeoutMs = 1e4, fetchImpl = fetch } = {}) {
-    this.credentials = credentials;
-    this.origins = origins;
-    this.pollMs = pollMs;
-    this.timeoutMs = timeoutMs;
-    this.probeTimeoutMs = probeTimeoutMs;
-    this.fetch = fetchImpl;
+var ImageApiClient = class {
+  constructor(credentials, { fetchImpl = fetch, origins = {}, probeTimeoutMs = 1e4, timeoutMs = 15 * 60 * 1e3 } = {}) {
+    Object.assign(this, { credentials, fetch: fetchImpl, origins, probeTimeoutMs, timeoutMs });
   }
-  async request(provider, key, endpoint, body, { signal, multipart = false, method = "POST", timeoutMs = 6e4 } = {}) {
+  config(preset2) {
+    const p = validateImageApiPreset(preset2, { requireConfigured: true }), service = imageApiService(p.provider);
+    return { ...p, baseUrl: this.origins[p.provider] || p.baseUrl || service.baseUrl, protocol: p.protocol || service.protocol, service };
+  }
+  async json(response, maxBytes = 24 * 1024 * 1024) {
+    const chunks = [];
+    let size = 0;
+    for await (const chunk of response.body) {
+      size += chunk.length;
+      if (size > maxBytes) throw Error("API \u54CD\u5E94\u8D85\u8FC7\u672C\u673A\u4FDD\u5B58\u4E0A\u9650");
+      chunks.push(chunk);
+    }
     try {
-      const response = await this.fetch(this.origins[provider] + endpoint, { method, headers: { Authorization: "Bearer " + key, ...multipart || method === "GET" ? {} : { "Content-Type": "application/json" } }, ...method === "GET" ? {} : { body: multipart ? body : JSON.stringify(body) }, signal: AbortSignal.any([...signal ? [signal] : [], AbortSignal.timeout(timeoutMs)]), redirect: "error" });
-      const j = await response.json().catch(() => {
-        throw Error("RunningHub \u8FD4\u56DE\u4E86\u65E0\u6CD5\u8BFB\u53D6\u7684\u54CD\u5E94\uFF08HTTP " + response.status + "\uFF09");
-      });
-      if (!response.ok || j.code !== void 0 && !["0", "200"].includes(String(j.code)) || endpoint.startsWith("/openapi/v2/") && j.errorCode && !j.taskId) {
-        const detail = [j.errorCode, j.errorMessage, j.errorMsg, j.message, j.msg, j.data?.failedReason, j.data?.exception_message, typeof j.error === "string" ? j.error : j.error?.message].filter(Boolean).join(" \xB7 ") || "\u8BF7\u6C42\u5931\u8D25";
-        const e = Error("RunningHub HTTP " + response.status + (j.code !== void 0 ? " / " + j.code : "") + "\uFF1A" + detail);
-        e.providerCode = String(j.code ?? "");
-        e.httpStatus = response.status;
-        e.fatal = [401, 402, 403].includes(response.status) || /api.?key|unauthorized|insufficient|余额|额度|欠费|鉴权/i.test(detail);
+      return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    } catch {
+      throw Error("API \u8FD4\u56DE\u7684\u4E0D\u662F\u6709\u6548 JSON\uFF08HTTP " + response.status + "\uFF09\uFF0C\u8BF7\u68C0\u67E5\u63A5\u53E3\u5730\u5740\u548C\u534F\u8BAE");
+    }
+  }
+  async request(config2, key, route, { method = "GET", body, signal, timeoutMs = this.timeoutMs } = {}) {
+    const multipart = body instanceof FormData;
+    try {
+      const response = await this.fetch(config2.baseUrl + route, { method, headers: { ...config2.protocol === "gemini" ? { "x-goog-api-key": key } : { Authorization: "Bearer " + key }, ...!body || multipart ? {} : { "Content-Type": "application/json" } }, ...body ? { body: multipart ? body : JSON.stringify(body) } : {}, redirect: "error", signal: AbortSignal.any([...signal ? [signal] : [], AbortSignal.timeout(timeoutMs)]) });
+      const data = await this.json(response, method === "GET" ? 2 * 1024 * 1024 : 24 * 1024 * 1024);
+      if (!response.ok || data.error) {
+        const error62 = data.error, detail = typeof error62 === "string" ? error62 : error62?.message || data.message || "\u8BF7\u6C42\u5931\u8D25";
+        const e = Error(config2.service.name + " HTTP " + response.status + "\uFF1A" + detail);
+        Object.assign(e, { httpStatus: response.status, fatal: [401, 402, 403, 429].includes(response.status) });
         throw e;
       }
-      return j;
-    } catch (e) {
-      const message = key && e.message ? e.message.replaceAll(key, "[Key \u5DF2\u9690\u85CF]").replaceAll(encodeURIComponent(key), "[Key \u5DF2\u9690\u85CF]") : e.message;
-      if (message !== e.message) {
-        const redacted = Error(message);
-        Object.assign(redacted, { name: e.name, fatal: e.fatal, providerCode: e.providerCode, httpStatus: e.httpStatus });
-        throw redacted;
-      }
-      throw e;
+      return data;
+    } catch (error62) {
+      let message = error62.message;
+      if (error62.name === "TimeoutError" || error62.name === "AbortError") message = "\u8FDE\u63A5\u6216\u7B49\u5F85 " + config2.service.name + " \u8D85\u65F6\uFF0C\u8BF7\u68C0\u67E5\u7F51\u7EDC\u3002\u5DF2\u63D0\u4EA4\u7684\u8BF7\u6C42\u53EF\u80FD\u4ECD\u5728\u670D\u52A1\u7AEF\u6267\u884C\uFF0C\u8BF7\u5148\u67E5\u770B\u5E73\u53F0\u7528\u91CF\u8BB0\u5F55\u518D\u91CD\u505A\u3002";
+      else if (message === "fetch failed") message = "\u65E0\u6CD5\u8FDE\u63A5 " + config2.service.name + "\uFF0C\u8BF7\u68C0\u67E5\u7F51\u7EDC\u3001\u4EE3\u7406\u548C\u63A5\u53E3\u5730\u5740\u3002" + (error62.cause?.code ? " \u7F51\u7EDC\u9519\u8BEF\u7801\uFF1A" + error62.cause.code : "");
+      message = String(message).replaceAll(key, "[Key \u5DF2\u9690\u85CF]").replaceAll(encodeURIComponent(key), "[Key \u5DF2\u9690\u85CF]");
+      const redacted = Error(message);
+      Object.assign(redacted, { name: error62.name, httpStatus: error62.httpStatus, fatal: error62.fatal });
+      throw redacted;
     }
   }
-  async preflight(provider, preset) {
-    validatePreset(preset);
-    return this.credentials.key(provider);
+  async preflight(provider, preset2) {
+    const config2 = this.config(preset2);
+    if (config2.provider !== provider) throw Error("\u4EFB\u52A1\u6E20\u9053\u4E0E\u6A21\u578B\u4E0D\u5339\u914D");
+    await this.credentials.key(provider);
+    return config2;
   }
-  async probe(provider, inputKey) {
+  async probe(provider, inputKey, preset2) {
     try {
-      const key = inputKey?.trim() || await this.credentials.key(provider);
+      const config2 = this.config(preset2), key = inputKey?.trim() || await this.credentials.key(provider);
       if (/[\r\n]/.test(key)) throw Error("Key \u4E0D\u80FD\u5305\u542B\u6362\u884C\uFF0C\u8BF7\u53EA\u586B\u5199\u5BC6\u94A5\u672C\u8EAB");
-      await this.request(provider, key, "/uc/openapi/accountStatus", { apikey: key }, { timeoutMs: this.probeTimeoutMs });
-      return { available: true, engine: provider, message: "RunningHub \u4E2A\u4EBA\u7248\u8FDE\u63A5\u6210\u529F\uFF08\u672A\u751F\u6210\u56FE\u7247\uFF09" };
-    } catch (e) {
-      let reason = e.message;
-      if (e.providerCode === "806") reason = "RunningHub \u8FD4\u56DE 806\uFF1A\u672A\u627E\u5230\u6B64 Key \u5173\u8054\u7684\u7528\u6237\u3002\u8BF7\u6838\u5BF9\u6240\u9009\u7AD9\u70B9\u548C Key \u662F\u5426\u590D\u5236\u5B8C\u6574\u3002";
-      else if (e.providerCode === "802" || e.httpStatus === 401) reason = "RunningHub \u672A\u63A5\u53D7\u6B64 Key\uFF1A\u53EF\u80FD\u672A\u6388\u6743\u3001\u5DF2\u5931\u6548\u6216\u4E0D\u5C5E\u4E8E\u6240\u9009\u7AD9\u70B9\u3002";
-      else if (e.providerCode === "801") reason = "\u6B64\u8D26\u6237\u6682\u4E0D\u652F\u6301\u4E2A\u4EBA\u7248 API\uFF0C\u8BF7\u5728\u5BF9\u5E94\u7AD9\u70B9\u786E\u8BA4 API \u6743\u9650\u3002";
-      else if (e.name === "TimeoutError" || e.name === "AbortError") reason = "\u8FDE\u63A5 RunningHub \u8D85\u65F6\uFF08" + Math.round(this.probeTimeoutMs / 1e3) + " \u79D2\uFF09\uFF0C\u8BF7\u68C0\u67E5\u7F51\u7EDC\u540E\u91CD\u8BD5\u3002";
-      else if (e.message === "fetch failed") reason = "\u65E0\u6CD5\u8FDE\u63A5 RunningHub\uFF0C\u8BF7\u68C0\u67E5\u7F51\u7EDC\u8FDE\u63A5\u540E\u91CD\u8BD5\u3002";
-      return { available: false, engine: provider, reason, details: e.message, ...e.providerCode ? { code: e.providerCode } : {} };
+      const route = config2.protocol === "gemini" ? "/models/" + encodeURIComponent(config2.model) : config2.protocol === "seedream" || provider === "image-custom" ? "/models" : "/models/" + encodeURIComponent(config2.model);
+      const response = await this.request(config2, key, route, { timeoutMs: this.probeTimeoutMs });
+      if ((config2.protocol === "seedream" || provider === "image-custom") && Array.isArray(response.data) && !response.data.some((m) => m.id === config2.model)) throw Error("Key \u5DF2\u88AB\u63A5\u53D7\uFF0C\u4F46\u8D26\u53F7\u7684\u6A21\u578B\u5217\u8868\u4E2D\u6CA1\u6709 " + config2.model + "\u3002\u8BF7\u5F00\u901A\u8BE5\u6A21\u578B\u6216\u66F4\u6362\u6A21\u578B\u3002");
+      return { available: true, engine: provider, message: "API \u5DF2\u8FDE\u63A5\uFF0C\u6A21\u578B\u4FE1\u606F\u53EF\u8BBF\u95EE\u3002\u5C1A\u672A\u9A8C\u8BC1\u751F\u56FE\u80FD\u529B\u3002" };
+    } catch (error62) {
+      return { available: false, engine: provider, reason: error62.message, details: error62.message };
     }
   }
-  async inspect({ provider, kind, link, example }) {
-    if (!["app", "workflow"].includes(kind)) throw Error("\u8BF7\u9009\u62E9 AI \u5E94\u7528\u6216\u5DE5\u4F5C\u6D41");
-    const id = remoteId(provider, link);
-    let data;
-    if (example?.trim()) data = example;
-    else {
-      const key = await this.credentials.key(provider);
-      data = kind === "app" ? await this.request(provider, key, "/api/webapp/apiCallDemo?" + new URLSearchParams({ apiKey: key, webappId: id }), null, { method: "GET" }) : await this.request(provider, key, "/api/openapi/getJsonApiFormat", { apiKey: key, workflowId: id });
-    }
-    return { provider, kind, remoteId: id, nodes: importedNodes(data, kind) };
+  size(ratio, protocol, model) {
+    const [a, b] = ratio.split(":").map(Number);
+    if (!a || !b) throw Error("\u56FE\u7247\u6BD4\u4F8B\u65E0\u6548");
+    if (model === "gpt-image-1.5") return a === b ? "1024x1024" : a > b ? "1536x1024" : "1024x1536";
+    const unit = protocol === "seedream" ? Math.ceil(Math.sqrt(4194304 / (a * b)) / 16) * 16 : Math.floor(1536 / Math.max(a, b) / 16) * 16;
+    return a * unit + "x" + b * unit;
   }
   async generate(task, { signal, onProgress = async () => {
   }, onRemote = async () => {
   } } = {}) {
-    const key = await this.preflight(task.provider, task.providerPreset), preset = validatePreset(task.providerPreset), files = [];
-    const v2 = preset.apiVersion === 2;
-    personalPayload(task, task.references.map(({ kind }) => ({ kind, fileName: "validation.png", url: "https://example.invalid/validation.png" })));
-    for (let i = 0; i < task.references.length; i++) {
+    const config2 = await this.preflight(task.provider, task.providerPreset), key = await this.credentials.key(task.provider);
+    if (!task.references.some((r) => r.kind === "portrait") || task.references.length < 2 || task.references.length > 3) throw Error("\u751F\u56FE\u9700\u8981\u4E00\u5F20\u4E3B\u89D2\u56FE\uFF0C\u4EE5\u53CA\u670D\u88C5\u6216\u59FF\u52BF\u53C2\u8003\u56FE");
+    const images = [];
+    for (const ref of task.references) {
       signal?.throwIfAborted();
-      const ref = task.references[i], bytes = await readFile4(ref.path), type = imageType(bytes);
-      if (bytes.length > 30 * 1024 * 1024) throw Error("\u53C2\u8003\u56FE\u8D85\u8FC7 RunningHub 30 MB \u9650\u5236");
-      const formats = new Set(preset.nodes.filter((n) => n.source === ref.kind || n.source === "references").map((n) => n.format));
-      const file2 = { kind: ref.kind };
-      await onProgress("\u6B63\u5728\u4E0A\u4F20\u53C2\u8003\u56FE " + (i + 1) + "/" + task.references.length + "\u2026");
-      for (const format of formats) {
-        const form = new FormData();
-        form.set("file", new Blob([bytes], { type: type.mime }), "reference-" + (i + 1) + type.ext);
-        if (v2 || format === "url") {
-          const upload = await this.request(task.provider, key, "/openapi/v2/media/upload/binary", form, { signal, multipart: true });
-          if (format === "url") {
-            file2.url = upload.data?.download_url;
-            if (!file2.url || !/^https?:\/\//.test(file2.url)) throw Error("RunningHub \u4E0A\u4F20\u672A\u8FD4\u56DE\u56FE\u7247 URL");
-          } else {
-            file2.fileName = upload.data?.fileName || upload.data?.filename;
-            if (!file2.fileName) throw Error("RunningHub \u4E0A\u4F20\u672A\u8FD4\u56DE fileName");
-          }
-        } else {
-          form.set("apiKey", key);
-          form.set("fileType", "input");
-          const upload = await this.request(task.provider, key, "/task/openapi/upload", form, { signal, multipart: true });
-          file2.fileName = upload.data?.fileName;
-          if (!file2.fileName) throw Error("RunningHub \u4E0A\u4F20\u672A\u8FD4\u56DE fileName");
-        }
-      }
-      files.push(file2);
+      const bytes2 = await readFile4(ref.path), type = imageType(bytes2);
+      if (bytes2.length > 10 * 1024 * 1024) throw Error("\u53C2\u8003\u56FE\u8D85\u8FC7 API \u7684 10 MB \u4E0A\u4F20\u9650\u5236");
+      images.push({ bytes: bytes2, mime: type.mime, ext: type.ext });
     }
-    const { nodeInfoList } = personalPayload(task, files);
-    await onProgress("\u6B63\u5728\u63D0\u4EA4\u5230 RunningHub \u4E2A\u4EBA\u7248\u2026");
-    const submitted = v2 ? await this.request(task.provider, key, "/openapi/v2/run/workflow/" + preset.remoteId, { addMetadata: true, nodeInfoList, instanceType: "default", usePersonalQueue: "false" }, { signal }) : await this.request(task.provider, key, preset.kind === "app" ? "/task/openapi/ai-app/run" : "/task/openapi/create", { apiKey: key, [preset.kind === "app" ? "webappId" : "workflowId"]: preset.remoteId, nodeInfoList });
-    const taskId = submitted.data?.taskId || submitted.taskId;
-    if (!taskId) throw Error("RunningHub \u672A\u8FD4\u56DE taskId\uFF0C\u672A\u81EA\u52A8\u91CD\u63D0\u4EE5\u907F\u514D\u91CD\u590D\u8BA1\u8D39");
-    await onRemote({ remoteTaskId: String(taskId), providerStatus: "CREATE" });
-    const deadline = Date.now() + this.timeoutMs;
-    try {
-      while (Date.now() < deadline) {
-        signal?.throwIfAborted();
-        const raw = v2 ? await this.request(task.provider, key, "/openapi/v2/query", { taskId }, { signal }) : await this.request(task.provider, key, "/task/openapi/status", { apiKey: key, taskId }, { signal });
-        const status = v2 ? raw.status : typeof raw.data === "string" ? raw.data : raw.data?.status || raw.data?.taskStatus;
-        if (!["CREATE", "QUEUED", "RUNNING", "SUCCESS", "FAILED", "CANCEL", "CANCELED", "CANCELLED"].includes(status)) throw Error("RunningHub \u8FD4\u56DE\u672A\u77E5\u4EFB\u52A1\u72B6\u6001\uFF1A" + status);
-        await onRemote({ remoteTaskId: String(taskId), providerStatus: status });
-        if (status === "SUCCESS" || status === "FAILED") {
-          const results = v2 ? raw.results : (await this.request(task.provider, key, "/task/openapi/outputs", { apiKey: key, taskId }, { signal })).data;
-          if (status === "FAILED") throw Error([raw.errorCode, raw.errorMessage].filter(Boolean).join(" \xB7 ") || "RunningHub \u751F\u6210\u5931\u8D25\uFF0C\u672A\u8FD4\u56DE\u53EF\u7528\u7ED3\u679C");
-          const image = (Array.isArray(results) ? results : []).find((r) => {
-            const type = v2 ? r.outputType : r.fileType;
-            return (!type || /^(png|jpe?g|webp|image|image\/(png|jpe?g|webp))$/i.test(type)) && (v2 ? r.url : r.fileUrl);
-          });
-          const url2 = v2 ? image?.url : image?.fileUrl;
-          if (!url2) throw Error("RunningHub \u62A5\u544A\u6210\u529F\u4F46\u672A\u8FD4\u56DE\u56FE\u7247\u5730\u5740");
-          const parsed = new URL(url2);
-          if (parsed.protocol !== "https:" && !(parsed.protocol === "http:" && new URL(this.origins[task.provider]).protocol === "http:")) throw Error("\u7ED3\u679C\u56FE\u7247\u5730\u5740\u534F\u8BAE\u4E0D\u53D7\u652F\u6301");
-          await onProgress("\u751F\u6210\u5B8C\u6210\uFF0C\u6B63\u5728\u4FDD\u5B58\u56FE\u7247\u2026");
-          const response = await this.fetch(url2, { signal: AbortSignal.any([...signal ? [signal] : [], AbortSignal.timeout(6e4)]), redirect: "error" });
-          if (!response.ok) throw Error("\u7ED3\u679C\u56FE\u7247\u4E0B\u8F7D\u5931\u8D25 HTTP " + response.status);
-          const chunks = [];
-          let size = 0;
-          for await (const chunk of response.body) {
-            size += chunk.length;
-            if (size > 12 * 1024 * 1024) throw Error("\u7ED3\u679C\u56FE\u7247\u8D85\u8FC7\u672C\u5730 12 MB \u4FDD\u5B58\u9650\u5236");
-            chunks.push(chunk);
-          }
-          const bytes = Buffer.concat(chunks);
-          imageType(bytes);
-          await onRemote({ remoteTaskId: String(taskId), providerStatus: status, outputUrl: url2 });
-          return { base64: bytes.toString("base64") };
-        }
-        if (status.startsWith("CANCEL")) throw Error("RunningHub \u8FDC\u7AEF\u4EFB\u52A1\u5DF2\u53D6\u6D88");
-        await onProgress((status === "RUNNING" ? "RunningHub \u6B63\u5728\u751F\u6210" : "RunningHub \u6392\u961F\u4E2D") + " \xB7 \u4EFB\u52A1 " + taskId);
-        await delay(Math.min(this.pollMs, Math.max(1, deadline - Date.now())), void 0, { signal });
-      }
-      throw Error("RunningHub \u7B49\u5F85\u7ED3\u679C\u8D85\u8FC7 " + Math.round(this.timeoutMs / 6e4) + " \u5206\u949F\uFF1B\u8FDC\u7AEF\u4EFB\u52A1\u53EF\u80FD\u4ECD\u5728\u6267\u884C\uFF0C\u53EF\u7528\u4EFB\u52A1\u7F16\u53F7\u67E5\u8BE2\uFF0C\u672A\u81EA\u52A8\u91CD\u63D0");
-    } catch (e) {
-      const failure2 = Error((e.message + "\uFF08RunningHub \u4EFB\u52A1 " + taskId + "\uFF09").replaceAll(key, "[Key \u5DF2\u9690\u85CF]"));
-      Object.assign(failure2, { name: e.name, fatal: e.fatal });
-      throw failure2;
+    const size = this.size(task.ratio, config2.protocol, config2.model);
+    let route, body;
+    if (config2.protocol === "gemini") {
+      route = "/models/" + encodeURIComponent(config2.model) + ":generateContent";
+      body = { contents: [{ role: "user", parts: [{ text: task.prompt }, ...images.map((i) => ({ inlineData: { mimeType: i.mime, data: i.bytes.toString("base64") } }))] }], generationConfig: { responseModalities: ["TEXT", "IMAGE"], imageConfig: { aspectRatio: task.ratio } } };
+    } else if (config2.protocol === "seedream") {
+      route = "/images/generations";
+      body = { model: config2.model, prompt: task.prompt, image: images.map((i) => "data:" + i.mime + ";base64," + i.bytes.toString("base64")), size, response_format: "b64_json", sequential_image_generation: "disabled", watermark: true };
+    } else {
+      route = "/images/edits";
+      if (config2.protocol === "openai-multipart") {
+        body = new FormData();
+        body.set("model", config2.model);
+        body.set("prompt", task.prompt);
+        body.set("n", "1");
+        body.set("size", size);
+        for (let n = 0; n < images.length; n++) body.append("image[]", new Blob([images[n].bytes], { type: images[n].mime }), "reference-" + (n + 1) + images[n].ext);
+      } else body = { model: config2.model, prompt: task.prompt, n: 1, size, output_format: "png", images: images.map((i) => ({ image_url: "data:" + i.mime + ";base64," + i.bytes.toString("base64") })) };
     }
+    await onProgress("\u6B63\u5728\u5C06 " + images.length + " \u5F20\u53C2\u8003\u56FE\u53D1\u9001\u5230 " + config2.service.name + "\uFF0C\u7B49\u5F85\u751F\u6210\u2026");
+    const result = await this.request(config2, key, route, { method: "POST", body, signal });
+    if (result.id || result.request_id) await onRemote({ remoteTaskId: result.id || result.request_id, providerStatus: "returned" });
+    const parts = result.candidates?.flatMap((c) => c.content?.parts || []) || [];
+    const inline = parts.find((p) => !p.thought && (p.inlineData || p.inline_data));
+    const encoded = inline?.inlineData?.data || inline?.inline_data?.data || result.data?.[0]?.b64_json;
+    let bytes;
+    if (encoded) {
+      if (typeof encoded !== "string" || encoded.length > 17 * 1024 * 1024 || !/^[a-zA-Z0-9+/]*={0,2}$/.test(encoded)) throw Error("API \u8FD4\u56DE\u7684\u56FE\u7247\u7F16\u7801\u65E0\u6548\u6216\u8D85\u8FC7\u672C\u673A 12 MB \u4FDD\u5B58\u4E0A\u9650");
+      bytes = Buffer.from(encoded, "base64");
+    } else if (result.data?.[0]?.url) {
+      const url2 = new URL(result.data[0].url);
+      if (url2.protocol !== "https:" && !(url2.protocol === "http:" && this.origins[task.provider]?.startsWith("http://127.0.0.1:"))) throw Error("API \u8FD4\u56DE\u4E86\u4E0D\u53D7\u652F\u6301\u7684\u56FE\u7247\u5730\u5740");
+      await onProgress("\u751F\u6210\u5B8C\u6210\uFF0C\u6B63\u5728\u4E0B\u8F7D\u5E76\u4FDD\u5B58\u56FE\u7247\u2026");
+      await onRemote({ outputUrl: url2.href, providerStatus: "generated" });
+      try {
+        const response = await this.fetch(url2, { redirect: "error", signal: AbortSignal.any([...signal ? [signal] : [], AbortSignal.timeout(6e4)]) });
+        if (!response.ok) throw Error("HTTP " + response.status);
+        const chunks = [];
+        let length = 0;
+        for await (const chunk of response.body) {
+          length += chunk.length;
+          if (length > 12 * 1024 * 1024) throw Error("\u7ED3\u679C\u56FE\u7247\u8D85\u8FC7\u672C\u673A 12 MB \u4FDD\u5B58\u4E0A\u9650");
+          chunks.push(chunk);
+        }
+        bytes = Buffer.concat(chunks);
+      } catch (error62) {
+        const reason = error62.message === "fetch failed" ? "\u65E0\u6CD5\u8FDE\u63A5\u7ED3\u679C\u56FE\u7247\u670D\u52A1\u5668" + (error62.cause?.code ? "\uFF08" + error62.cause.code + "\uFF09" : "") : error62.message;
+        throw Error(("\u56FE\u7247\u5DF2\u751F\u6210\uFF0C\u4F46\u4E0B\u8F7D\u4FDD\u5B58\u5931\u8D25\uFF1A" + reason + "\u3002\u8BF7\u5148\u5230\u670D\u52A1\u5546\u540E\u53F0\u67E5\u770B\u7ED3\u679C\uFF0C\u518D\u51B3\u5B9A\u662F\u5426\u91CD\u505A\u3002").replaceAll(key, "[Key \u5DF2\u9690\u85CF]"));
+      }
+    } else {
+      const reason = result.promptFeedback?.blockReason || result.candidates?.[0]?.finishReason || parts.map((p) => p.text || "").join(" ").slice(0, 800) || result.data?.[0]?.error?.message || "\u672A\u8FD4\u56DE\u53EF\u4FDD\u5B58\u7684\u56FE\u7247";
+      throw Error(config2.service.name + " \u672A\u751F\u6210\u56FE\u7247\uFF1A" + String(reason).replaceAll(key, "[Key \u5DF2\u9690\u85CF]"));
+    }
+    if (bytes.length > 12 * 1024 * 1024) throw Error("\u7ED3\u679C\u56FE\u7247\u8D85\u8FC7\u672C\u673A 12 MB \u4FDD\u5B58\u4E0A\u9650");
+    imageType(bytes);
+    await onProgress("\u56FE\u7247\u5DF2\u8FD4\u56DE\uFF0C\u6B63\u5728\u4FDD\u5B58\u5230\u6210\u529F\u8BB0\u5F55\u2026");
+    return { base64: bytes.toString("base64") };
   }
 };
 
 // src/agent-bridge.mjs
-import { setTimeout as delay2 } from "node:timers/promises";
+import { setTimeout as delay } from "node:timers/promises";
 var AgentBridge = class {
-  constructor(store, { pollMs = 200, processingMs = 16 * 60 * 1e3 } = {}) {
+  constructor(store, { pollMs = 200, processingMs = 16 * 60 * 1e3, receiptMs = 9e4 } = {}) {
     this.store = store;
     this.pollMs = pollMs;
     this.processingMs = processingMs;
+    this.receiptMs = receiptMs;
     this.connection = null;
     this.waiting = false;
   }
   unavailable(reason) {
-    if (this.waiting || this.connection?.phase === "generating") throw Error("\u8BF7\u5148\u7ED3\u675F\u5F53\u524D\u7B49\u5F85\u6216\u56DE\u586B\u5DF2\u9886\u53D6\u4EFB\u52A1\uFF0C\u518D\u62A5\u544A\u80FD\u529B\u7F3A\u5931\u3002");
+    if (this.waiting || this.status().connected && this.connection?.taskId) throw Error("\u8BF7\u5148\u7ED3\u675F\u5F53\u524D\u7B49\u5F85\u6216\u56DE\u586B\u5DF2\u9886\u53D6\u4EFB\u52A1\uFF0C\u518D\u62A5\u544A\u80FD\u529B\u7F3A\u5931\u3002");
     this.unavailableReason = reason;
     this.connection = null;
     return this.status();
@@ -37989,31 +39058,45 @@ var AgentBridge = class {
     }
   }
   disconnect(sessionId) {
-    if (this.connection?.sessionId === sessionId && this.connection.phase === "generating") throw Error("\u8BF7\u5148\u56DE\u586B\u5DF2\u9886\u53D6\u4EFB\u52A1\u7684\u7ED3\u679C\u6216\u5931\u8D25\u539F\u56E0\uFF0C\u518D\u65AD\u5F00\u3002");
+    if (this.connection?.sessionId === sessionId && this.status().connected && this.connection.taskId) throw Error("\u8BF7\u5148\u56DE\u586B\u5DF2\u9886\u53D6\u4EFB\u52A1\u7684\u7ED3\u679C\u6216\u5931\u8D25\u539F\u56E0\uFF0C\u518D\u65AD\u5F00\u3002");
     if (this.connection?.sessionId === sessionId && !this.waiting) this.connection = null;
     return this.status();
   }
   async reconcile() {
-    const c = this.connection;
-    if (!c || c.phase !== "generating" || c.expiresAt > Date.now()) return;
-    this.connection = null;
+    const expired = (s2) => s2.batch?.provider === "agent" && s2.tasks.find((t) => t.batchId === s2.batch.id && t.status === "running" && (t.agentDeadline || Date.parse(t.startedAt) + this.processingMs) <= Date.now());
+    const s = await this.store.refresh();
+    if (this.connection?.taskId && !s.tasks.some((t) => t.id === this.connection.taskId && t.status === "running")) this.connection = null;
+    if (!expired(s)) return;
     await this.store.mutate(() => {
-      const s = this.store.state, t = s.tasks.find((t2) => t2.id === c.taskId && t2.status === "running");
-      if (!t || s.batch?.id !== t.batchId) return;
-      const message = "\u5F53\u524D Agent \u8D85\u65F6\u672A\u56DE\u586B\u7ED3\u679C\uFF0C\u8BF7\u68C0\u67E5\u804A\u5929\u662F\u5426\u4ECD\u5728\u8FD0\u884C\u3002\u4EFB\u52A1\u6CA1\u6709\u81EA\u52A8\u91CD\u8BD5\u3002";
+      const s2 = this.store.state, t = expired(s2);
+      if (!t) return;
+      const message = t.agentAcknowledgedAt || !t.agentDeadline ? "Agent \u8D85\u65F6\u672A\u56DE\u586B\u7ED3\u679C\u3002\u91CD\u65B0\u8FDE\u63A5\u540E\u53EF\u7EE7\u7EED\u5269\u4F59\u4EFB\u52A1\u3002" : "Agent \u672A\u5728\u9650\u65F6\u5185\u786E\u8BA4\u6536\u5230\u4EFB\u52A1\u3002\u91CD\u65B0\u8FDE\u63A5\u540E\u53EF\u7EE7\u7EED\u5269\u4F59\u4EFB\u52A1\u3002";
       t.status = "failed";
       t.error = message;
       t.finishedAt = (/* @__PURE__ */ new Date()).toISOString();
-      s.batch.failedCount = (s.batch.failedCount || 0) + 1;
-      s.batch.lastError = message;
-      if (s.batch.status !== "cancelled") s.batch.status = "paused";
-      s.execution = { batchId: t.batchId, phase: "failed", message, updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
+      s2.batch.failedCount = (s2.batch.failedCount || 0) + 1;
+      s2.batch.lastError = message;
+      if (s2.batch.status !== "paused") {
+        s2.batch.status = "paused";
+        s2.batch.resumeOnReconnect = true;
+        s2.execution = { batchId: t.batchId, phase: "failed", message };
+      }
+      this.finish(t.id);
     });
   }
-  async wait({ sessionId, agentName, imageTool, timeoutMs = 45e3 }, signal) {
+  async acknowledge(taskId) {
+    const receipt = await this.store.acknowledgeAgentTask(taskId, this.processingMs);
+    if (this.connection?.taskId === taskId) {
+      this.connection.phase = "generating";
+      this.connection.expiresAt = receipt.deadline;
+    }
+    return receipt;
+  }
+  async wait({ sessionId, agentName, imageTool, timeoutMs = 45e3, renew = false }, signal) {
     if (this.waiting) throw Error("\u5DF2\u6709 Agent \u6B63\u5728\u7B49\u5F85\u4EFB\u52A1\uFF0C\u8BF7\u4F7F\u7528\u5F53\u524D\u8FDE\u63A5\uFF0C\u4E0D\u8981\u91CD\u590D\u542F\u52A8\u3002");
     await this.reconcile();
-    if (this.connection?.phase === "generating") throw Error("\u5DF2\u6709\u4EFB\u52A1\u5728\u751F\u6210\uFF0C\u8BF7\u5148\u56DE\u586B\u7ED3\u679C\uFF0C\u4E0D\u8981\u91CD\u590D\u9886\u53D6\u3002");
+    if (this.waiting) throw Error("\u5DF2\u6709 Agent \u6B63\u5728\u7B49\u5F85\u4EFB\u52A1\uFF0C\u8BF7\u4F7F\u7528\u5F53\u524D\u8FDE\u63A5\uFF0C\u4E0D\u8981\u91CD\u590D\u542F\u52A8\u3002");
+    if (this.status().connected && this.connection.taskId) throw Error("\u5DF2\u6709\u4EFB\u52A1\u5728\u6267\u884C\uFF0C\u8BF7\u5148\u56DE\u586B\u7ED3\u679C\uFF0C\u4E0D\u8981\u91CD\u590D\u9886\u53D6\u3002");
     if (this.status().connected && this.connection.sessionId !== sessionId) throw Error("\u53E6\u4E00\u4E2A Agent \u6B63\u5728\u5904\u7406\u5DE5\u4F5C\u53F0\u4EFB\u52A1\uFF0C\u8BF7\u7B49\u5F85\u5B83\u7ED3\u675F\u3002");
     const c = { sessionId, agentName, imageTool, phase: "waiting", expiresAt: Date.now() + timeoutMs + 2e3 };
     this.connection = c;
@@ -38023,99 +39106,523 @@ var AgentBridge = class {
     try {
       while (Date.now() < deadline) {
         signal?.throwIfAborted();
+        const test = await this.testWait?.({ sessionId, agentName, imageTool, timeoutMs: Math.max(100, deadline - Date.now()), renew }, signal);
+        if (test) return test;
         const s = await this.store.refresh();
-        if (s.batch?.provider === "agent" && ["queued", "running"].includes(s.batch.status)) {
+        if (s.batch?.provider === "agent" && (["queued", "running"].includes(s.batch.status) || s.batch.status === "paused" && s.batch.resumeOnReconnect)) {
+          if (!matchesAgentHost(s.batch.agentHost, agentName)) return { task: null, batch: s.batch, reason: "different_agent" };
           if (s.tasks.some((t) => t.batchId === s.batch.id && t.status === "running")) return { task: null, batch: s.batch, reason: "busy" };
-          const next = await this.store.claimNext(s.batch.id);
+          const next = await this.store.claimNext(s.batch.id, { receiptMs: this.receiptMs, reconnect: true, agentName });
           if (next.task) {
             if (signal?.aborted) {
               await this.store.mutate(() => {
-                if (this.store.state.batch?.id === next.task.batchId) this.store.state.batch.status = "paused";
+                const s2 = this.store.state, t = s2.tasks.find((t2) => t2.id === next.task.id && t2.status === "running");
+                if (!t || s2.batch?.id !== t.batchId) return;
+                t.status = "pending";
+                delete t.agentDeadline;
+                delete s2.execution;
+                if (s2.batch.status === "running") s2.batch.status = "queued";
               });
-              await this.store.recordResult(next.task.id, { error: "Agent \u5728\u53C2\u8003\u56FE\u51C6\u5907\u671F\u95F4\u65AD\u5F00\uFF0C\u8BF7\u91CD\u65B0\u8FDE\u63A5\u540E\u7EE7\u7EED\u3002" });
               signal.throwIfAborted();
             }
-            c.phase = "generating";
+            c.phase = "claimed";
             c.taskId = next.task.id;
-            c.expiresAt = Date.now() + this.processingMs;
-            await this.store.mutate(() => {
-              if (this.store.state.batch?.id === next.task.batchId) this.store.state.execution = { batchId: next.task.batchId, phase: "generating", message: "\u5DF2\u4EA4\u7ED9 " + agentName + " \u751F\u6210\uFF0C\u8BF7\u7B49\u5F85\u771F\u5B9E\u56FE\u7247\u8FD4\u56DE\u3002", updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
-            });
+            c.expiresAt = next.task.agentDeadline;
             return next;
           }
           return { ...next, reason: next.batch?.status || "empty" };
         }
-        await delay2(Math.min(this.pollMs, Math.max(1, deadline - Date.now())), void 0, { signal });
+        await delay(Math.min(this.pollMs, Math.max(1, deadline - Date.now())), void 0, { signal });
       }
+      if (renew) c.expiresAt = Date.now() + 3e3;
       return { task: null, reason: "idle" };
     } finally {
       this.waiting = false;
-      if (this.connection === c && c.phase !== "generating") this.connection = null;
+      if (this.connection === c && !c.taskId && (!renew || signal?.aborted || Date.now() < deadline)) this.connection = null;
     }
   }
 };
 
+// src/generation-checks.mjs
+import { createHash as createHash3, randomUUID as randomUUID3 } from "node:crypto";
+import path5 from "node:path";
+var lifetime = 24 * 60 * 60 * 1e3;
+var activeStates = ["preparing", "queued", "running"];
+var checkKey = (provider, agentHost) => provider === "agent" ? "agent:" + (agentHost || "current") : provider;
+var GenerationChecks = class {
+  constructor(store, runner, runninghub, agentBridge) {
+    this.store = store;
+    this.runner = runner;
+    this.runninghub = runninghub;
+    this.agentBridge = agentBridge;
+    this.active = null;
+    this.starting = false;
+  }
+  async scope(provider, agentHost) {
+    if (provider === "agent") {
+      const c = this.agentBridge.status();
+      return c.connected && matchesAgentHost(agentHost, c.agentName) ? JSON.stringify([c.agentName, c.imageTool]) : null;
+    }
+    if (provider === "codex") return (await this.runner.probe(provider)).accountId || null;
+    const s = await this.store.refresh();
+    const preset2 = selectedPreset(s.providerPresets, provider, s.draft.providerPresetId);
+    const key = await this.runninghub.credentials.key(provider);
+    return createHash3("sha256").update(key).update(JSON.stringify(preset2)).digest("hex");
+  }
+  async status(provider, agentHost, probe) {
+    const s = await this.store.refresh(), key = checkKey(provider, agentHost), check2 = s.generationChecks?.[key];
+    let scope;
+    if (provider === "codex") scope = probe?.accountId;
+    else if (provider === "agent") scope = await this.scope(provider, agentHost);
+    else if (probe?.available) scope = await this.scope(provider, agentHost);
+    const fresh = check2 && (check2.scope === scope || provider === "agent" && !scope) && Date.now() - Date.parse(check2.updatedAt) < lifetime;
+    const active = check2 && activeStates.includes(check2.status) && check2.deadline > Date.now();
+    return { key, checkScope: scope, capability: fresh && check2.status === "verified" ? "confirmed" : fresh && check2.status === "failed" ? "failed" : "unknown", check: active || fresh ? check2 : null };
+  }
+  async patch(key, id, patch) {
+    return this.store.mutate(() => {
+      const check2 = this.store.state.generationChecks?.[key];
+      if (check2?.id === id && check2.status !== "cancelled") Object.assign(check2, patch, { updatedAt: (/* @__PURE__ */ new Date()).toISOString() });
+      return check2;
+    });
+  }
+  async start({ provider, agentHost, costConfirmed = false }) {
+    if (this.starting) throw Error("\u6D4B\u8BD5\u6B63\u5728\u51C6\u5907\uFF0C\u8BF7\u7A0D\u5019\u3002");
+    this.starting = true;
+    try {
+      const s = await this.store.refresh();
+      if (this.runner.job || s.tasks.some((t) => t.status === "running")) throw Error("\u8BF7\u5148\u7B49\u5F53\u524D\u56FE\u7247\u5B8C\u6210\uFF0C\u518D\u6D4B\u8BD5\u6E20\u9053\u3002");
+      if (!isNativeProvider(provider) && !costConfirmed) throw Error("\u751F\u56FE API \u6D4B\u8BD5\u4F1A\u63D0\u4EA4\u4E00\u5F20\u56FE\u7247\u5E76\u4EA7\u751F\u8D39\u7528\uFF0C\u8BF7\u5148\u786E\u8BA4\u3002");
+      const scope = await this.scope(provider, agentHost);
+      if (provider !== "agent" && !scope) throw Error("\u8BF7\u5148\u8FDE\u63A5\u5E76\u767B\u5F55\u6240\u9009\u6E20\u9053\u3002");
+      const id = randomUUID3(), key = checkKey(provider, agentHost), deadline = Date.now() + 16 * 60 * 1e3;
+      await this.store.mutate(() => {
+        const state = this.store.state;
+        if (this.runner.job || state.tasks.some((t) => t.status === "running")) throw Error("\u5F53\u524D\u56FE\u7247\u6B63\u5728\u6267\u884C\uFF0C\u8BF7\u7A0D\u540E\u6D4B\u8BD5\u3002");
+        const busy = Object.values(state.generationChecks || {}).find((c) => activeStates.includes(c.status) && c.deadline > Date.now());
+        if (busy) throw Error("\u5DF2\u6709\u6D4B\u8BD5\u56FE\u5728\u6267\u884C\uFF0C\u8BF7\u7B49\u5F85\u5B83\u5B8C\u6210\u3002");
+        state.generationChecks ??= {};
+        state.generationChecks[key] = { id, key, provider, agentHost, scope, status: "preparing", deadline, workerPid: process.pid, updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
+      });
+      this.active = { id, key, provider, agentHost };
+      try {
+        const testStore = await new Store(path5.join(this.store.root, "checks", id), { builtinPresets: [] }).init();
+        const task = { id, batchId: id, provider, agentHost, status: "pending", attempts: 0, ratio: "1:1", prompt: "\u8BF7\u751F\u6210\u4E00\u5F20\u7070\u8272\u7EAF\u8272\u80CC\u666F\u4E0A\u7684\u7EA2\u8272\u9676\u74F7\u676F\u7167\u7247\uFF0C\u65B9\u5F62\u6784\u56FE\uFF0C\u67D4\u548C\u5F71\u68DA\u5149\u7EBF\u3002\u76F4\u63A5\u751F\u6210\u56FE\u7247\u3002", isCapabilityTest: true, createdAt: (/* @__PURE__ */ new Date()).toISOString() };
+        if (!isNativeProvider(provider)) {
+          const { costumes, poses, count } = queueReferences(s.draft);
+          const preset2 = selectedPreset(s.providerPresets, provider, s.draft.providerPresetId);
+          const problem = referenceCompatibility(preset2, ["portrait", ...costumes[0] ? ["costume"] : [], ...poses[0] ? ["pose"] : []], s.draft.ratio);
+          if (!s.draft.portraitId || !count || !preset2 || problem) throw Error(problem || "\u5148\u9009\u62E9\u4E3B\u89D2\u548C\u4E00\u5957\u642D\u914D\uFF0C\u518D\u4F7F\u7528\u5F53\u524D\u5DE5\u4F5C\u6D41\u6D4B\u8BD5\u4E00\u5F20\u3002");
+          Object.assign(task, { portraitId: s.draft.portraitId, costumeId: costumes[0], poseId: poses[0], ratio: s.draft.ratio, providerPreset: preset2, prompt: this.store.prompt(s.assets[costumes[0]], s.assets[poses[0]], s.draft) });
+        }
+        await testStore.mutate(() => {
+          testStore.state.assets = structuredClone(s.assets);
+          testStore.state.tasks = [task];
+          testStore.state.batch = { id, status: "queued", provider, agentHost, providerPreset: task.providerPreset ?? null };
+        });
+        const bridge = new AgentBridge(testStore);
+        Object.assign(this.active, { store: testStore, bridge });
+        const queued = await this.patch(key, id, { status: "queued" });
+        if (queued?.status === "cancelled") return { started: false, cancelled: true, id, key };
+        if (provider !== "agent") {
+          const runner = new GenerationRunner(testStore, { clientFactory: this.runner.clientFactory, runninghub: this.runninghub });
+          this.active.runner = runner;
+          const active = this.active;
+          await runner.start(id);
+          void runner.job.then(() => this.finish(active)).catch((e) => this.patch(key, id, { status: "failed", reason: e.message }));
+        }
+        return { started: true, id, key };
+      } catch (e) {
+        await this.patch(key, id, { status: "failed", reason: e.message });
+        throw e;
+      }
+    } finally {
+      this.starting = false;
+    }
+  }
+  owns(taskId) {
+    return this.active?.id === taskId && !!this.active.store;
+  }
+  async waiting() {
+    if (this.active?.provider !== "agent" || !this.active.store) return null;
+    const check2 = (await this.store.refresh()).generationChecks?.[this.active.key];
+    return check2 && activeStates.includes(check2.status) ? this.active : null;
+  }
+  async busy() {
+    const s = await this.store.refresh();
+    return Object.values(s.generationChecks || {}).some((c) => activeStates.includes(c.status) && c.deadline > Date.now());
+  }
+  async unavailable(reason) {
+    if (!await this.waiting()) return false;
+    const active = this.active;
+    active.bridge.unavailable(reason);
+    await this.patch(active.key, active.id, { status: "failed", reason });
+    return true;
+  }
+  async cancel(id) {
+    const active = this.active;
+    if (!active || active.id !== id) throw Error("\u5F53\u524D\u6D4B\u8BD5\u5DF2\u53D8\u5316\uFF0C\u8BF7\u5237\u65B0\u540E\u91CD\u8BD5\u3002");
+    active.runner?.stop(active.runner.activeRun);
+    if (active.store) await active.store.batchAction("cancel");
+    await this.patch(active.key, id, { status: "cancelled", reason: "\u5DF2\u53D6\u6D88\u6D4B\u8BD5\u3002" });
+    return { cancelled: true };
+  }
+  async wait(args, signal) {
+    const active = await this.waiting();
+    if (!active) return null;
+    const next = await active.bridge.wait(args, signal);
+    if (next.task) {
+      const scope = JSON.stringify([args.agentName, args.imageTool]);
+      await this.patch(active.key, active.id, { status: "running", scope });
+    }
+    return next;
+  }
+  async result(taskId, result) {
+    const active = this.active;
+    await active.store.recordResult(taskId, result);
+    active.bridge.finish(taskId);
+    if (result.error) await this.patch(active.key, active.id, { status: "failed", reason: result.error });
+    else await this.finish(active);
+    return this.store.refresh();
+  }
+  async finish(active = this.active) {
+    if (!active?.store) return;
+    const s = await active.store.refresh(), task = s.tasks.find((t) => t.id === active.id);
+    const check2 = (await this.store.refresh()).generationChecks?.[active.key];
+    if (!check2 || !activeStates.includes(check2.status)) return;
+    if (task?.status === "done") {
+      const output2 = s.assets[task.resultId];
+      const { base64: base643 } = await active.store.image(output2.id);
+      const asset = await this.store.putImage(Buffer.from(base643, "base64"), "channel-test.png", "check-result");
+      await this.patch(active.key, active.id, { status: "verified", resultId: asset.id });
+      await this.store.mutate(() => {
+        this.store.state.channelSetup = { provider: active.provider, agentHost: active.agentHost ?? null, checkedAt: (/* @__PURE__ */ new Date()).toISOString() };
+      });
+    } else {
+      await this.patch(active.key, active.id, { status: "failed", reason: task?.error || s.execution?.message || "\u6D4B\u8BD5\u672A\u8FD4\u56DE\u53EF\u56DE\u586B\u7684\u56FE\u7247\uFF0C\u8BF7\u68C0\u67E5\u751F\u56FE\u5DE5\u5177\u540E\u91CD\u8BD5\u3002" });
+    }
+  }
+  async reconcile() {
+    if (await this.waiting()) {
+      await this.active.bridge.reconcile();
+      const test = await this.active.store.refresh();
+      if (["done", "paused"].includes(test.batch?.status)) await this.finish();
+    }
+    const s = await this.store.refresh();
+    const pending = Object.values(s.generationChecks || {}).filter((c) => activeStates.includes(c.status));
+    for (const c of pending) {
+      let alive = true;
+      try {
+        process.kill(c.workerPid, 0);
+      } catch {
+        alive = false;
+      }
+      if (!alive || c.deadline <= Date.now()) await this.patch(c.key, c.id, { status: "failed", reason: "\u6D4B\u8BD5\u6267\u884C\u4E2D\u65AD\u6216\u8D85\u8FC7 16 \u5206\u949F\u3002\u8BF7\u91CD\u65B0\u8FDE\u63A5\u6E20\u9053\uFF0C\u518D\u6D4B\u8BD5\u4E00\u5F20\u3002" });
+    }
+  }
+};
+
+// src/batch-export.mjs
+var import_yazl = __toESM(require_yazl(), 1);
+import { mkdir as mkdir3, copyFile, rename as rename3, realpath as realpath2, stat } from "node:fs/promises";
+import { createWriteStream, createReadStream } from "node:fs";
+import { pipeline } from "node:stream/promises";
+import { createHash as createHash4, randomUUID as randomUUID4 } from "node:crypto";
+import path6 from "node:path";
+var BatchExporter = class {
+  constructor(store) {
+    this.store = store;
+    this.root = path6.join(store.root, "exports");
+    this.jobs = /* @__PURE__ */ new Map();
+    this.downloads = /* @__PURE__ */ new Map();
+  }
+  async inside(file2) {
+    const root = await realpath2(this.store.root), resolved = await realpath2(file2);
+    const relative = path6.relative(root, resolved);
+    if (relative === ".." || relative.startsWith(".." + path6.sep) || path6.isAbsolute(relative)) throw Error("\u4FDD\u5B58\u8DEF\u5F84\u8D85\u51FA\u4EBA\u7269\u5DE5\u4F5C\u53F0\u7684\u6570\u636E\u76EE\u5F55\u3002");
+    return resolved;
+  }
+  async prepare(batchId) {
+    const state = await this.store.refresh();
+    const batch = Object.hasOwn(state.batches, batchId) ? state.batches[batchId] : null;
+    if (!batch) throw Error("\u627E\u4E0D\u5230\u8FD9\u4E2A\u6279\u6B21\uFF0C\u8BF7\u5237\u65B0\u540E\u91CD\u8BD5\u3002");
+    const tasks = state.tasks.filter((t) => t.batchId === batchId && t.status === "done" && t.resultId);
+    if (!tasks.length) throw Error("\u672C\u6279\u8FD8\u6CA1\u6709\u6210\u529F\u751F\u6210\u7684\u56FE\u7247\u3002");
+    const digest = createHash4("sha256").update(JSON.stringify([batch.id, batch.name, tasks.map((t) => [t.id, t.resultId, t.costumeId, t.poseId])])).digest("hex").slice(0, 20);
+    const jobKey = batchId + ":" + digest;
+    if (this.jobs.has(jobKey)) return this.jobs.get(jobKey);
+    const job = this.writeFiles(state, batch, tasks, digest).finally(() => this.jobs.delete(jobKey));
+    this.jobs.set(jobKey, job);
+    return job;
+  }
+  async writeFiles(state, batch, tasks, digest) {
+    const batchDir = createHash4("sha256").update(batch.id).digest("hex").slice(0, 24);
+    const parent = path6.join(this.root, batchDir), folder = path6.join(parent, digest);
+    await mkdir3(this.root, { recursive: true });
+    await this.inside(this.root);
+    await mkdir3(parent, { recursive: true });
+    await this.inside(parent);
+    const files = tasks.map((task, index) => ({ name: resultFilename(batch, task, state.assets, index), asset: state.assets[task.resultId] }));
+    const ready = await stat(folder).then((s) => s.isDirectory(), (e) => {
+      if (e.code === "ENOENT") return false;
+      throw e;
+    });
+    if (!ready) {
+      const stage = path6.join(parent, ".preparing-" + randomUUID4());
+      await mkdir3(stage);
+      await this.inside(stage);
+      for (const file2 of files) {
+        const source = file2.asset?.path;
+        try {
+          if (!source) throw Error("missing");
+          const resolved = await this.inside(source);
+          await copyFile(resolved, path6.join(stage, file2.name));
+        } catch (e) {
+          throw Error("\u65E0\u6CD5\u5BFC\u51FA\u300C" + file2.name + "\u300D\uFF1A\u539F\u56FE\u4E0D\u5B58\u5728\u6216\u65E0\u6CD5\u8BFB\u53D6\u3002\u8BF7\u5728\u6210\u529F\u8BB0\u5F55\u4E2D\u67E5\u770B\u6216\u91CD\u505A\u8FD9\u5F20\u56FE\u3002", { cause: e });
+        }
+      }
+      try {
+        await rename3(stage, folder);
+      } catch (e) {
+        if (!["EEXIST", "ENOTEMPTY", "EPERM"].includes(e.code) || !await stat(folder).then((s) => s.isDirectory(), () => false)) throw e;
+      }
+    }
+    await this.inside(folder);
+    const archive = path6.join(parent, digest + ".zip");
+    return {
+      batchId: batch.id,
+      folder: await this.inside(folder),
+      archive,
+      files: files.map((f) => f.name),
+      filename: safeFilePart(batchLabel(batch), "\u6279\u6B21", 50) + "__" + safeFilePart(batch.id, "batch", 8) + ".zip",
+      count: files.length
+    };
+  }
+  async writeArchive(prepared) {
+    const key = "archive:" + prepared.archive;
+    if (this.jobs.has(key)) return this.jobs.get(key);
+    const job = this.writeZip(prepared).finally(() => this.jobs.delete(key));
+    this.jobs.set(key, job);
+    return job;
+  }
+  async writeZip({ folder, archive, files }) {
+    const exists = await stat(archive).then((s) => s.isFile(), (e) => {
+      if (e.code === "ENOENT") return false;
+      throw e;
+    });
+    if (!exists) {
+      const temporary = path6.join(path6.dirname(archive), ".archive-" + randomUUID4() + ".zip");
+      const zip = new import_yazl.default.ZipFile();
+      const output2 = createWriteStream(temporary, { flags: "wx" });
+      zip.once("error", (e) => zip.outputStream.destroy(e));
+      const writing = pipeline(zip.outputStream, output2);
+      for (const file2 of files) zip.addFile(path6.join(folder, file2), file2, { compress: false });
+      zip.end();
+      await writing;
+      try {
+        await rename3(temporary, archive);
+      } catch (e) {
+        if (!["EEXIST", "EPERM"].includes(e.code) || !await stat(archive).then((s) => s.isFile(), () => false)) throw e;
+      }
+    }
+    return this.inside(archive);
+  }
+  async download(batchId, baseUrl) {
+    const prepared = await this.prepare(batchId);
+    await this.writeArchive(prepared);
+    for (const [key, value] of this.downloads) if (value.expiresAt <= Date.now()) this.downloads.delete(key);
+    if (this.downloads.size >= 128) this.downloads.delete(this.downloads.keys().next().value);
+    const token = randomUUID4();
+    this.downloads.set(token, { ...prepared, expiresAt: Date.now() + 60 * 60 * 1e3 });
+    return { batchId, count: prepared.count, filename: prepared.filename, downloadUrl: baseUrl + "/api/exports/" + token, folder: prepared.folder };
+  }
+  async send(token, response, head = false) {
+    const download = this.downloads.get(token);
+    if (!download || download.expiresAt <= Date.now()) {
+      response.writeHead(404);
+      response.end("\u4E0B\u8F7D\u94FE\u63A5\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u91CD\u65B0\u70B9\u51FB\u4E0B\u8F7D\u672C\u6279\u56FE\u7247\u3002");
+      return;
+    }
+    const file2 = await this.inside(download.archive), info = await stat(file2);
+    response.writeHead(200, {
+      "Content-Type": "application/zip",
+      "Content-Length": info.size,
+      "Content-Disposition": `attachment; filename="character-studio-batch.zip"; filename*=UTF-8''` + encodeURIComponent(download.filename).replace(/['()*]/g, (c) => "%" + c.charCodeAt(0).toString(16).toUpperCase())
+    });
+    if (head) response.end();
+    else await pipeline(createReadStream(file2), response);
+  }
+};
+
+// src/catalog-download.mjs
+async function downloadCatalogImage(catalog, { kind, id }, { fetchImpl = fetch } = {}) {
+  const item = (await catalog.load(kind)).find((item2) => item2.id === id);
+  if (!item) throw Error("\u627E\u4E0D\u5230\u8FD9\u5F20\u56FE\u5E93\u539F\u56FE\uFF0C\u8BF7\u5237\u65B0\u56FE\u5E93\u540E\u91CD\u8BD5\u3002");
+  const url2 = new URL(kind === "portrait" ? portraitUrl(item.url, "full") : item.url);
+  if (url2.origin !== new URL(SOURCES[kind]).origin || url2.username || url2.password) throw Error("\u56FE\u7247\u5FC5\u987B\u6765\u81EA\u6240\u9009\u56FE\u5E93\u3002");
+  let response;
+  try {
+    response = await fetchImpl(url2.href, { redirect: "error", signal: AbortSignal.timeout(3e4) });
+  } catch (error62) {
+    throw Error("\u4E0B\u8F7D\u56FE\u5E93\u539F\u56FE\u5931\u8D25\uFF1A" + (error62.name === "TimeoutError" ? "\u8FDE\u63A5\u8D85\u65F6\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5\u3002" : "\u65E0\u6CD5\u8FDE\u63A5\u56FE\u5E93\uFF0C\u8BF7\u68C0\u67E5\u7F51\u7EDC\u540E\u91CD\u8BD5\u3002"), { cause: error62 });
+  }
+  if (!response.ok) throw Error("\u4E0B\u8F7D\u56FE\u5E93\u539F\u56FE\u5931\u8D25\uFF08HTTP " + response.status + "\uFF09\uFF0C\u8BF7\u5237\u65B0\u540E\u91CD\u8BD5\u3002");
+  const chunks = [];
+  let size = 0;
+  try {
+    for await (const chunk of response.body) {
+      size += chunk.length;
+      if (size > 20 * 1024 * 1024) throw Error("\u56FE\u5E93\u539F\u56FE\u8D85\u8FC7 20 MB\uFF0C\u65E0\u6CD5\u4E0B\u8F7D\u3002");
+      chunks.push(chunk);
+    }
+  } catch (error62) {
+    throw Error(error62.message.includes("20 MB") ? error62.message : "\u4E0B\u8F7D\u56FE\u5E93\u539F\u56FE\u65F6\u8FDE\u63A5\u4E2D\u65AD\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5\u3002", { cause: error62 });
+  }
+  const bytes = Buffer.concat(chunks), type = imageType(bytes);
+  return { filename: safeFilePart(kind + "_" + item.id, "reference", 100) + type.ext, mime: type.mime, base64: bytes.toString("base64") };
+}
+
 // src/version.mjs
-var VERSION = false ? "0.3.1-dev" : "0.3.1";
-var BUILD_ID = false ? "development" : "6f575dcc3574854baf3a";
+var VERSION = false ? "0.4.0-dev" : "0.4.0";
+var BUILD_ID = false ? "development" : "f70797da02d7c4c9d136";
 var SERVICE = "character-studio";
 
 // src/server.mjs
-import { createHash as createHash2 } from "node:crypto";
-import { writeFile as writeFile4, rename as rename3 } from "node:fs/promises";
+import { createHash as createHash5 } from "node:crypto";
+import { writeFile as writeFile4, rename as rename4 } from "node:fs/promises";
 var UI_URI = "ui://character-studio/workbench.html";
 var resourceMeta = { ui: { prefersBorder: false, csp: { resourceDomains: [...Object.values(SOURCES).map((source) => new URL(source).origin), "data:", "blob:"], connectDomains: [] } }, "openai/widgetDescription": "\u4EBA\u7269\u3001\u670D\u88C5\u3001\u59FF\u52BF\u7EC4\u5408\u4E0E\u6279\u91CF\u4EFB\u52A1\u5DE5\u4F5C\u53F0", "openai/widgetPrefersBorder": false };
 async function createStudio(root, options = {}) {
   const store = await new Store(root, { builtinPresets: options.builtinPresets }).init(), catalog = new Catalog(store.root);
-  const credentials = new ProviderCredentials(store), runninghub = new RunningHubClient(credentials, options.runninghubOptions);
+  if (store.state.draft.provider?.startsWith("runninghub-")) await store.mutate(() => {
+    const s = store.state;
+    s.draft.provider = "agent";
+    s.draft.providerPresetId = null;
+    if (s.batch?.provider?.startsWith("runninghub-") && ["queued", "running", "paused", "draft"].includes(s.batch.status)) {
+      s.batch.status = "cancelled";
+      delete s.batch.resumeOnReconnect;
+      s.tasks.filter((t) => t.batchId === s.batch.id && ["pending", "running"].includes(t.status)).forEach((t) => t.status = "cancelled");
+      s.execution = { batchId: s.batch.id, phase: "cancelled", message: "RunningHub \u6E20\u9053\u5DF2\u79FB\u9664\uFF0C\u8BF7\u9009\u62E9\u5F53\u524D Agent \u6216\u751F\u56FE API \u521B\u5EFA\u65B0\u4EFB\u52A1\u3002" };
+    }
+  });
+  const credentials = new ProviderCredentials(store, options.credentialOptions), imageApi = new ImageApiClient(credentials, options.imageApiOptions);
+  const apiClient = (provider2) => {
+    if (!isImageApi(provider2)) throw Error("RunningHub \u6E20\u9053\u5DF2\u79FB\u9664\uFF0C\u8BF7\u9009\u62E9\u5F53\u524D Agent \u6216\u751F\u56FE API\u3002");
+    return imageApi;
+  };
+  const runninghub = { credentials, probe: (provider2, ...args) => apiClient(provider2).probe(provider2, ...args), preflight: (provider2, ...args) => apiClient(provider2).preflight(provider2, ...args), generate: (task, ...args) => apiClient(task.provider).generate(task, ...args) };
   const runner = new GenerationRunner(store, { ...options, runninghub });
   const agentBridge = new AgentBridge(store, options.agentBridgeOptions);
+  const checks = new GenerationChecks(store, runner, runninghub, agentBridge);
+  const exporter = new BatchExporter(store);
+  let studio, downloadServerPromise;
+  const downloadBase = async () => {
+    const server2 = studio.httpServer || await (downloadServerPromise ??= serveHttp(studio, 0).then((s) => {
+      s.unref();
+      return s;
+    }).catch((e) => {
+      downloadServerPromise = null;
+      throw e;
+    }));
+    return "http://127.0.0.1:" + server2.address().port;
+  };
+  agentBridge.testWait = (args, signal) => checks.wait(args, signal);
+  const connection = () => checks.active?.bridge?.status().connected ? checks.active.bridge.status() : agentBridge.status();
   const snapshot = async () => {
     await agentBridge.reconcile();
-    return { ...await store.refresh(), agentConnection: agentBridge.status() };
+    await checks.reconcile();
+    return { ...await store.refresh(), agentConnection: connection() };
   };
-  const provider = external_exports.enum(["codex", "agent", "runninghub-cn", "runninghub-global"]), rhProvider = external_exports.enum(["runninghub-cn", "runninghub-global"]);
-  const scalar = external_exports.union([external_exports.string().max(12e3), external_exports.number(), external_exports.boolean(), external_exports.null()]);
-  const preset = external_exports.object({ id: external_exports.string().optional(), provider: rhProvider, kind: external_exports.enum(["app", "workflow"]), remoteId: external_exports.string().max(2e3), name: external_exports.string().max(150), allowPartialReferences: external_exports.boolean().optional(), nodes: external_exports.array(external_exports.object({ nodeId: external_exports.string().max(100), fieldName: external_exports.string().max(150), value: scalar, description: external_exports.string().max(200).optional(), source: external_exports.enum(INPUT_SOURCES.map(([s]) => s)), format: external_exports.enum(["fileName", "url"]).optional(), options: external_exports.array(external_exports.object({ value: scalar, label: external_exports.string().max(500) })).optional() })).max(300) });
+  const provider = external_exports.enum(PROVIDERS.map((p) => p.id));
+  const apiConfig = external_exports.object({ baseUrl: external_exports.string().max(2e3), model: external_exports.string().max(150), protocol: external_exports.enum(["openai-json", "openai-multipart", "gemini", "seedream"]) });
+  const agentHost = external_exports.enum(["codex", "doubao"]);
   const connectionReports = /* @__PURE__ */ new Map();
   const tools = {
     agent_connection_status: { schema: { checkId: external_exports.string().uuid().optional() }, read: true, appOnly: true, description: "\u8BFB\u53D6\u5F53\u524D Agent \u7684\u8FDE\u63A5\u53CA\u672C\u6B21\u68C0\u6D4B\u7684\u56DE\u6267\u3002", run: (a) => {
       const report = connectionReports.get(a.checkId);
-      return { connection: agentBridge.status(), report: report?.expiresAt > Date.now() ? report.result : null };
+      return { connection: connection(), report: report?.expiresAt > Date.now() ? report.result : null };
     } },
-    agent_report_connection: { schema: { checkId: external_exports.string().uuid(), agentName: external_exports.string().min(1).max(80), imageTool: external_exports.string().min(1).max(150).optional(), reason: external_exports.string().min(1).max(1e3).optional() }, modelOnly: true, description: "\u56DE\u5E94\u5DE5\u4F5C\u53F0\u7684\u8FDE\u63A5\u68C0\u6D4B\u3002\u786E\u8BA4\u5177\u5907\u770B\u56FE\u3001\u751F\u56FE\u548C\u56DE\u586B\u56FE\u7247\u80FD\u529B\u540E\u586B\u5199\u771F\u5B9E imageTool\uFF1B\u80FD\u529B\u7F3A\u5931\u65F6\u586B\u5199\u5177\u4F53 reason\u3002\u4EC5\u56DE\u62A5\u8FDE\u63A5\uFF0C\u4E0D\u9886\u53D6\u3001\u6062\u590D\u6216\u6267\u884C\u4EFB\u52A1\u3002", run: (a) => {
+    agent_report_connection: { schema: { checkId: external_exports.string().uuid(), agentName: external_exports.string().min(1).max(80), imageTool: external_exports.string().min(1).max(150).optional(), reason: external_exports.string().min(1).max(1e3).optional() }, modelOnly: true, description: "\u56DE\u5E94\u8FDE\u63A5\u68C0\u6D4B\u3002\u68C0\u67E5\u672C\u4F1A\u8BDD\u7684\u770B\u56FE\u3001\u751F\u56FE\u548C\u771F\u5B9E\u6587\u4EF6\u56DE\u586B\u5DE5\u5177\u540E\u586B\u5199 imageTool\uFF0C\u7F3A\u5C11\u80FD\u529B\u65F6\u586B\u5199 reason\u3002\u6B64\u56DE\u62A5\u4E0D\u4F1A\u8BD5\u751F\u6210\u56FE\u7247\u3002", run: async (a) => {
       if (!!a.imageTool === !!a.reason) throw Error("\u8BF7\u586B\u5199\u5DF2\u786E\u8BA4\u7684\u751F\u56FE\u5DE5\u5177\u540D\u79F0\u6216\u5177\u4F53\u5931\u8D25\u539F\u56E0\uFF0C\u4E24\u8005\u9009\u4E00\u3002");
       if (connectionReports.size >= 16) connectionReports.delete(connectionReports.keys().next().value);
       connectionReports.set(a.checkId, { expiresAt: Date.now() + 6e4, result: { agentName: a.agentName, imageTool: a.imageTool, reason: a.reason } });
+      if (a.imageTool) await store.mutate(() => {
+        store.state.channelSetup = { provider: "agent", agentHost: /豆包|doubao/i.test(a.agentName) ? "doubao" : /codex/i.test(a.agentName) ? "codex" : null, checkedAt: (/* @__PURE__ */ new Date()).toISOString() };
+      });
       return { received: true };
     } },
     open_workbench: { schema: { executor: external_exports.enum(["agent", "codex"]).optional() }, render: true, description: "\u6253\u5F00\u4EBA\u7269\u670D\u88C5\u59FF\u52BF\u5185\u5D4C\u5DE5\u4F5C\u53F0\uFF1B\u6062\u590D\u672C\u673A\u5185\u5BB9\u3002\u53EF\u663E\u5F0F\u6307\u5B9A\u4E0B\u4E00\u6279\u4F7F\u7528 agent\uFF08\u5F53\u524D\u5BBF\u4E3B\u539F\u751F\u751F\u56FE\uFF09\u6216 codex\uFF08\u672C\u673A Codex\uFF09\uFF1B\u4E0D\u6539\u53D8\u5DF2\u63D0\u4EA4\u6279\u6B21\u3002", run: (a) => a.executor ? store.saveDraft({ provider: a.executor }) : store.refresh() },
     get_state: { schema: {}, read: true, description: "\u8BFB\u53D6\u5DE5\u4F5C\u53F0\u72B6\u6001\u4E0E\u5F53\u524D\u4EFB\u52A1\u7ED3\u679C\u3002", run: snapshot },
-    agent_wait: { schema: { sessionId: external_exports.string().min(1).max(100), agentName: external_exports.string().min(1).max(80), imageTool: external_exports.string().min(1).max(150), timeoutMs: external_exports.number().int().min(100).max(55e3).optional() }, modelOnly: true, description: "\u5DF2\u786E\u8BA4\u5177\u5907\u539F\u751F\u751F\u56FE\u5DE5\u5177\u7684\u5F53\u524D Agent \u7B49\u5F85\u7528\u6237\u63D0\u4EA4\uFF0C\u6700\u591A 55 \u79D2\uFF1B\u8FD4\u56DE\u4EFB\u52A1\u65F6\u5DF2\u9886\u53D6\uFF0C\u5FC5\u987B\u5148\u67E5\u770B\u53C2\u8003\u56FE\u518D\u751F\u6210\u3002idle \u53EF\u7EE7\u7EED\u7B49\u5F85\uFF0C\u4E0D\u80FD\u51ED\u8FDE\u63A5\u72B6\u6001\u5BA3\u79F0\u5DF2\u751F\u6210\u3002", run: (a, ctx) => agentBridge.wait(a, ctx?.signal) },
-    agent_disconnect: { schema: { sessionId: external_exports.string() }, modelOnly: true, description: "\u5F53\u524D Agent \u7ED3\u675F\u5DE5\u4F5C\u53F0\u7B49\u5F85\uFF0C\u91CA\u653E\u8FDE\u63A5\u72B6\u6001\u3002", run: (a) => agentBridge.disconnect(a.sessionId) },
+    dismiss_onboarding: { schema: {}, appOnly: true, description: "\u8BB0\u4F4F\u7528\u6237\u5DF2\u5173\u95ED\u4F7F\u7528\u6307\u5357\uFF0C\u4E4B\u540E\u901A\u8FC7\u53F3\u4E0A\u89D2\u6309\u94AE\u67E5\u770B\u3002", run: () => store.mutate(() => {
+      store.state.onboardingGuideSeen = true;
+      return store.snapshot();
+    }) },
+    agent_wait: { schema: { sessionId: external_exports.string().min(1).max(100), agentName: external_exports.string().min(1).max(80), imageTool: external_exports.string().min(1).max(150), timeoutMs: external_exports.number().int().min(100).max(55e3).optional(), renew: external_exports.boolean().optional() }, modelOnly: true, description: "\u7B49\u5F85\u5E76\u9886\u53D6\u4EFB\u52A1\uFF0C\u5305\u542B\u72EC\u7ACB\u7684\u80FD\u529B\u6D4B\u8BD5\u56FE\u3002\u6D4B\u8BD5\u4EFB\u52A1 isCapabilityTest=true\uFF0C\u6309\u5176 prompt \u751F\u56FE\u5E76\u56DE\u586B\uFF0C\u6D4B\u8BD5\u540E\u7ED3\u675F\u672C\u6B21\u63A5\u624B\u3002idle \u53EF\u7EE7\u7EED\u7B49\u5F85\uFF0C\u91CD\u8FDE\u7EED\u63A5\u5F85\u6267\u884C\u4EFB\u52A1\u3002", run: async (a, ctx) => await checks.wait(a, ctx?.signal) ?? agentBridge.wait(a, ctx?.signal) },
+    agent_ack_task: { schema: { taskId: external_exports.string().uuid() }, modelOnly: true, description: "\u5B9E\u9645\u6536\u5230\u4EFB\u52A1\u4E14\u5177\u5907\u751F\u56FE\u80FD\u529B\u540E\uFF0C\u5728\u8C03\u7528\u751F\u56FE\u5DE5\u5177\u524D\u786E\u8BA4\u6536\u5230\u3002\u5DE5\u4F5C\u53F0\u6B64\u65F6\u624D\u663E\u793A Agent \u6B63\u5728\u751F\u6210\u3002", run: (a) => checks.owns(a.taskId) ? checks.active.bridge.acknowledge(a.taskId) : agentBridge.acknowledge(a.taskId) },
+    agent_disconnect: { schema: { sessionId: external_exports.string() }, modelOnly: true, description: "\u5F53\u524D Agent \u7ED3\u675F\u5DE5\u4F5C\u53F0\u7B49\u5F85\uFF0C\u91CA\u653E\u8FDE\u63A5\u72B6\u6001\u3002", run: (a) => checks.active?.bridge?.status().connected ? checks.active.bridge.disconnect(a.sessionId) : agentBridge.disconnect(a.sessionId) },
     agent_unavailable: { schema: { sessionId: external_exports.string(), reason: external_exports.string().min(1).max(2e3) }, modelOnly: true, description: "\u5F53\u524D\u4F1A\u8BDD\u7F3A\u5C11\u770B\u56FE\u3001\u751F\u56FE\u6216\u8F93\u51FA\u6587\u4EF6\u5DE5\u5177\u65F6\uFF0C\u5728\u5DE5\u4F5C\u53F0\u663E\u793A\u771F\u5B9E\u539F\u56E0\u3002", run: async (a) => {
-      const connection = agentBridge.unavailable(a.reason);
+      if (await checks.unavailable(a.reason)) return connection();
+      const result = agentBridge.unavailable(a.reason);
       await store.mutate(() => {
         const s = store.state;
         if (s.batch?.provider === "agent" && ["queued", "running"].includes(s.batch.status) && !s.tasks.some((t) => t.batchId === s.batch.id && t.status === "running")) {
           s.batch.status = "paused";
+          s.batch.resumeOnReconnect = true;
           s.execution = { batchId: s.batch.id, phase: "failed", message: a.reason, updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
         }
       });
-      return connection;
+      return result;
     } },
-    execution_status: { schema: { provider: provider.optional(), inputKey: external_exports.string().max(2048).optional() }, read: true, appOnly: true, description: "\u68C0\u67E5\u6240\u9009\u6E20\u9053\u7684\u767B\u5F55\u6216\u4E2A\u4EBA\u7248 API \u8FDE\u63A5\uFF0C\u4E0D\u751F\u6210\u56FE\u7247\u3002\u53EF\u4E34\u65F6\u6D4B\u8BD5\u7528\u6237\u5F53\u524D\u8F93\u5165\u7684 Key\uFF0C\u4E0D\u4FDD\u5B58\u6216\u8FD4\u56DE Key\u3002", run: (a) => runner.probe(a.provider, a.inputKey) },
-    generation_channels: { schema: {}, read: true, appOnly: true, description: "\u8BFB\u53D6\u751F\u56FE\u6E20\u9053\u3001\u4E2A\u4EBA\u7248\u6A21\u578B\u9884\u8BBE\u548C\u5BC6\u94A5\u914D\u7F6E\u72B6\u6001\uFF0C\u4E0D\u8FD4\u56DE\u5BC6\u94A5\u3002", run: async () => ({ providers: PROVIDERS, inputSources: INPUT_SOURCES, credentials: await credentials.status() }) },
-    save_provider_keys: { schema: { keys: external_exports.object({ "runninghub-cn": external_exports.string().max(2048).optional(), "runninghub-global": external_exports.string().max(2048).optional() }) }, appOnly: true, description: "\u4EC5\u5728\u672C\u673A\u4FDD\u5B58 RunningHub \u4E2A\u4EBA\u7248 API Key\uFF1B\u7A7A\u5B57\u7B26\u4E32\u5220\u9664\u672C\u673A\u4FDD\u5B58\u7684\u8BE5\u7AD9\u70B9\u5BC6\u94A5\u3002\u4E0D\u8FD4\u56DE\u5BC6\u94A5\u3002", run: (a) => credentials.save(a.keys) },
-    inspect_provider_preset: { schema: { provider: rhProvider, kind: external_exports.enum(["app", "workflow"]), link: external_exports.string().max(2e3), example: external_exports.string().max(15e4).optional() }, appOnly: true, description: "\u8BFB\u53D6 AI \u5E94\u7528/\u5DE5\u4F5C\u6D41\u8F93\u5165\uFF0C\u6216\u89E3\u6790\u7528\u6237\u7C98\u8D34\u7684\u8C03\u7528\u793A\u4F8B\uFF0C\u4E0D\u6267\u884C\u5BFC\u5165\u4EE3\u7801\u3001\u4E0D\u63D0\u4EA4\u751F\u56FE\u3002", run: (a) => runninghub.inspect(a) },
-    save_provider_preset: { schema: { preset }, appOnly: true, description: "\u4FDD\u5B58\u7528\u6237\u786E\u8BA4\u7684\u4E2A\u4EBA\u7248\u5E94\u7528/\u5DE5\u4F5C\u6D41\u6A21\u578B\u9884\u8BBE\u4E0E\u8F93\u5165\u6620\u5C04\u3002", run: (a) => store.saveProviderPreset(a.preset) },
-    delete_provider_preset: { schema: { id: external_exports.string() }, appOnly: true, description: "\u5220\u9664\u672C\u673A\u6A21\u578B\u9884\u8BBE\uFF0C\u4E0D\u5F71\u54CD\u5DF2\u63D0\u4EA4\u4EFB\u52A1\u548C\u5386\u53F2\u7ED3\u679C\u3002", run: (a) => store.deleteProviderPreset(a.id) },
-    start_generation: { schema: {}, appOnly: true, description: "\u6309\u5DF2\u63D0\u4EA4\u6279\u6B21\u9501\u5B9A\u7684\u6E20\u9053\uFF0C\u4F7F\u7528 Codex \u5185\u7F6E\u751F\u56FE\u6216 RunningHub \u4E2A\u4EBA\u7248\u5E94\u7528/\u5DE5\u4F5C\u6D41\u6267\u884C\u3002\u5931\u8D25\u539F\u56E0\u56DE\u586B\u4EFB\u52A1\u5361\uFF0C\u4E0D\u81EA\u52A8\u5207\u6362\u6E20\u9053\u3002", run: () => runner.start() },
+    execution_status: { schema: { provider: provider.optional(), agentHost: agentHost.nullable().optional(), inputKey: external_exports.string().max(2048).optional(), customConfig: apiConfig.optional() }, appOnly: true, description: "\u5206\u522B\u68C0\u67E5\u8D26\u53F7\u3001\u6267\u884C\u5668\u4E0E\u751F\u56FE\u80FD\u529B\u3002\u6B64\u68C0\u6D4B\u4E0D\u751F\u6210\u56FE\u7247\u3002\u5DF2\u8FDE\u63A5\u7684\u6E20\u9053\u4F1A\u8BB0\u4F4F\u9009\u62E9\u3002", run: async (a) => {
+      const state = await store.refresh(), selected = a.provider || state.draft.provider || "codex";
+      const c = connection();
+      const probe = selected === "agent" ? { available: c.connected, engine: "agent", account: "host", executor: c.connected, capability: c.imageTool ? "declared" : "unknown", reason: c.reason, message: c.connected ? "\u6267\u884C\u5668\u5DF2\u8FDE\u63A5\u3002" : "\u56DE\u5230\u6253\u5F00\u5DE5\u4F5C\u53F0\u7684\u539F\u804A\u5929\uFF0C\u53D1\u9001\u300C\u91CD\u65B0\u8FDE\u63A5\u4EBA\u7269\u5DE5\u4F5C\u53F0\u300D\u3002" } : await runner.probe(selected, a.inputKey, selected === "image-custom" && a.customConfig ? { ...a.customConfig, provider: selected, id: "image-custom:default" } : void 0);
+      if (a.inputKey !== void 0) return probe;
+      const verified = await checks.status(selected, a.agentHost, probe);
+      if (probe.available) await store.mutate(() => {
+        const current = store.state;
+        current.channelSetup = { provider: selected, agentHost: a.agentHost ?? null, checkedAt: (/* @__PURE__ */ new Date()).toISOString() };
+        if (current.draft.provider === state.draft.provider && current.draft.agentHost === state.draft.agentHost) {
+          current.draft.provider = selected;
+          if (selected === "codex") current.draft.agentHost = "codex";
+          else if (selected === "agent" && a.agentHost) current.draft.agentHost = a.agentHost;
+        }
+      });
+      return { ...probe, ...verified };
+    } },
+    test_generation: { schema: { provider, agentHost: agentHost.nullable().optional(), costConfirmed: external_exports.boolean().optional() }, appOnly: true, description: "\u7528\u6237\u786E\u8BA4\u540E\u72EC\u7ACB\u751F\u6210\u4E00\u5F20\u771F\u5B9E\u6D4B\u8BD5\u56FE\u3002\u751F\u56FE API \u5FC5\u987B\u786E\u8BA4\u8D39\u7528\uFF0C\u4F7F\u7528\u5F53\u524D\u4E3B\u89D2\u53CA\u7B2C\u4E00\u7EC4\u642D\u914D\u3002\u6D4B\u8BD5\u4E0D\u66FF\u6362\u7528\u6237\u6279\u6B21\u3002", run: (a) => checks.start(a) },
+    cancel_generation_test: { schema: { testId: external_exports.string().uuid() }, appOnly: true, description: "\u53D6\u6D88\u5F53\u524D\u672C\u673A\u6D4B\u8BD5\u7B49\u5F85\u3002\u5DF2\u63D0\u4EA4\u5230\u6536\u8D39\u6E20\u9053\u7684\u8FDC\u7AEF\u4EFB\u52A1\u53EF\u80FD\u7EE7\u7EED\u8FD0\u884C\u3002", run: (a) => checks.cancel(a.testId) },
+    generation_channels: { schema: {}, read: true, appOnly: true, description: "\u8BFB\u53D6\u751F\u56FE API \u670D\u52A1\u3001\u5185\u7F6E\u6A21\u578B\u9884\u8BBE\u548C\u5BC6\u94A5\u914D\u7F6E\u72B6\u6001\uFF0C\u4E0D\u8FD4\u56DE\u5BC6\u94A5\u3002", run: async () => ({ providers: PROVIDERS, apiServices: IMAGE_API_SERVICES, credentials: Object.fromEntries(Object.entries(await credentials.status()).filter(([p]) => isImageApi(p))) }) },
+    save_provider_keys: { schema: { keys: external_exports.object(Object.fromEntries(IMAGE_API_SERVICES.map((s) => [s.id, external_exports.string().max(2048).optional()]))) }, appOnly: true, description: "\u4EC5\u5728\u672C\u673A\u4FDD\u5B58\u5404\u751F\u56FE API \u7684 Key\uFF1B\u7A7A\u5B57\u7B26\u4E32\u5220\u9664\u672C\u673A\u4FDD\u5B58\u7684\u5BC6\u94A5\u3002\u4E0D\u8FD4\u56DE\u5BC6\u94A5\u3002", run: (a) => credentials.save(a.keys) },
+    save_image_api_config: { schema: { config: apiConfig }, appOnly: true, description: "\u4FDD\u5B58\u7528\u6237\u5728\u5F39\u7A97\u586B\u5199\u7684\u81EA\u5B9A\u4E49 API \u63A5\u53E3\u5730\u5740\u3001\u534F\u8BAE\u4E0E\u6A21\u578B ID\uFF0C\u4E0D\u4FDD\u5B58 Key\u3002", run: (a) => store.saveImageApiConfig(a.config) },
+    start_generation: { schema: {}, appOnly: true, description: "\u6309\u5DF2\u63D0\u4EA4\u6279\u6B21\u9501\u5B9A\u7684\u6E20\u9053\u6267\u884C\u3002Codex \u5FC5\u987B\u5148\u901A\u8FC7\u72EC\u7ACB\u751F\u56FE\u6D4B\u8BD5\u3002", run: async () => {
+      if (await checks.busy()) throw Error("\u8BF7\u5148\u7B49\u5F85\u6216\u53D6\u6D88\u6D4B\u8BD5\u56FE\u3002");
+      const s = await store.refresh();
+      if (s.batch?.provider === "codex") {
+        const probe = await runner.probe("codex"), verified = await checks.status("codex", null, probe);
+        if (!probe.available || verified.capability !== "confirmed") throw Error(verified.check?.reason || probe.reason || "\u5C1A\u672A\u9A8C\u8BC1\u751F\u56FE\u80FD\u529B\uFF0C\u8BF7\u5148\u751F\u6210\u4E00\u5F20\u6D4B\u8BD5\u56FE\u3002");
+      }
+      return runner.start();
+    } },
+    reconnect_with_local_codex: { schema: { batchId: external_exports.string().nullable() }, appOnly: true, description: "\u7528\u6237\u660E\u786E\u9009\u62E9\u672C\u673A Codex \u540E\uFF0C\u9A8C\u8BC1\u672C\u673A\u767B\u5F55\u5E76\u63A5\u624B\u5F53\u524D\u672A\u9886\u53D6\u7684\u4EFB\u52A1\u3002", run: async (a) => {
+      const probe = await runner.probe("codex");
+      if (!probe.available) throw Error(probe.reason || "\u672C\u673A Codex \u65E0\u6CD5\u8FDE\u63A5\u3002");
+      const verified = await checks.status("codex", null, probe);
+      if (verified.capability !== "confirmed") {
+        await store.saveDraft({ provider: "codex", agentHost: "codex" });
+        return { ...probe, ...verified, needsTest: true, message: "\u8D26\u53F7\u5DF2\u767B\u5F55\uFF0C\u6267\u884C\u5668\u5DF2\u8FDE\u63A5\u3002\u8BF7\u5148\u751F\u6210\u4E00\u5F20\u6D4B\u8BD5\u56FE\uFF0C\u518D\u63A5\u7EED\u6574\u6279\u3002" };
+      }
+      if (agentBridge.status().connected) throw Error("\u5F53\u524D Agent \u5DF2\u8FDE\u63A5\uFF0C\u53EF\u7EE7\u7EED\u4F7F\u7528\u3002");
+      const state = await store.useLocalCodex(a.batchId);
+      if (state.batch?.status === "queued") await runner.start(state.batch.id);
+      return probe;
+    } },
     report_dispatch_error: { schema: { batchId: external_exports.string(), error: external_exports.string().min(1).max(4e3) }, description: "\u8BB0\u5F55\u5524\u8D77\u5BBF\u4E3B\u5931\u8D25\u6216\u7F3A\u5C11\u751F\u56FE/\u6587\u4EF6\u56DE\u586B\u5DE5\u5177\u7684\u539F\u56E0\u5E76\u6682\u505C\u8BE5\u6279\u6B21\uFF0C\u4FDD\u7559\u672A\u6267\u884C\u4EFB\u52A1\u3002\u4E0D\u6253\u65AD\u5DF2\u9886\u53D6\u4EFB\u52A1\u3002", run: (a) => store.mutate(() => {
-      const s = store.state;
-      if (s.batch?.id === a.batchId && ["queued", "running"].includes(s.batch.status) && !s.tasks.some((t) => t.batchId === a.batchId && t.status === "running")) {
-        s.batch.status = "paused";
-        s.execution = { batchId: a.batchId, phase: "failed", message: a.error, updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
+      const { batch, tasks } = store.state;
+      if (batch?.id === a.batchId && ["queued", "running"].includes(batch.status) && !tasks.some((t) => t.batchId === a.batchId && t.status === "running")) {
+        batch.status = "paused";
+        if (batch.provider === "agent") batch.resumeOnReconnect = true;
+        store.state.execution = { batchId: a.batchId, phase: "failed", message: a.error, updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
       }
       return store.snapshot();
     }) },
@@ -38127,28 +39634,45 @@ async function createStudio(root, options = {}) {
     } },
     read_image: { schema: { id: external_exports.string() }, read: true, appOnly: true, description: "\u8BFB\u53D6\u5DE5\u4F5C\u53F0\u672C\u5730\u56FE\u7247\u4F9B\u754C\u9762\u663E\u793A\u3002", run: async (a) => ({ id: a.id, ...await store.image(a.id) }) },
     browse_catalog: { schema: { kind: external_exports.enum(["portrait", "pose", "costume"]), q: external_exports.string().optional(), category: external_exports.string().optional(), angle: external_exports.string().optional(), offset: external_exports.number().int().min(0).optional(), limit: external_exports.number().int().min(1).max(60).optional(), refresh: external_exports.boolean().optional() }, read: true, description: "\u6D4F\u89C8\u4EBA\u50CF\u3001\u670D\u88C5\u6216\u59FF\u52BF\u56FE\u5E93\uFF0C\u53EF\u6309\u5206\u7C7B\u548C\u5173\u952E\u8BCD\u7B5B\u9009\u3002", run: (a) => catalog.query(a) },
+    download_catalog_image: { schema: { kind: external_exports.enum(["portrait", "pose", "costume"]), id: external_exports.string().min(1).max(100) }, appOnly: true, read: true, description: "\u4E0B\u8F7D\u6307\u5B9A\u56FE\u5E93\u7684\u771F\u5B9E\u539F\u56FE\uFF0C\u4E0D\u9009\u62E9\u7D20\u6750\uFF0C\u4E0D\u66F4\u6362\u4E3B\u89D2\uFF0C\u4E0D\u521B\u5EFA\u751F\u6210\u4EFB\u52A1\u3002", run: (a) => downloadCatalogImage(catalog, a, options.catalogDownloadOptions) },
     select_reference: { schema: { item: external_exports.object({ id: external_exports.string(), kind: external_exports.enum(["pose", "costume"]), name: external_exports.string(), category: external_exports.string().optional(), group: external_exports.string().optional(), angle: external_exports.string().optional(), url: external_exports.string().url(), thumb: external_exports.string().url() }) }, appOnly: true, description: "\u767B\u8BB0\u7528\u6237\u4ECE\u56FE\u5E93\u9009\u4E2D\u7684\u53C2\u8003\u7D20\u6750\u3002", run: (a) => store.addReference(a.item) },
-    save_draft: { schema: { patch: external_exports.object({ portraitId: external_exports.string().nullable().optional(), costumeIds: external_exports.array(external_exports.string()).optional(), poseIds: external_exports.array(external_exports.string()).optional(), ratio: external_exports.string().regex(/^\d{1,3}:\d{1,3}$/).optional(), template: external_exports.string().optional(), notes: external_exports.string().optional(), provider: provider.optional(), providerPresetId: external_exports.string().nullable().optional() }) }, appOnly: true, description: "\u4FDD\u5B58\u7528\u6237\u7684\u9009\u62E9\u3001\u6E20\u9053\u3001\u6A21\u578B\u9884\u8BBE\u3001\u6BD4\u4F8B\u548C\u63D0\u793A\u8BCD\u3002", run: (a) => store.saveDraft(a.patch) },
+    save_draft: { schema: { patch: external_exports.object({ portraitId: external_exports.string().nullable().optional(), costumeIds: external_exports.array(external_exports.string()).optional(), poseIds: external_exports.array(external_exports.string()).optional(), ratio: external_exports.string().regex(/^\d{1,3}:\d{1,3}$/).optional(), template: external_exports.string().optional(), notes: external_exports.string().optional(), provider: provider.optional(), agentHost: agentHost.nullable().optional(), providerPresetId: external_exports.string().nullable().optional() }) }, appOnly: true, description: "\u4FDD\u5B58\u7528\u6237\u7684\u9009\u62E9\u3001\u6E20\u9053\u3001Agent\u3001\u6A21\u578B\u9884\u8BBE\u3001\u6BD4\u4F8B\u548C\u63D0\u793A\u8BCD\u3002", run: (a) => store.saveDraft(a.patch) },
     build_queue: { schema: {}, appOnly: true, description: "\u6309\u6240\u9009\u670D\u88C5\u4E58\u59FF\u52BF\u5EFA\u7ACB\u4EFB\u52A1\u8349\u7A3F\uFF0C\u4FDD\u7559\u5386\u53F2\u7ED3\u679C\u3002", run: () => store.buildQueue() },
     edit_task: { schema: { taskId: external_exports.string(), patch: external_exports.object({ remove: external_exports.boolean().optional(), costumeId: external_exports.string().nullable().optional(), poseId: external_exports.string().nullable().optional(), prompt: external_exports.string().optional() }) }, appOnly: true, description: "\u5728\u63D0\u4EA4\u4E4B\u524D\u5220\u9664\u4EFB\u52A1\u6216\u8C03\u6574\u7EC4\u5408\u53CA\u5355\u6761\u63D0\u793A\u8BCD\u3002", run: (a) => store.patchTask(a.taskId, a.patch) },
-    control_batch: { schema: { action: external_exports.enum(["start", "pause", "continue", "cancel"]) }, appOnly: true, description: "\u63D0\u4EA4\u6279\u6B21\u3001\u6682\u505C\u540E\u7EED\u4EFB\u52A1\u3001\u7EE7\u7EED\u6216\u53D6\u6D88\u6279\u6B21\u3002", run: (a) => store.batchAction(a.action) },
-    claim_next_task: { schema: {}, modelOnly: true, description: "\u9886\u53D6\u4F7F\u7528 Codex/\u5BBF\u4E3B\u751F\u56FE\u7684\u4E0B\u4E00\u4E2A\u5DF2\u63D0\u4EA4\u4EFB\u52A1\u3002RunningHub \u4EFB\u52A1\u7531\u672C\u673A\u6267\u884C\u5668\u5904\u7406\uFF1B\u6682\u505C\u6216\u53D6\u6D88\u65F6\u4E0D\u9886\u53D6\u3002", run: async () => {
-      const s = await store.refresh();
-      return s.batch?.provider && !isNativeProvider(s.batch.provider) ? { task: null, batch: s.batch, error: "\u6B64\u6279\u6B21\u4F7F\u7528 RunningHub\uFF0C\u8BF7\u5728\u5DE5\u4F5C\u53F0\u542F\u52A8\u81EA\u52A8\u6267\u884C\uFF0C\u4E0D\u4F7F\u7528\u5BBF\u4E3B\u751F\u56FE\u5DE5\u5177\u3002" } : store.claimNext(s.batch?.id);
+    control_batch: { schema: { action: external_exports.enum(["start", "pause", "continue", "cancel"]) }, appOnly: true, description: "\u63D0\u4EA4\u6279\u6B21\u3001\u6682\u505C\u540E\u7EED\u4EFB\u52A1\u3001\u7EE7\u7EED\u6216\u53D6\u6D88\u6279\u6B21\u3002", run: async (a) => {
+      if (["start", "continue"].includes(a.action)) {
+        if (await checks.busy()) throw Error("\u6D4B\u8BD5\u56FE\u6B63\u5728\u6267\u884C\uFF0C\u5B8C\u6210\u540E\u518D\u63D0\u4EA4\u6574\u6279\u3002");
+        const s = await store.refresh();
+        if (s.batch?.provider === "codex") {
+          const probe = await runner.probe("codex"), verified = await checks.status("codex", null, probe);
+          if (!probe.available || verified.capability !== "confirmed") throw Error(verified.check?.reason || probe.reason || "\u5C1A\u672A\u9A8C\u8BC1\u751F\u56FE\u80FD\u529B\u3002\u8BF7\u5148\u751F\u6210\u4E00\u5F20\u6D4B\u8BD5\u56FE\uFF0C\u6210\u529F\u540E\u518D\u63D0\u4EA4\u6574\u6279\u3002");
+        }
+      }
+      return store.batchAction(a.action);
     } },
-    record_result: { schema: { taskId: external_exports.string(), filePath: external_exports.string().optional(), base64: external_exports.string().optional(), error: external_exports.string().optional() }, modelOnly: true, description: "\u56DE\u586B\u771F\u5B9E\u751F\u56FE\u5DE5\u5177\u8FD4\u56DE\u7684\u7ED3\u679C\u6587\u4EF6\u6216\u5931\u8D25\u539F\u56E0\uFF0C\u4E0D\u5F97\u4F7F\u7528\u5360\u4F4D\u56FE\u5145\u5F53\u751F\u56FE\u3002\u7ED3\u679C\u590D\u5236\u5230\u672C\u5730\u5E76\u6309\u4EFB\u52A1\u5C55\u793A\u3002", run: async (a) => {
+    claim_next_task: { schema: {}, modelOnly: true, description: "\u9886\u53D6\u4F7F\u7528 Codex/\u5BBF\u4E3B\u751F\u56FE\u7684\u4E0B\u4E00\u4E2A\u5DF2\u63D0\u4EA4\u4EFB\u52A1\u3002Agent \u6536\u5230\u540E\u5148\u7528 agent_ack_task \u786E\u8BA4\uFF0C\u518D\u751F\u56FE\u3002\u751F\u56FE API \u4EFB\u52A1\u7531\u672C\u673A\u6267\u884C\u5668\u5904\u7406\u3002", run: async () => {
+      await agentBridge.reconcile();
+      const s = await store.refresh();
+      if (s.batch?.provider === "agent" && s.batch.agentHost) return { task: null, batch: s.batch, error: "\u6B64\u6279\u6B21\u6307\u5B9A\u4E86 Agent\uFF0C\u8BF7\u7528 agent_wait \u6216 CLI wait \u6309\u5BBF\u4E3B\u540D\u79F0\u9886\u53D6\u3002" };
+      if (s.batch?.provider && !isNativeProvider(s.batch.provider)) return { task: null, batch: s.batch, error: "\u6B64\u6279\u6B21\u4F7F\u7528\u751F\u56FE API\uFF0C\u8BF7\u5728\u5DE5\u4F5C\u53F0\u542F\u52A8\u81EA\u52A8\u6267\u884C\uFF0C\u4E0D\u4F7F\u7528\u5BBF\u4E3B\u751F\u56FE\u5DE5\u5177\u3002" };
+      return store.claimNext(s.batch?.id, s.batch?.provider === "agent" ? { receiptMs: agentBridge.receiptMs } : void 0);
+    } },
+    record_result: { schema: { taskId: external_exports.string(), filePath: external_exports.string().optional(), base64: external_exports.string().optional(), error: external_exports.string().optional() }, modelOnly: true, description: "\u56DE\u586B\u5DF2\u9886\u53D6\u7684\u771F\u5B9E\u56FE\u7247\u6216\u5931\u8D25\u539F\u56E0\u3002PNG\u3001JPEG\u3001WebP \u6700\u5927 12 MB\u3002\u666E\u901A\u4EFB\u52A1\u51FA\u73B0\u5728\u6210\u529F\u8BB0\u5F55\uFF0C\u80FD\u529B\u6D4B\u8BD5\u663E\u793A\u5728\u6E20\u9053\u68C0\u6D4B\u533A\u3002", run: async (a) => {
+      if (checks.owns(a.taskId)) return checks.result(a.taskId, a);
       const result = await store.recordResult(a.taskId, a);
       agentBridge.finish(a.taskId);
       return store.mutate(() => {
         const s = store.state, b = s.batch;
-        if (b?.id === result.batch?.id) {
+        if (b && b.id === result.batch?.id) {
           const message = b.status === "done" ? b.failedCount ? "\u672C\u6279\u6B21\u5DF2\u5904\u7406\u5B8C\u6210\uFF0C\u5DF2\u8DF3\u8FC7 " + b.failedCount + " \u4E2A\u5931\u8D25\u4EFB\u52A1\u3002\u6700\u8FD1\u5931\u8D25\u539F\u56E0\uFF1A" + b.lastError : "\u672C\u6279\u6B21\u5DF2\u5B8C\u6210\uFF0C\u56FE\u7247\u5DF2\u4FDD\u5B58\u5728\u6210\u529F\u8BB0\u5F55\u3002" : b.status === "paused" ? "\u4EFB\u52A1\u5DF2\u6682\u505C\u3002" : "\u5F53\u524D\u56FE\u7247\u5DF2\u5904\u7406\uFF0C\u7B49\u5F85\u4E0B\u4E00\u9879\u4EFB\u52A1\u3002";
           s.execution = { batchId: b.id, phase: b.status, message, updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
         }
         return store.snapshot();
       });
     } },
-    retry_task: { schema: { taskId: external_exports.string() }, appOnly: true, description: "\u7528\u6237\u4E3B\u52A8\u91CD\u505A\u4E00\u5F20\u56FE\u7247\uFF0C\u521B\u5EFA\u72EC\u7ACB\u7684\u91CD\u505A\u4EFB\u52A1\u3002", run: (a) => store.retry(a.taskId) }
+    retry_task: { schema: { taskId: external_exports.string() }, appOnly: true, description: "\u7528\u6237\u4E3B\u52A8\u91CD\u505A\u4E00\u5F20\u56FE\u7247\uFF0C\u521B\u5EFA\u72EC\u7ACB\u7684\u91CD\u505A\u4EFB\u52A1\u3002", run: (a) => store.retry(a.taskId) },
+    rename_batch: { schema: { batchId: external_exports.string().min(1).max(200), name: external_exports.string().max(80) }, appOnly: true, description: "\u4E3A\u6307\u5B9A\u5386\u53F2\u6279\u6B21\u547D\u540D\uFF0C\u4FDD\u7559\u539F\u56FE\u548C\u4EFB\u52A1\u3002", run: (a) => store.renameBatch(a.batchId, a.name) },
+    download_batch: { schema: { batchId: external_exports.string().min(1).max(200) }, appOnly: true, description: "\u6253\u5305\u672C\u6279\u5F53\u524D\u5DF2\u6210\u529F\u751F\u6210\u7684\u5168\u90E8\u56FE\u7247\uFF0C\u8FD4\u56DE\u672C\u673A ZIP \u4E0B\u8F7D\u94FE\u63A5\u3002", run: async (a) => exporter.download(a.batchId, await downloadBase()) }
   };
   const invoke = async (name, args = {}, context = {}) => {
     const t = tools[name];
@@ -38168,9 +39692,10 @@ async function createStudio(root, options = {}) {
     inputSchema: t.schema,
     annotations: { readOnlyHint: !!t.read, destructiveHint: false, openWorldHint: ["browse_catalog", "select_portrait", "claim_next_task"].includes(name), idempotentHint: !!t.read },
     _meta: { ui: { ...t.render ? { resourceUri: UI_URI } : {}, ...t.appOnly ? { visibility: ["app"] } : t.modelOnly ? { visibility: ["model"] } : {} }, ...t.render ? { "openai/outputTemplate": UI_URI } : {}, "openai/widgetAccessible": !t.modelOnly }
-  }, (a) => invoke(name, a));
+  }, (a, extra) => invoke(name, a, { signal: extra.signal }));
   server.registerResource("character-studio-ui", UI_URI, { mimeType: "text/html;profile=mcp-app", _meta: resourceMeta }, async () => ({ contents: [{ uri: UI_URI, mimeType: "text/html;profile=mcp-app", text: await readFile5(new URL("./workbench.html", import.meta.url), "utf8"), _meta: resourceMeta }] }));
-  return { server, store, catalog, invoke, tools, runner, agentBridge };
+  studio = { server, store, catalog, invoke, tools, runner, agentBridge, exporter };
+  return studio;
 }
 async function serveHttp(studio, port = 43127) {
   const server = createServer(async (req, res) => {
@@ -38186,12 +39711,16 @@ async function serveHttp(studio, port = 43127) {
     try {
       if (req.method === "GET" && url2.pathname === "/api/health") {
         res.setHeader("Content-Type", "application/json");
-        res.end(JSON.stringify({ service: SERVICE, version: VERSION, buildId: BUILD_ID, pid: process.pid, homeId: createHash2("sha256").update(studio.store.root).digest("hex"), features: ["agent-cli-v1", "agent-wait-v1"] }));
+        res.end(JSON.stringify({ service: SERVICE, version: VERSION, buildId: BUILD_ID, pid: process.pid, homeId: createHash5("sha256").update(studio.store.root).digest("hex"), features: ["agent-cli-v1", "agent-wait-v1"] }));
         return;
       }
       if (req.method === "GET" && url2.pathname === "/") {
         res.setHeader("Content-Type", "text/html;charset=utf-8");
         res.end(await readFile5(new URL("./workbench.html", import.meta.url)));
+        return;
+      }
+      if (["GET", "HEAD"].includes(req.method) && url2.pathname.startsWith("/api/exports/")) {
+        await studio.exporter.send(url2.pathname.slice("/api/exports/".length), res, req.method === "HEAD");
         return;
       }
       if (req.method === "POST" && url2.pathname === "/api/tool") {
@@ -38215,6 +39744,10 @@ async function serveHttp(studio, port = 43127) {
       res.writeHead(404);
       res.end("Not found");
     } catch (e) {
+      if (res.headersSent) {
+        res.destroy();
+        return;
+      }
       res.writeHead(400, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: e.message }));
     }
@@ -38223,17 +39756,18 @@ async function serveHttp(studio, port = 43127) {
     server.once("error", reject);
     server.listen(port, "127.0.0.1", resolve);
   });
+  studio.httpServer = server;
   return server;
 }
-if (process.argv[1] && path5.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && path7.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const studio = await createStudio();
   if (process.argv.includes("--http")) {
     const portIndex = process.argv.indexOf("--port");
     const server = await serveHttp(studio, portIndex < 0 ? 43127 : Number(process.argv[portIndex + 1]));
-    const address = { service: SERVICE, version: VERSION, buildId: BUILD_ID, pid: process.pid, port: server.address().port, homeId: createHash2("sha256").update(studio.store.root).digest("hex") };
-    const discovery = path5.join(studio.store.root, "service.json"), tmp = discovery + "." + process.pid + ".tmp";
+    const address = { service: SERVICE, version: VERSION, buildId: BUILD_ID, pid: process.pid, port: server.address().port, homeId: createHash5("sha256").update(studio.store.root).digest("hex") };
+    const discovery = path7.join(studio.store.root, "service.json"), tmp = discovery + "." + process.pid + ".tmp";
     await writeFile4(tmp, JSON.stringify(address));
-    await rename3(tmp, discovery);
+    await rename4(tmp, discovery);
     process.send?.(address);
     console.log("Character Studio: http://127.0.0.1:" + server.address().port);
   } else await studio.server.connect(new StdioServerTransport());

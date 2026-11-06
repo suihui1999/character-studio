@@ -2,22 +2,21 @@
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Character Studio</title>
 <style>
 :root{color-scheme:light dark;--paper:light-dark(#f7f6f2,#171918);--surface:light-dark(#fff,#212522);--ink:light-dark(#252c29,#eff2ec);--muted:light-dark(#69716b,#a7afa7);--line:light-dark(#dedfd7,#3a423c);--accent:light-dark(#964c33,#eead8b);--accent-ink:light-dark(#fff,#25180f);--soft:light-dark(#eee9e1,#353029);--green:light-dark(#326b54,#91cfad);--danger:light-dark(#a23434,#ffb3a9)}
-*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.5 'Microsoft YaHei','PingFang SC',sans-serif}button,input,textarea,select{font:inherit;color:inherit}button,a{touch-action:manipulation}button{cursor:pointer;background:var(--surface);border:1px solid var(--line);padding:8px 13px;border-radius:5px}button:hover{border-color:var(--accent)}button:disabled{cursor:default;opacity:.45}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:3px}a{color:var(--accent)}input,textarea,select{width:100%;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:9px}h1,h2,h3,p{margin:0}h2{font-size:16px}h3{font-size:14px}small,.small{font-size:12px;color:var(--muted)}.app{max-width:1440px;margin:auto;padding:24px}.header{display:flex;justify-content:space-between;gap:18px;align-items:center;border-bottom:1px solid var(--line);padding:0 0 20px;margin-bottom:24px}.brand{font:25px/1.1 Georgia,serif;letter-spacing:1px}.brand span{color:var(--accent)}.eyebrow{letter-spacing:2px;font-size:10px;margin-top:8px;color:var(--muted)}.header-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.connection{color:var(--green);font-size:12px}.layout{display:grid;grid-template-columns:185px minmax(0,1fr) 240px;gap:24px;align-items:start}.sidebar,.queue{display:grid;gap:16px;min-width:0}.step{font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:6px}.portrait{position:relative;aspect-ratio:3/4;border:1px dashed var(--line);border-radius:6px;background:var(--surface);display:grid;place-items:center;overflow:hidden}.portrait img{width:100%;height:100%;object-fit:contain;position:absolute}.field{display:grid;gap:5px}.field>span{font-size:12px;color:var(--muted)}.selected-strip{display:flex;gap:5px;flex-wrap:wrap}.selected-strip button{padding:4px 7px;font-size:11px;max-width:100%;overflow-wrap:anywhere}.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}.full{width:100%}.tabs{display:flex;gap:18px;align-items:center;border-bottom:1px solid var(--line);margin-bottom:16px}.tab{background:none;border:0;border-radius:0;padding:0 0 12px;color:var(--muted)}.tab[aria-selected=true]{color:var(--ink);border-bottom:2px solid var(--accent)}.tabs .tab:last-child{margin-left:auto}.filters{display:grid;grid-template-columns:minmax(0,1fr) 130px 90px;gap:8px;margin-bottom:12px}.meta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:14px}.gallery{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px 10px;min-width:0}.tile{position:relative;background:none;border:0;border-radius:0;padding:0;text-align:left;min-width:0}.tile .photo{aspect-ratio:3/4;background:var(--soft);overflow:hidden;display:grid;place-items:center;position:relative;border-radius:3px}.tile img{width:100%;height:100%;object-fit:contain;position:absolute}.tile[aria-pressed=true] .photo{outline:2px solid var(--accent);outline-offset:2px}.tick{position:absolute;right:6px;top:6px;width:21px;height:21px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);font-size:13px}.tile .caption{margin-top:6px;font-size:11px;display:flex;justify-content:space-between;gap:4px}.tile .name{font-size:11px;color:var(--muted);text-overflow:ellipsis;overflow:hidden;white-space:nowrap;display:block}.pager{display:flex;justify-content:space-between;align-items:center;margin-top:20px}.empty{grid-column:1/-1;padding:45px 5px;color:var(--muted)}.queue-title{display:flex;justify-content:space-between;align-items:baseline}.number{font:22px Georgia,serif;color:var(--accent)}.queue-stat{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.queue-stat strong{font-size:18px;font-weight:500}.status{font-size:12px;min-height:20px;overflow-wrap:anywhere}.status.error{color:var(--danger)}.queue-list{display:grid;gap:10px}.job{border-top:1px solid var(--line);padding-top:10px;display:grid;gap:6px}.job-head{display:flex;justify-content:space-between;gap:6px}.job-head span{font-size:11px}.job-meta{font-size:11px;color:var(--muted);overflow-wrap:anywhere}.job button{padding:4px 8px;font-size:11px}.job-actions{display:flex;gap:5px;flex-wrap:wrap}.tag{color:var(--green)}.result-image{width:100%;max-height:260px;object-fit:contain;background:var(--soft)}details>summary{cursor:pointer;font-size:12px;color:var(--muted)}details textarea{margin-top:8px;font-size:12px}dialog{max-width:min(800px,95vw);max-height:90vh;overflow:auto;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:20px}dialog::backdrop{background:#0007}.dialog-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}.dialog-body{display:grid;gap:14px}.lightbox{max-width:100%;max-height:70vh;object-fit:contain}.text-button{border:0;background:none;color:var(--accent);padding:0}.fallback{display:grid;gap:8px}.hidden,[hidden]{display:none!important}.support{padding-top:12px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.5 'Microsoft YaHei','PingFang SC',sans-serif}button,input,textarea,select{font:inherit;color:inherit}button,a{touch-action:manipulation}button{cursor:pointer;background:var(--surface);border:1px solid var(--line);padding:8px 13px;border-radius:5px}button:hover{border-color:var(--accent)}button:disabled{cursor:default;opacity:.45}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:3px}a{color:var(--accent)}input,textarea,select{width:100%;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:9px}h1,h2,h3,p{margin:0}h2{font-size:16px}h3{font-size:14px}small,.small{font-size:12px;color:var(--muted)}.app{max-width:1440px;margin:auto;padding:24px}.header{display:flex;justify-content:space-between;gap:18px;align-items:center;border-bottom:1px solid var(--line);padding:0 0 20px;margin-bottom:24px}.brand{font-size:20px;line-height:1.2}.header-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.connection{color:var(--green);font-size:12px}.layout{display:grid;grid-template-columns:185px minmax(0,1fr) 240px;gap:24px;align-items:start}.sidebar,.queue{display:grid;gap:16px;min-width:0}.portrait{position:relative;aspect-ratio:3/4;border:1px dashed var(--line);border-radius:6px;background:var(--surface);display:grid;place-items:center;overflow:hidden}.portrait img{width:100%;height:100%;object-fit:contain;position:absolute}.field{display:grid;gap:5px}.field>span{font-size:12px;color:var(--muted)}.selected-strip{display:flex;gap:5px;flex-wrap:wrap}.selected-strip button{padding:4px 7px;font-size:12px;max-width:100%;overflow-wrap:anywhere}.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}.full{width:100%}.tabs{display:flex;gap:18px;align-items:center;border-bottom:1px solid var(--line);margin-bottom:16px}.tab{background:none;border:0;border-radius:0;padding:0 0 12px;color:var(--muted)}.tab[aria-selected=true]{color:var(--ink);border-bottom:2px solid var(--accent)}.tabs .tab:last-child{margin-left:auto}.filters{display:grid;grid-template-columns:minmax(0,1fr) 130px 90px;gap:8px;margin-bottom:12px}.meta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:14px}.gallery{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px 10px;min-width:0}.tile{position:relative;background:none;border:0;border-radius:0;padding:0;text-align:left;min-width:0}.tile .photo{aspect-ratio:3/4;background:var(--soft);overflow:hidden;display:grid;place-items:center;position:relative;border-radius:3px}.tile img{width:100%;height:100%;object-fit:contain;position:absolute}.tile[aria-pressed=true] .photo{outline:2px solid var(--accent);outline-offset:2px}.tick{position:absolute;right:6px;top:6px;width:21px;height:21px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);font-size:12px}.tile .caption{margin-top:6px;font-size:12px;display:flex;justify-content:space-between;gap:4px}.tile .name{font-size:12px;color:var(--muted);text-overflow:ellipsis;overflow:hidden;white-space:nowrap;display:block}.pager{display:flex;justify-content:space-between;align-items:center;margin-top:20px}.empty{grid-column:1/-1;padding:45px 5px;color:var(--muted)}.queue-title{display:flex;justify-content:space-between;align-items:baseline}.status{font-size:12px;min-height:20px;overflow-wrap:anywhere}.status.error{color:var(--danger)}.queue-list{display:grid;gap:10px}.job{border-top:1px solid var(--line);padding-top:10px;display:grid;gap:6px}.job-head{display:flex;justify-content:space-between;gap:6px}.job-head span{font-size:12px}.job-meta{font-size:12px;color:var(--muted);overflow-wrap:anywhere}.job button{padding:4px 8px;font-size:12px}.job-actions{display:flex;gap:5px;flex-wrap:wrap}.tag{color:var(--green)}.result-image{width:100%;max-height:260px;object-fit:contain;background:var(--soft)}details>summary{cursor:pointer;font-size:12px;color:var(--muted)}details textarea{margin-top:8px;font-size:12px}dialog{max-width:min(800px,95vw);max-height:90vh;overflow:auto;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:20px}dialog::backdrop{background:#0007}.dialog-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}.dialog-body{display:grid;gap:14px}.lightbox{max-width:100%;max-height:70vh;object-fit:contain}.text-button{border:0;background:none;color:var(--accent);padding:0}.fallback{display:grid;gap:8px}.hidden,[hidden]{display:none!important}.support{font-size:12px;color:var(--muted)}
 @media(min-width:1200px){.gallery{grid-template-columns:repeat(5,minmax(0,1fr))}}
 @media(max-width:1000px){.layout{grid-template-columns:150px minmax(0,1fr)}.queue{grid-column:1/-1;align-items:start}.queue>header,.queue>.queue-list,.queue>.status,.queue>.fallback{grid-column:1/-1}.queue-list{grid-template-columns:repeat(3,minmax(0,1fr))}.gallery{grid-template-columns:repeat(4,minmax(0,1fr))}}
-@media(max-width:600px){.app{padding:16px}.header{align-items:start}.brand{font-size:20px}.header-actions{justify-content:flex-end}.layout{grid-template-columns:minmax(0,1fr)}.sidebar{grid-template-columns:110px minmax(0,1fr);gap:14px}.sidebar>.portrait-section{grid-row:span 3}.sidebar>.field{grid-column:2}.sidebar>.support{grid-column:1/-1}.gallery{grid-template-columns:repeat(3,minmax(0,1fr))}.filters{grid-template-columns:minmax(0,1fr) 100px}.filters input{grid-column:1/-1}.queue{grid-template-columns:minmax(0,1fr)}.queue-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.app{padding:16px}.header{flex-wrap:wrap}.header-actions{justify-content:flex-start}.layout{grid-template-columns:minmax(0,1fr)}.sidebar{grid-template-columns:110px minmax(0,1fr);gap:14px}.sidebar>.portrait-section{grid-row:span 3}.sidebar>.field{grid-column:2}.sidebar>.support{grid-column:1/-1}.gallery{grid-template-columns:repeat(3,minmax(0,1fr))}.filters{grid-template-columns:minmax(0,1fr) 100px}.filters input{grid-column:1/-1}.queue{grid-template-columns:minmax(0,1fr)}.queue-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:380px){.gallery{grid-template-columns:repeat(2,minmax(0,1fr))}.queue-list{grid-template-columns:minmax(0,1fr)}.header{flex-wrap:wrap}.header-actions{justify-content:flex-start}}
-@media(prefers-reduced-motion:no-preference){.tile .photo{transition:outline-color .15s}.primary{transition:filter .15s}.primary:hover{filter:brightness(1.08)}}
 .layout>* , .sidebar>* , .portrait-section , .library , #library-panel{min-width:0;max-width:100%}
 .portrait{width:100%;min-width:0;isolation:isolate}
 .portrait img{inset:0}
 .selected-strip{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
-.selected-reference{display:grid;grid-template-columns:40px minmax(0,1fr) 24px;gap:6px;align-items:center;min-width:0;padding:5px;border:1px solid var(--line);border-radius:5px;background:var(--surface)}
+.selected-reference{display:grid;grid-template-columns:40px minmax(0,1fr) 24px;gap:6px;align-items:center;min-width:0}
 .selected-reference-image,.selected-reference-missing{display:block;width:40px;height:54px;object-fit:contain;border-radius:3px;background:var(--soft)}
 .selected-reference-missing{display:grid;place-items:center;color:var(--muted)}
-.selected-reference-text{min-width:0;font-size:11px;overflow-wrap:anywhere}
-.selected-reference-text>span{display:block}.selected-reference-text small{font-size:10px}
-.selected-strip .selected-reference-remove{padding:0;width:24px;height:30px;border:0;background:transparent;font-size:17px;line-height:1}
+.selected-reference-text{min-width:0;font-size:12px;overflow-wrap:anywhere}
+.selected-reference-text>span{display:block}.selected-reference-text small{font-size:12px}
+.selected-strip .selected-reference-remove{padding:0;width:24px;height:30px;border:0;background:transparent;font-size:16px;line-height:1}
 .portrait-actions{display:grid;gap:6px;margin-bottom:10px}
 #upload-portrait{min-height:44px;padding:8px 4px;font-weight:700}
 #open-portrait-gallery{padding:7px 4px}
@@ -26,10 +25,10 @@
 .tabs{gap:clamp(8px,2vw,18px)}
 .job-failure{padding:10px;border-left:3px solid var(--danger);background:color-mix(in srgb,var(--danger) 6%,var(--surface));font-size:12px;overflow-wrap:anywhere}
 .job-failure strong,.tag.failed,.execution.error{color:var(--danger)}
-.job-failure details{margin-top:7px}.job-failure .error-detail{white-space:pre-wrap;font-size:11px;margin-top:6px}
+.job-failure details{margin-top:7px}.job-failure .error-detail{white-space:pre-wrap;font-size:12px;margin-top:6px}
 .execution{border-left:3px solid var(--green);padding:8px 10px;background:var(--surface);font-size:12px;overflow-wrap:anywhere}
 .queue>.execution{grid-column:1/-1}
-.generation-step{display:grid;gap:10px;min-width:0;border-bottom:1px solid var(--line);padding-bottom:14px}
+.generation-step{display:grid;gap:10px;min-width:0}
 .choice-buttons,.generation-actions{display:grid;gap:8px}
 .choice-buttons{grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr))}
 .generation-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -37,12 +36,12 @@
 .generation-actions .job-actions:not(:has(button:not([hidden]))){display:none}
 .anchored-dialog{position:absolute;bottom:auto;margin:0 auto;max-height:min(75vh,560px)}
 .choice-buttons button{min-height:42px;padding:8px;overflow-wrap:anywhere}
-.choice-buttons button[aria-pressed=true]{border-color:var(--accent);background:var(--soft);box-shadow:inset 0 0 0 1px var(--accent);color:var(--ink);font-weight:600}
+.choice-buttons button[aria-pressed=true]{border-color:var(--accent);background:var(--soft);color:var(--ink);font-weight:600}
 .generation-actions .job-actions{grid-column:1/-1}
 #combination-preview{width:680px}
 #combination-preview .dialog-head{gap:12px}
 .preview-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:10px}
-.preview-card{display:grid;gap:8px;min-width:0;padding:10px;border:1px solid var(--line);border-radius:6px}
+.preview-card{display:grid;gap:8px;min-width:0}
 .preview-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .preview-pair img{display:block;width:100%;height:76px;object-fit:contain;background:var(--soft);border-radius:3px}
 .preview-pair small{display:block;overflow-wrap:anywhere;margin-top:3px}
@@ -52,29 +51,88 @@
 #prompt-settings>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #prompt-settings[open] .field{margin-top:8px}
 #prompt-settings textarea{margin-top:0}
-.success-history{grid-column:1/-1;border-top:1px solid var(--line);padding-top:14px;min-width:0}
-.success-history>summary{color:var(--ink);font-size:14px;padding:6px 0}
-.success-history>summary span{color:var(--muted);font-size:12px;margin-left:6px}
-.success-history[open]>.queue-list{margin-top:12px}
+.success-history{grid-column:1/-1;border-top:1px solid var(--line);padding-top:14px}
+#success-history{width:min(760px,95vw)}
+#success-results{grid-template-columns:minmax(0,1fr);gap:24px}
+.batch-record{display:grid;gap:12px;min-width:0;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.batch-record:last-child{border-bottom:0;padding-bottom:0}
+.batch-heading{display:flex;gap:12px;align-items:start}
+.batch-portrait{width:64px;height:84px;object-fit:contain;background:var(--soft);border-radius:3px}
+.batch-description{display:grid;gap:5px;min-width:0;flex:1}
+.batch-description time,.batch-description p{font-size:12px;color:var(--muted)}
+.batch-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,155px),1fr));gap:12px}
+.batch-record [data-history-feedback]{overflow-wrap:anywhere}
+.job-head .tag{flex-shrink:0;white-space:nowrap}
+.job-head>span:first-child{min-width:0;overflow-wrap:anywhere}
+.gallery[data-page-size="6"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+.gallery[data-page-size="9"]{grid-template-columns:repeat(3,minmax(0,1fr))}
+.gallery[data-page-size="12"]{grid-template-columns:repeat(4,minmax(0,1fr))}
+.library-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.library-actions select{width:auto;padding:5px}
+#reference-viewer{width:min(680px,95vw)}
+#reference-image{display:block;margin:0 auto;max-height:65vh}
+#reference-confirm{margin-top:12px}
+.execution[data-working=true]::before{content:"";display:inline-block;width:.8em;height:.8em;margin-right:8px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;vertical-align:-1px}
+@media(prefers-reduced-motion:no-preference){.execution[data-working=true]::before{animation:progress-spin .8s linear infinite}}
+@keyframes progress-spin{to{transform:rotate(1turn)}}
 .history-empty{font-size:12px;color:var(--muted);padding:12px 0}
-.generation-choice{display:grid;gap:9px;padding-bottom:14px;border-bottom:1px solid var(--line);min-width:0;grid-column:1/-1}.provider-label{display:flex;align-items:center;justify-content:space-between;gap:8px}.provider-label label{font-size:12px;color:var(--muted)}.provider-label button{padding:2px 5px;font-size:12px;white-space:nowrap}.channel-status{min-height:0}.channel-status[data-state="ready"]{color:var(--green)}.generation-choice small{overflow-wrap:anywhere}
-#rh-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-#rh-actions button{font-size:12px;padding:5px 8px}
-#rh-guide{width:780px}
-#rh-key-dialog{width:430px}
-#rh-guide .dialog-head,#rh-key-dialog .dialog-head{gap:10px}
-#rh-guide img{display:block;width:100%;height:auto;border-radius:6px}
-#rh-key-form{display:grid;gap:8px;margin-top:8px}
-#rh-key-form .job-actions{align-items:center}
-#rh-key-status[data-state="ready"]{color:var(--green)}
+.generation-choice{display:grid;gap:9px;min-width:0;grid-column:1/-1}.provider-label{display:flex;align-items:center;justify-content:space-between;gap:8px}.provider-label label{font-size:12px;color:var(--muted)}.provider-label button{padding:2px 5px;font-size:12px;white-space:nowrap}.channel-status{min-height:0}.channel-status[data-state="ready"]{color:var(--green)}.generation-choice small{overflow-wrap:anywhere}
+#api-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+#api-actions button{font-size:12px;padding:5px 8px}
+#api-guide{width:780px}
+#api-key-dialog{width:430px}
+#api-guide .dialog-head,#api-key-dialog .dialog-head{gap:10px}
+#api-guide img{display:block;width:100%;height:auto;border-radius:6px}
+#api-key-form{display:grid;gap:8px;margin-top:8px}
+#api-key-steps{list-style:none;counter-reset:api-step;margin:0;padding:0;display:grid;gap:12px}
+#api-key-steps li{counter-increment:api-step;display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;align-items:start;padding:12px;background:var(--paper);border-radius:6px}
+#api-key-steps li::before{content:counter(api-step);background:#ffe600;color:#161616;border-radius:4px;text-align:center;font-weight:700;font-size:16px;line-height:30px}
+#api-guide{width:600px}
+#api-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+#api-actions button{font-size:12px;padding:6px 8px}
+#api-key-form .job-actions{align-items:center}
+#api-key-status[data-state="ready"]{color:var(--green)}
 .tile:has(>.result-image){display:block;width:100%;min-height:100px}.tile>.result-image{position:static;width:100%;height:auto;max-height:260px}
+.result-frame{position:relative;min-width:0}
+.result-download{position:absolute;right:8px;bottom:8px;z-index:1;display:grid;place-items:center;width:32px;height:32px;border:1px solid #e7e7e7;border-radius:50%;background:#fff;color:#242424;text-decoration:none;padding:0;cursor:pointer}
+.result-download svg{display:block;width:20px;height:20px}
+.result-download:hover{border-color:#cfcfcf;color:#111}
+.result-download:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.result-download[aria-disabled=true]{pointer-events:none;opacity:.45}
+.reference-image-frame{position:relative;width:fit-content;max-width:100%;margin:auto}
+.reference-image-frame .lightbox{display:block;max-width:100%;height:auto}
+#status:empty,#jobs:empty{display:none}
+.fixed-angle .caption>span:last-child{display:none}
+.tile .caption{flex-wrap:wrap}
+.portrait-section:has(#portrait-frame:not([hidden])) #upload-portrait{background:var(--surface);color:var(--ink);border-color:var(--line)}
+ .setup-flow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.setup-flow button{border:0;padding:4px 0;background:transparent;color:var(--muted)}
+.setup-flow button[aria-current=step]{color:var(--ink);font-weight:700}
+#setup-next{margin:8px 0}
+#channel-setup{grid-template-columns:minmax(0,1fr);gap:9px}
+#onboarding-guide{width:760px}
+#guide-panel{margin-top:12px}
+.guide-screenshots{overflow:auto;max-width:100%;border-radius:6px}
+.guide-screenshot{display:block;width:100%;height:auto}
+.guide-screenshots.is-zoomed .guide-screenshot{width:1100px;max-width:none}
+.guide-copy{margin:12px 0}.guide-copy h3{font-size:14px}.guide-copy ol{margin:6px 0;padding-left:22px}.guide-copy li+li{margin-top:6px}
+.guide-copy summary{cursor:pointer;color:var(--muted)}
+.guide-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:8px 0;font-size:12px;color:var(--muted)}
+.guide-tabs{display:flex;gap:8px;flex-wrap:wrap}.guide-tabs button[aria-selected=true]{border-color:var(--accent);font-weight:700}
+#onboarding-guide>.job-actions{margin-top:16px}
+#onboarding-guide .dialog-head{gap:12px}
+.channel-stages{display:flex;gap:12px 24px;flex-wrap:wrap;padding:0;margin:0;list-style:none;font-size:12px;color:var(--muted)}
+.channel-stages [data-state=confirmed]{color:var(--green)}
+.channel-stages [data-state=failed]{color:var(--danger)}
+#test-confirmation{width:430px}
+#test-confirmation .job-actions{margin-top:16px}
+@media(max-width:600px){#channel-setup{grid-template-columns:minmax(0,1fr)}.channel-stages{display:grid;gap:5px}}
 </style></head><body>
 <main class="app">
-  <header class="header"><div><h1 class="brand">CHARACTER <span>STUDIO</span></h1><p class="eyebrow">一个主角 · 多套服装 · 多个姿势</p></div><div class="header-actions"><span id="connection" class="connection">正在连接…</span><button id="refresh" type="button">恢复 / 刷新</button><button id="expand" type="button" hidden>展开工作台</button></div></header>
+  <header class="header"><h1 class="brand">Character Studio</h1><div class="header-actions"><span id="connection" class="connection" role="status">正在连接…</span><button id="open-onboarding" type="button" aria-haspopup="dialog">使用指南</button><button id="refresh" type="button">刷新</button><button id="expand" type="button" hidden>展开工作台</button><button id="open-disclaimer" class="text-button" type="button" aria-haspopup="dialog">免责声明</button></div></header>
   <div class="layout">
     <aside class="sidebar">
       <section class="portrait-section">
-        <p class="step">01 / 主角</p>
         <div class="portrait-actions">
           <button id="upload-portrait" class="primary" type="button">上传主角图</button>
           <input id="portrait-file" type="file" accept="image/png,image/jpeg,image/webp" hidden>
@@ -90,41 +148,66 @@
     </aside>
     <section class="library" aria-label="参考图库">
       <div class="tabs" role="tablist" aria-label="图库选择">
-        <button class="tab" id="portrait-tab" role="tab" aria-selected="false" aria-controls="library-panel" type="button">01 / 人像</button>
-        <button class="tab" id="costume-tab" role="tab" aria-selected="true" aria-controls="library-panel" type="button">02 / 服装</button>
-        <button class="tab" id="pose-tab" role="tab" aria-selected="false" aria-controls="library-panel" type="button">03 / 姿势</button>
-        <button id="source" class="tab" type="button">来源 ↗</button>
+        <button class="tab" id="portrait-tab" role="tab" aria-selected="false" aria-controls="library-panel" type="button">人像</button>
+        <button class="tab" id="costume-tab" role="tab" aria-selected="true" aria-controls="library-panel" type="button">服装</button>
+        <button class="tab" id="pose-tab" role="tab" aria-selected="false" aria-controls="library-panel" type="button">姿势</button>
+        <button id="source" class="tab" type="button">图库来源</button>
       </div>
       <div id="library-panel" role="tabpanel" aria-labelledby="costume-tab"><div class="filters"><input id="search" type="search" placeholder="搜索编号、关键词或动作" aria-label="搜索参考图"><select id="category" aria-label="分类"><option value="">全部分类</option></select><select id="angle" aria-label="视角" hidden><option value="">全部视角</option><option>正面</option><option>俯视</option><option>仰视</option><option>侧面</option><option>斜侧</option></select></div>
-      <div class="meta"><small id="library-count">正在读取图库索引…</small><button class="text-button" id="reload-catalog" type="button">更新索引</button></div><div id="gallery" class="gallery"></div><nav class="pager" aria-label="图库分页"><button id="previous" type="button">上一页</button><small id="page-number"></small><button id="next" type="button">下一页</button></nav></div>
+      <div class="meta">
+        <small id="library-count">正在读取图库索引…</small>
+        <div class="library-actions">
+          <select id="gallery-page-size" aria-label="每页图片数量"><option value="6">每页 6 张</option><option value="9">每页 9 张</option><option value="12" selected>每页 12 张</option></select>
+          <button class="text-button" id="reload-catalog" type="button">更新索引</button>
+        </div>
+      </div>
+      <div id="gallery" class="gallery" data-page-size="12"></div><nav class="pager" aria-label="图库分页"><button id="previous" type="button">上一页</button><small id="page-number"></small><button id="next" type="button">下一页</button></nav></div>
     </section>
     <section class="queue" aria-label="生成任务队列">
-      <header><p class="step">04 / 任务</p><div class="queue-title"><h2>搭配与生成</h2><span class="small">共 <b id="combination-count" class="number">0</b> 张</span></div><div class="queue-stat"><span><strong id="comb-costumes">0</strong> 套衣服</span><span id="comb-divider">×</span><span id="comb-pose-summary"><strong id="comb-poses">0</strong> 个姿势</span></div></header>
-      <p id="start-guide" class="start-guide" aria-live="polite">先上传主角，再选服装或姿势。</p>
-      <section class="generation-choice" aria-labelledby="provider-title">
+      <header class="queue-title"><h2>生成图片</h2><span class="small">共 <b id="combination-count">0</b> 张</span></header>
+  <section id="channel-setup" class="generation-choice" aria-labelledby="provider-title">
         <div class="provider-label"><h3 id="provider-title">生图渠道</h3><button id="check-provider" class="text-button" type="button" disabled>检测连接</button></div>
         <div id="provider" class="choice-buttons" role="group" aria-labelledby="provider-title">
           <button type="button" data-provider="agent" aria-pressed="true" disabled>当前 Agent 生图</button>
-          <button type="button" data-provider="runninghub-cn" aria-pressed="false" disabled>RunningHub 国内站</button>
-          <button type="button" data-provider="runninghub-global" aria-pressed="false" disabled>RunningHub 国际站</button>
+          <button type="button" data-provider="image-api" aria-pressed="false" disabled>生图 API</button>
         </div>
         <p id="channel-status" class="status channel-status" role="status">正在检测连接…</p>
+        <div id="local-reconnect" hidden>
+          <button id="reconnect-local-codex" type="button">改用本机 Codex</button>
+          <small>直接在工作台生成，已提交且未领取的任务也可接续。</small>
+        </div>
         <details id="channel-details" hidden><summary>查看接口返回</summary><p class="status error-detail"></p></details>
-        <label class="field"><span>选择模型</span><select id="provider-preset" disabled><option value="">当前宿主提供的模型</option></select></label>
+        <label id="agent-field" class="field"><span>选择 Agent</span><select id="agent-choice" disabled><option value="" disabled>请选择 Agent</option><option value="codex">Codex</option><option value="doubao">豆包工作</option></select></label>
+        <label id="api-service-field" class="field" hidden><span>选择 API 服务</span><select id="api-service"><option value="image-openai">OpenAI</option><option value="image-gemini">Google Gemini</option><option value="image-seedream">火山方舟 Seedream</option><option value="image-custom">自定义兼容 API</option></select></label>
+        <label id="provider-preset-field" class="field" hidden><span>选择模型</span><select id="provider-preset" disabled></select></label>
         <small id="provider-hint"></small>
-        <div id="rh-actions" hidden>
-          <button id="open-rh-guide" type="button" aria-haspopup="dialog">获取 Key 教程</button>
-          <button id="open-rh-key" type="button" aria-haspopup="dialog">填写 API Key</button>
-          <small id="rh-key-summary"></small>
+        <ol id="channel-stages" class="channel-stages" aria-label="渠道检测状态">
+          <li id="account-stage">账号尚未确认</li>
+          <li id="executor-stage">执行器尚未连接</li>
+          <li id="capability-stage">尚未验证生图能力</li>
+        </ol>
+        <p id="channel-solution" class="status" hidden></p>
+        <div class="job-actions">
+          <button id="test-generation" type="button">生成一张测试图</button>
+          <button id="copy-agent-reconnect" type="button" hidden>复制重连指令</button>
+          <button id="view-test-result" type="button" hidden>查看测试图</button>
+          <button id="cancel-test" type="button" hidden>取消测试</button>
+        </div>
+        <p id="test-status" class="status" role="status" hidden></p>
+        <div id="api-actions" hidden>
+          <button id="open-api-guide" type="button" aria-haspopup="dialog">获取 Key 教程</button>
+          <button id="open-api-key" type="button" aria-haspopup="dialog">管理 API Key</button>
+          <small id="api-key-summary"></small>
         </div>
       </section>
+      <p id="start-guide" class="start-guide" aria-live="polite">先上传主角，再选服装或姿势。</p>
       <section class="generation-step" aria-labelledby="prompt-title">
         <h3 id="prompt-title">提示词</h3>
         <label class="field"><span>补充要求</span><textarea id="notes" rows="3" placeholder="背景、商品细节、希望保留的特征…"></textarea></label>
         <details id="prompt-settings">
           <summary>编辑默认提示词</summary>
           <div class="field">
-            <small id="prompt-save-hint">改完点一下框外，自动保存。新建任务会使用这份提示词。</small>
+            <small id="prompt-save-hint">离开输入框后自动保存，应用于新任务。</small>
             <textarea id="template" rows="12" aria-label="默认提示词" aria-describedby="prompt-save-hint"></textarea>
           </div>
         </details>
@@ -138,31 +221,92 @@
       <p id="preview-change" class="small" hidden>设置已修改。下次预览或生成会重建组合，之前的单张调整需要重新设置。</p>
       <div id="status" class="status" role="status" aria-live="polite"></div>
       <div id="execution-message" class="execution" role="status" aria-live="polite" hidden></div>
+      <div id="doubao-handoff" class="field" hidden>
+        <p>回到豆包工作，发送下面这句话，一次接手本批剩余图片。</p>
+        <strong id="doubao-prompt"></strong>
+        <div class="job-actions"><button id="copy-doubao-handoff" type="button">复制接手指令</button></div>
+        <small id="doubao-copy-status" role="status"></small>
+      </div>
       <div id="jobs" class="queue-list"></div>
-      <details id="success-history" class="success-history"><summary>成功记录 <span id="success-count">0</span></summary><div id="success-results" class="queue-list"></div></details>
+      <div class="success-history"><button id="open-success-history" type="button" aria-haspopup="dialog">成功记录 <span id="success-count">0</span></button></div>
     </section>
   </div>
 </main>
 
-<dialog id="rh-guide" aria-labelledby="rh-guide-title">
-  <div class="dialog-head"><h2 id="rh-guide-title">获取 RunningHub API Key</h2><button id="close-rh-guide" type="button">关闭</button></div>
-  <div class="dialog-body">
-    <div class="job-actions">
-      <a id="rh-cn-link" href="https://www.runninghub.cn?inviteCode=s3dw8iym" target="_blank" rel="noopener noreferrer">打开 RunningHub 国内站 ↗</a>
-      <a id="rh-global-link" href="https://www.runninghub.ai?inviteCode=qpj6esof" target="_blank" rel="noopener noreferrer" hidden>打开 RunningHub 国际站 ↗</a>
+<dialog id="onboarding-guide" aria-labelledby="onboarding-title">
+  <div class="dialog-head"><h2 id="onboarding-title">使用指南</h2><button id="close-onboarding" type="button">关闭</button></div>
+  <div class="guide-tabs" role="tablist" aria-label="渠道使用指南">
+    <button id="guide-doubao-tab" type="button" role="tab" data-guide="doubao" aria-selected="true" aria-controls="guide-panel">豆包工作</button>
+    <button id="guide-codex-tab" type="button" role="tab" data-guide="codex" aria-selected="false" aria-controls="guide-panel">Codex</button>
+    <button id="guide-api-tab" type="button" role="tab" data-guide="api" aria-selected="false" aria-controls="guide-panel">生图 API</button>
+  </div>
+  <div id="guide-panel" role="tabpanel" aria-labelledby="guide-doubao-tab">
+    <div class="guide-screenshots">
+      <img id="guide-doubao-image" class="guide-screenshot" src="<!--GUIDE_DOUBAO-->" alt="豆包工作三步图解：选择豆包工作；复制重连指令回原聊天发送；选择主角和搭配后预览并生成。">
+      <img id="guide-codex-image" class="guide-screenshot" src="<!--GUIDE_CODEX-->" alt="Codex 三步图解：选择 Codex；检测连接并生成测试图确认生图能力；选择主角和搭配后预览并生成。" hidden>
+      <img id="guide-api-image" class="guide-screenshot" src="<!--GUIDE_API-->" alt="生图 API 三步图解：选择服务与模型；查看获取 Key 教程并在弹窗管理 API Key；选择主角与搭配，预览后生成。" hidden>
     </div>
-    <img src="<!--RH_KEY_GUIDE-->" width="1536" height="1024" alt="三步获取 API Key：注册并登录对应站点，点击右上角头像，进入控制台，在左侧选择消费级-会员。获取完整 API Key 后，回工作台填写并验证。">
-    <small>图中为导航示意。若页面只显示掩码，请使用你之前保存的完整 Key。</small>
+    <div class="guide-toolbar"><span>放大后可左右滑动查看。</span><button id="guide-zoom" type="button" aria-pressed="false">放大图解</button></div>
+    <details class="guide-copy"><summary>查看文字步骤</summary><h3 id="guide-channel-title">用豆包工作生图</h3><ol id="guide-instructions"></ol><p id="guide-note" class="small"></p></details>
+  </div>
+  <nav class="setup-flow" aria-label="首次使用步骤">
+    <button id="setup-channel" type="button">连接生图渠道</button><span aria-hidden="true">→</span>
+    <button id="setup-portrait" type="button">选择主角</button><span aria-hidden="true">→</span>
+    <button id="setup-outfit" type="button">选择搭配</button>
+  </nav>
+  <p id="setup-next" class="status" role="status">先连接生图渠道，确认可用后再选择主角和搭配。</p>
+  <div class="job-actions"><button id="finish-onboarding" type="button" class="primary">开始使用</button></div>
+</dialog>
+
+<dialog id="test-confirmation" aria-labelledby="test-title">
+  <div class="dialog-head"><h2 id="test-title">生成一张测试图</h2><button id="close-test" type="button">取消</button></div>
+  <p id="test-description"></p>
+  <div class="job-actions"><button id="confirm-test" type="button" class="primary">开始测试</button></div>
+</dialog>
+
+<dialog id="disclaimer" aria-labelledby="disclaimer-title">
+  <div class="dialog-head"><h2 id="disclaimer-title">免责声明</h2><button id="close-disclaimer" type="button">关闭</button></div>
+  <div class="dialog-body">
+    <p>请只使用你有权使用的人像和素材，尊重肖像权、隐私及各图库的使用条款。发布生成图片前，请自行核对内容和授权。</p>
+    <p>生图效果和服务可用性由所选渠道决定。使用生图 API 时，参考图和提示词会发送到所选服务商，按对应服务规则计费。</p>
   </div>
 </dialog>
-<dialog id="rh-key-dialog" aria-labelledby="rh-key-title">
-  <div class="dialog-head"><h2 id="rh-key-title">填写 API Key</h2><button id="close-rh-key" type="button">关闭</button></div>
-  <p id="rh-key-state" class="small"></p>
-  <form id="rh-key-form">
-    <input id="provider-key" type="password" aria-label="RunningHub API Key" autocomplete="off" placeholder="粘贴当前站点的 API Key" required>
+<dialog id="success-history" aria-labelledby="success-title">
+  <div class="dialog-head"><h2 id="success-title">成功记录</h2><button id="close-success-history" type="button">关闭</button></div>
+  <div id="success-results" class="queue-list"></div>
+</dialog>
+<dialog id="reference-viewer" aria-labelledby="reference-title">
+  <div class="dialog-head"><h2 id="reference-title">参考图预览</h2><button id="close-reference-viewer" type="button">关闭</button></div>
+  <div class="reference-image-frame"><img id="reference-image" class="lightbox" alt="参考图大图"><button id="reference-download" class="result-download" type="button" aria-label="下载原图" title="下载原图"><span data-download-icon aria-hidden="true"></span></button></div>
+  <p id="reference-image-status" class="small" role="status"></p>
+  <button id="reference-confirm" class="primary full" type="button">确认选择</button>
+</dialog>
+
+<dialog id="api-guide" aria-labelledby="api-guide-title">
+  <div class="dialog-head"><h2 id="api-guide-title">获取 API Key</h2><button id="close-api-guide" type="button">关闭</button></div>
+  <div class="dialog-body">
+    <div class="job-actions">
+      <a id="api-key-link" target="_blank" rel="noopener noreferrer">打开官方 Key 管理页面</a>
+      <a id="api-docs-link" target="_blank" rel="noopener noreferrer">查看官方教程</a>
+    </div>
+    <ol id="api-key-steps"></ol>
+    <p id="api-key-note" class="small"></p>
+    <button id="guide-open-key" type="button" class="primary">填写 API Key</button>
+  </div>
+</dialog>
+<dialog id="api-key-dialog" aria-labelledby="api-key-title">
+  <div class="dialog-head"><h2 id="api-key-title">填写 API Key</h2><button id="close-api-key" type="button">关闭</button></div>
+  <p id="api-key-state" class="small"></p>
+  <form id="api-key-form">
+    <div id="custom-api-fields" class="dialog-body" hidden>
+      <label class="field"><span>API 接口地址</span><input id="api-base-url" type="url" placeholder="https://服务商域名/v1"></label>
+      <label class="field"><span>接口协议</span><select id="api-protocol"><option value="openai-multipart">OpenAI 图片编辑 · 多图上传</option><option value="openai-json">OpenAI 图片编辑 · JSON</option><option value="gemini">Gemini 多模态生图</option><option value="seedream">Seedream 图片生成</option></select></label>
+      <label class="field"><span>模型 ID</span><input id="api-model" type="text" placeholder="服务商提供的生图模型 ID"></label>
+    </div>
+    <input id="provider-key" type="password" aria-label="生图 API Key" autocomplete="off" placeholder="粘贴当前服务的 API Key" required>
     <div class="job-actions"><button id="save-provider-key" type="submit">验证并保存</button><button id="clear-provider-key" class="text-button" type="button" hidden>移除本机 Key</button></div>
   </form>
-  <p id="rh-key-status" class="status" role="status" hidden></p>
+  <p id="api-key-status" class="status" role="status" hidden></p>
 </dialog>
 <dialog id="combination-preview" aria-labelledby="preview-title">
   <div class="dialog-head"><h2 id="preview-title">预览组合</h2><button id="close-preview" type="button">返回生成</button></div>
@@ -174,6 +318,6 @@
   </div>
 </dialog>
 <dialog id="editor"><div class="dialog-head"><h2>调整任务</h2><button id="close-editor" type="button">关闭</button></div><div class="dialog-body"><label class="field"><span>服装</span><select id="edit-costume"></select></label><label class="field"><span>姿势</span><select id="edit-pose"></select></label><label class="field"><span>单条提示词</span><textarea id="edit-prompt" rows="10"></textarea></label><p id="edit-error" class="status error" role="status" hidden></p><button id="save-task" type="button" class="primary">保存调整</button></div></dialog>
-<dialog id="viewer"><div class="dialog-head"><h2>图片预览</h2><button id="close-viewer" type="button">关闭</button></div><img id="viewer-image" class="lightbox" alt="结果大图"><a id="download" download="character-result.png">下载结果图片</a></dialog>
+<dialog id="viewer"><div class="dialog-head"><h2>图片预览</h2><button id="close-viewer" type="button">关闭</button></div><div class="reference-image-frame"><img id="viewer-image" class="lightbox" alt="结果大图"><a id="download" class="result-download" aria-label="下载原图" title="下载原图" download="character-result.png"><span data-download-icon aria-hidden="true"></span></a></div></dialog>
 <!--APP_SCRIPT-->
 </body></html>

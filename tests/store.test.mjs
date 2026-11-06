@@ -87,10 +87,23 @@ test('failed history is removed automatically while current errors and successfu
   assert.ok(!JSON.parse(await readFile(restored.file,'utf8')).tasks.some(t=>t.status==='failed'));
 });
 
-test('reference download failure skips that task and claims the next without pausing',async()=>{
-  const {s}=await fixture();await s.buildQueue();await s.batchAction('start');
-  const download=s.downloadAsset.bind(s);let first=true;s.downloadAsset=async id=>{if(first){first=false;throw Error('fixture missing reference');}return download(id);};
-  const next=await s.claimNext();assert.ok(next.task);assert.equal(s.state.tasks[0].status,'failed');assert.equal(next.task.id,s.state.tasks[1].id);assert.equal(s.state.batch.failedCount,1);assert.match(s.state.tasks[0].error,/missing reference/);
+test('reference download failure identifies the image and network cause, then claims the next task',async t=>{
+  const {s,cs}=await fixture();
+  await s.mutate(()=>delete s.state.assets[cs[0]].path);
+  let first=true;
+  t.mock.method(globalThis,'fetch',async()=>{
+    if(first){first=false;throw new TypeError('fetch failed',{cause:Object.assign(Error('getaddrinfo failed'),{code:'ENOTFOUND'})});}
+    return new Response(PNG);
+  });
+  await s.buildQueue();await s.batchAction('start');
+  const next=await s.claimNext();
+  assert.ok(next.task);
+  assert.equal(s.state.tasks[0].status,'failed');
+  assert.equal(next.task.id,s.state.tasks[1].id);
+  assert.equal(s.state.batch.failedCount,1);
+  assert.match(s.state.tasks[0].error,/准备服装参考图「c0」失败：无法解析图库域名/);
+  assert.match(s.state.tasks[0].error,/ENOTFOUND\n图库来源：ai-costume-gallery\.pages\.dev/);
+  assert.equal(s.state.batch.lastError,s.state.tasks[0].error.split('\n')[0]);
 });
 
 test('an old executor cannot claim a task from a replacement batch',async()=>{
@@ -115,15 +128,13 @@ test('partial references preserve the original clothing or pose',async()=>{
     await s.batchAction('cancel');
   }
 });
-test('a legacy batch waiting for sample approval reopens as paused and can finish',async()=>{
+test('a legacy batch waiting for sample approval automatically queues the remaining images',async()=>{
   const {s,root}=await fixture();
   await s.buildQueue();await s.batchAction('start');
   const {task}=await s.claimNext();
   await s.recordResult(task.id,{base64:PNG.toString('base64')});
   await s.mutate(()=>{s.state.batch.status='awaiting-approval';});
   const reopened=await new Store(root).init();
-  assert.equal(reopened.state.batch.status,'paused');
-  assert.equal((await reopened.claimNext()).task,null);
-  await reopened.batchAction('continue');
+  assert.equal(reopened.state.batch.status,'queued');
   assert.ok((await reopened.claimNext()).task);
 });

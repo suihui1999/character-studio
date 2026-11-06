@@ -2,9 +2,10 @@ import {mkdir,readFile,writeFile,rename,rm,realpath,access} from 'node:fs/promis
 import path from 'node:path';
 import os from 'node:os';
 import {randomUUID,createHash} from 'node:crypto';
-import {checkProvider,validatePreset,isNativeProvider,outputRatios,queueInputs,queueReferences,referenceCompatibility,selectedPreset} from './generation-models.mjs';
-import {RUNNINGHUB_DEFAULTS} from './runninghub-defaults.mjs';
+import {checkProvider,validatePreset,isNativeProvider,matchesAgentHost,outputRatios,queueInputs,queueReferences,referenceCompatibility,selectedPreset,REFERENCE_LABELS} from './generation-models.mjs';
+import {IMAGE_API_PRESETS,validateImageApiPreset} from './image-api-presets.mjs';
 import {portraitUrl} from './catalog.mjs';
+import {updateBatchHistory} from './batch-history.mjs';
 
 const PREVIOUS_DEFAULT_TEMPLATE=`请结合提供的参考图，融合成一张完整的人物图像：
 • 【图1（人像参考）】：保持上传主角的五官脸型、身份、发色与发型气质一致，不添加未出现在参考图中的固定发型描述。
@@ -21,8 +22,19 @@ export const DEFAULT_TEMPLATE=PREVIOUS_DEFAULT_TEMPLATE.replace(
 
 export function initialState(){return {version:1,revision:0,assets:{},providerPresets:[],draft:{portraitId:null,costumeIds:[],poseIds:[],ratio:'3:4',template:DEFAULT_TEMPLATE,notes:'',provider:'codex',providerPresetId:null},tasks:[],batch:null};}
 const uid=()=>randomUUID();
+function referenceNetworkError(error){
+  const causes=[error,error.cause,...(error.cause?.errors||[])].filter(Boolean);
+  const codes=[...new Set(causes.map(c=>c.code).filter(c=>typeof c==='string'))];
+  let reason='与图库的网络请求失败，请检查网络后重试。';
+  if(causes.some(c=>c.name==='TimeoutError')||codes.some(c=>/TIMEOUT|ETIMEDOUT/.test(c)))reason='连接图库超时，请稍后重试。';
+  else if(codes.some(c=>c==='ENOTFOUND'||c==='EAI_AGAIN'))reason='无法解析图库域名（DNS），请检查网络后重试。';
+  else if(codes.some(c=>/CERT|TLS|SSL/.test(c)))reason='无法建立到图库的 HTTPS 安全连接。';
+  else if(codes.some(c=>['ECONNRESET','UND_ERR_SOCKET'].includes(c)))reason='下载时网络连接中断，请稍后重试。';
+  else if(codes.includes('ECONNREFUSED'))reason='图库服务器拒绝了网络连接，请稍后重试。';
+  return Error(reason+(codes.length?'\n网络错误码：'+codes.join('、'):''),{cause:error});
+}
 function retainedTasks(state){
-  const active=state.batch&&['draft','queued','running','paused','awaiting-approval'].includes(state.batch.status);
+  const active=state.batch&&['draft','queued','running','paused'].includes(state.batch.status);
   return state.tasks.filter(t=>t.status!=='failed'||(active&&t.batchId===state.batch.id));
 }
 export function imageType(b){
@@ -32,7 +44,7 @@ export function imageType(b){
   throw Error('仅支持有效的 PNG、JPEG、WebP 图片');
 }
 export class Store{
-  constructor(root=process.env.CHARACTER_STUDIO_HOME||path.join(os.homedir(),'.character-studio'),{builtinPresets=RUNNINGHUB_DEFAULTS}={}){this.builtinPresets=builtinPresets.map(p=>({...validatePreset(p),builtin:true}));this.root=path.resolve(root);this.file=path.join(this.root,'state.json');this.chain=Promise.resolve();}
+  constructor(root=process.env.CHARACTER_STUDIO_HOME||path.join(os.homedir(),'.character-studio'),{builtinPresets=IMAGE_API_PRESETS}={}){this.builtinPresets=builtinPresets.map(p=>({...validatePreset(p),builtin:true}));this.root=path.resolve(root);this.file=path.join(this.root,'state.json');this.chain=Promise.resolve();}
   async init(){
     await mkdir(path.join(this.root,'assets'),{recursive:true});
     try{this.state=JSON.parse(await readFile(this.file,'utf8'));if(this.state.version!==1)throw Error('不支持此数据版本');}
@@ -41,17 +53,27 @@ export class Store{
       if(this.state.draft.template===PREVIOUS_DEFAULT_TEMPLATE)this.state.draft.template=DEFAULT_TEMPLATE;
     });
     const alive=pid=>{if(!pid)return false;try{process.kill(pid,0);return true;}catch{return false;}};
-    if(this.state.tasks.some(t=>t.status==='running'&&!alive(t.workerPid)))await this.mutate(()=>{this.state.tasks.filter(t=>t.status==='running'&&!alive(t.workerPid)).forEach(t=>{t.status='interrupted';t.error='上次执行中断，请确认后重试';});if(this.state.batch)this.state.batch.status='paused';});
+    if(this.state.tasks.some(t=>t.status==='running'&&!alive(t.workerPid)))await this.mutate(()=>{
+      const {tasks,batch}=this.state;
+      const interrupted=tasks.filter(t=>t.status==='running'&&!alive(t.workerPid));
+      for(const task of interrupted){
+        task.status='interrupted';task.error='上次执行中断，可在任务卡重做。';
+      }
+      if(batch&&interrupted.some(t=>t.batchId===batch.id)&&['queued','running'].includes(batch.status)){
+        batch.status='paused';
+        if(batch.provider==='agent')batch.resumeOnReconnect=true;
+      }
+    });
     if(this.state.batch?.status==='awaiting-approval')await this.mutate(()=>{
       const {batch,execution}=this.state;
       if(batch?.status!=='awaiting-approval')return;
-      batch.status='paused';
-      if(execution?.batchId===batch.id){execution.phase='paused';execution.message='任务已暂停，点击「继续剩余任务」可恢复。';}
+      batch.status=this.state.tasks.some(t=>t.batchId===batch.id&&t.status==='pending')?'queued':'done';
+      if(execution?.batchId===batch.id)delete this.state.execution;
     });
-    if(retainedTasks(this.state).length!==this.state.tasks.length)await this.mutate(()=>{});
+    if(!this.state.batches||retainedTasks(this.state).length!==this.state.tasks.length)await this.mutate(()=>{});
     return this;
   }
-  async persist(){this.state.tasks=retainedTasks(this.state);this.state.revision++;const tmp=this.file+'.'+uid()+'.tmp';await writeFile(tmp,JSON.stringify(this.state,null,2));await rename(tmp,this.file);}
+  async persist(){updateBatchHistory(this.state);this.state.tasks=retainedTasks(this.state);this.state.revision++;const tmp=this.file+'.'+uid()+'.tmp';await writeFile(tmp,JSON.stringify(this.state,null,2));await rename(tmp,this.file);}
   async reload(){this.state=JSON.parse(await readFile(this.file,'utf8'));return this.snapshot();}
   refresh(){const run=this.chain.then(()=>this.reload());this.chain=run.catch(()=>{});return run;}
   async lock(){
@@ -66,8 +88,16 @@ export class Store{
     }throw Error('工作台正在保存，请稍后重试');
   }
   mutate(fn){const run=this.chain.then(async()=>{const unlock=await this.lock();try{await this.reload();const result=await fn();await this.persist();if(result?.version===1&&typeof result.revision==='number')result.revision=this.state.revision;return result;}finally{await unlock();}});this.chain=run.catch(()=>{});return run;}
-  availablePresets(){return [...this.builtinPresets,...(this.state.providerPresets||[])];}
-  snapshot(){return structuredClone({...this.state,providerPresets:this.availablePresets(),tasks:retainedTasks(this.state)});}
+  availablePresets(){return [...this.builtinPresets.map(p=>p.provider==='image-custom'&&this.state.imageApiCustom?{...validateImageApiPreset({...p,...this.state.imageApiCustom}),builtin:true}:p),...(this.state.providerPresets||[])];}
+  saveImageApiConfig(config){const validated=validateImageApiPreset({...config,id:'image-custom:default',provider:'image-custom'},{requireConfigured:true});return this.mutate(()=>{this.state.imageApiCustom={baseUrl:validated.baseUrl,model:validated.model,protocol:validated.protocol};return this.snapshot();});}
+  renameBatch(id,name){return this.mutate(()=>{
+    updateBatchHistory(this.state);
+    const batch=Object.hasOwn(this.state.batches,id)?this.state.batches[id]:null;
+    if(!batch)throw Error('找不到这个批次，请刷新后重试。');
+    if(typeof name!=='string'||name.trim().length>80||/[\x00-\x1f\x7f]/.test(name))throw Error('批次名称最多 80 个字符，不能包含控制字符。');
+    batch.name=name.trim();return this.snapshot();
+  });}
+  snapshot(){updateBatchHistory(this.state);return structuredClone({...this.state,providerPresets:this.availablePresets(),tasks:retainedTasks(this.state)});}
   async putImage(bytes,name,kind='portrait',sourceId){
     if(bytes.length>12*1024*1024)throw Error('单张图片不能超过 12 MB');
     const type=imageType(bytes),hash=createHash('sha256').update(bytes).digest('hex');
@@ -110,6 +140,7 @@ export class Store{
     const {draft:d,batch}=this.state;
     if(batch?.status==='draft'&&!batch.inputs)batch.inputs=queueInputs(d,batch.provider||'codex',batch.providerPreset);
     if(patch.provider!==undefined){d.provider=checkProvider(patch.provider);if(isNativeProvider(d.provider)||!this.availablePresets().some(p=>p.id===d.providerPresetId&&p.provider===d.provider))d.providerPresetId=null;}
+    if(patch.agentHost!==undefined)d.agentHost=patch.agentHost;
     if(patch.providerPresetId!==undefined){if(patch.providerPresetId!==null&&!this.availablePresets().some(p=>p.id===patch.providerPresetId&&p.provider===(d.provider||'codex')))throw Error('该模型预设不属于所选渠道');d.providerPresetId=patch.providerPresetId;}
     for(const key of ['costumeIds','poseIds'])if(patch[key]){
       if(!Array.isArray(patch[key])||patch[key].some(id=>this.state.assets[id]?.kind!==(key==='poseIds'?'pose':'costume')))throw Error('选择包含无效的参考图');
@@ -124,6 +155,30 @@ export class Store{
       d.ratio=ratios.includes('3:4')?'3:4':ratios[0];
     }
     for(const key of ['template','notes'])if(patch[key]!==undefined){if(typeof patch[key]!=='string'||patch[key].length>12000)throw Error('提示词过长');d[key]=patch[key];}
+    return this.snapshot();
+  });}
+  useLocalCodex(expectedBatchId){return this.mutate(()=>{
+    const {batch,draft,tasks}=this.state;
+    if((batch?.id??null)!==expectedBatchId)throw Error('当前批次已变化，请刷新后再试。');
+    if(!isNativeProvider(draft.provider||'codex'))throw Error('请先选择当前 Agent 生图。');
+    const active=batch&&['queued','running','paused'].includes(batch.status);
+    if(active&&batch.provider!=='agent'&&batch.provider!=='codex')throw Error('当前批次正在使用其他生图渠道。');
+    if(active&&tasks.some(task=>task.batchId===batch.id&&task.status==='running'))throw Error('当前图片已被领取，请等它完成再切换。');
+    const matchingPreview=batch?.status==='draft'&&batch.provider==='agent'&&batch.inputs===queueInputs(draft,'agent',null);
+    draft.provider='codex';
+    draft.agentHost='codex';
+    draft.providerPresetId=null;
+    if(active||matchingPreview){
+      batch.provider='codex';
+      delete batch.agentHost;
+      batch.providerPreset=null;
+      for(const task of tasks){
+        if(task.batchId===batch.id&&task.status==='pending'){task.provider='codex';task.providerPreset=null;delete task.agentHost;}
+      }
+      if(matchingPreview)batch.inputs=queueInputs(draft,'codex',null);
+      if(batch.resumeOnReconnect){batch.status='queued';delete batch.resumeOnReconnect;}
+      if(batch.status==='queued')delete this.state.execution;
+    }
     return this.snapshot();
   });}
   saveProviderPreset(preset){const validated=validatePreset(preset);return this.mutate(()=>{
@@ -153,18 +208,20 @@ export class Store{
   buildQueue(){return this.mutate(()=>{
     const s=this.state,d=s.draft;
     const provider=d.provider||'codex',providerPreset=selectedPreset(this.availablePresets(),provider,d.providerPresetId);
-    if(!isNativeProvider(provider)&&!providerPreset)throw Error('此站的默认工作流尚未上线');
+    if(!isNativeProvider(provider)&&!providerPreset)throw Error('请选择可用的生图模型');
+    if(providerPreset?.kind==='image-api')validateImageApiPreset(providerPreset,{requireConfigured:true});
     if(!d.portraitId)throw Error('请先上传主角图片');
     const {costumes,poses,count}=queueReferences(d),ratio=d.ratio;
     if(!count)throw Error('请至少选择一套服装或一个姿势');
     const kinds=['portrait',...(costumes[0]?['costume']:[]),...(poses[0]?['pose']:[])];
     const problem=referenceCompatibility(providerPreset,kinds,ratio);
     if(problem)throw Error(problem);
-    if(s.batch&&['queued','running','paused','awaiting-approval'].includes(s.batch.status))throw Error('请先完成或取消当前批次');
+    if(s.batch&&['queued','running','paused'].includes(s.batch.status))throw Error('请先完成或取消当前批次');
     if(count>200)throw Error('每批最多 200 个任务，请减少选择');
-    const batchId=uid();s.tasks=s.tasks.filter(t=>t.status==='done'||t.status==='failed'||t.status==='interrupted');
-    for(const c of costumes)for(const p of poses)s.tasks.push({id:uid(),batchId,portraitId:d.portraitId,costumeId:c,poseId:p,prompt:this.prompt(s.assets[c],s.assets[p]),ratio,provider,providerPreset:providerPreset?structuredClone(providerPreset):null,status:'pending',createdAt:new Date().toISOString(),attempts:0});
-    s.batch={id:batchId,status:'draft',inputs:queueInputs(d,provider,providerPreset),provider,providerPreset:providerPreset?structuredClone(providerPreset):null,createdAt:new Date().toISOString()};delete s.execution;return this.snapshot();
+    const batchId=uid(),agentTarget=provider==='agent'&&d.agentHost?{agentHost:d.agentHost}:{};
+    s.tasks=s.tasks.filter(t=>t.status==='done'||t.status==='failed'||t.status==='interrupted');
+    for(const c of costumes)for(const p of poses)s.tasks.push({id:uid(),batchId,portraitId:d.portraitId,costumeId:c,poseId:p,prompt:this.prompt(s.assets[c],s.assets[p]),ratio,provider,...agentTarget,providerPreset:providerPreset?structuredClone(providerPreset):null,status:'pending',createdAt:new Date().toISOString(),attempts:0});
+    s.batch={id:batchId,status:'draft',portraitId:d.portraitId,inputs:queueInputs(d,provider,providerPreset),provider,...agentTarget,providerPreset:providerPreset?structuredClone(providerPreset):null,createdAt:new Date().toISOString()};delete s.execution;return this.snapshot();
   });}
   patchTask(taskId,patch){return this.mutate(()=>{
     const s=this.state,t=s.tasks.find(t=>t.id===taskId);if(!t)throw Error('找不到任务');
@@ -193,36 +250,87 @@ export class Store{
       if(pending.some(t=>t.outputStyle==='three-view'))throw Error('请重新预览当前搭配后生成');
       b.status='queued';
     }
-    else if(action==='pause'){if(['queued','running','awaiting-approval'].includes(b.status))b.status='paused';}
-    else if(action==='continue'){if(!['awaiting-approval','paused'].includes(b.status))throw Error('当前批次无需继续');b.status='queued';}
-    else if(action==='cancel'){b.status='cancelled';this.state.tasks.filter(t=>t.batchId===b.id&&['pending','running'].includes(t.status)).forEach(t=>t.status='cancelled');}
+    else if(action==='pause'){if(['queued','running','paused'].includes(b.status)){b.status='paused';delete b.resumeOnReconnect;}}
+    else if(action==='continue'){if(b.status!=='paused')throw Error('当前批次无需继续');b.status='queued';delete b.resumeOnReconnect;delete this.state.execution;}
+    else if(action==='cancel'){b.status='cancelled';delete b.resumeOnReconnect;delete this.state.execution;this.state.tasks.filter(t=>t.batchId===b.id&&['pending','running'].includes(t.status)).forEach(t=>t.status='cancelled');}
     else throw Error('未知批次操作');return this.snapshot();
   });}
   async downloadAsset(id){
     const a=this.state.assets[id];if(!a)throw Error('参考图不存在');if(a.path){try{await access(a.path);return a.path;}catch(e){if(e.code!=='ENOENT')throw e;delete a.path;delete a.mime;if(a.kind==='portrait')throw Error('主角图片文件已丢失，请重新上传。');}}
     if(!a.url)throw Error('参考图没有来源');
-    const r=await fetch(a.url,{headers:{'User-Agent':'CharacterStudio/0.1 reference-fetch'},signal:AbortSignal.timeout(30000),redirect:'error'});
-    if(!r.ok)throw Error('读取参考图失败 '+r.status+': '+a.sourceId);
-    const bytes=Buffer.from(await r.arrayBuffer());if(bytes.length>20*1024*1024)throw Error('参考图超过大小限制');
+    let r,bytes;
+    const host=new URL(a.url).hostname;
+    try{
+      r=await fetch(a.url,{headers:{'User-Agent':'CharacterStudio/0.1 reference-fetch'},signal:AbortSignal.timeout(30000),redirect:'error'});
+      if(r.ok)bytes=Buffer.from(await r.arrayBuffer());
+    }catch(e){
+      const failure=referenceNetworkError(e);
+      throw Error(failure.message+'\n图库来源：'+host,{cause:failure});
+    }
+    if(!r.ok){
+      const reason=r.status===404?'图库中找不到这张原图，请重新选择。':'图库未返回原图，请稍后重试或重新选择。';
+      throw Error(reason+'（HTTP '+r.status+'）\n图库来源：'+host);
+    }
+    if(bytes.length>20*1024*1024)throw Error('参考图超过 20 MB，请重新选择。');
     const type=imageType(bytes),f=path.join(this.root,'assets',createHash('sha256').update(bytes).digest('hex')+type.ext);await writeFile(f,bytes);a.path=f;a.mime=type.mime;return f;
   }
-  claimNext(expectedBatchId){return this.mutate(async()=>{
+  claimNext(expectedBatchId,agentClaim){return this.mutate(async()=>{
     const s=this.state,b=s.batch;
     if(expectedBatchId&&b?.id!==expectedBatchId)return {task:null,batch:b};
+    if(b?.provider==='agent'&&!matchesAgentHost(b.agentHost,agentClaim?.agentName))return {task:null,batch:b,reason:'different_agent'};
+    if(agentClaim?.reconnect&&b?.provider==='agent'&&b.status==='paused'&&b.resumeOnReconnect){
+      b.status='queued';delete b.resumeOnReconnect;delete s.execution;
+    }
     if(!b||!['queued','running'].includes(b.status))return {task:null,batch:b};
     if(s.tasks.some(t=>t.batchId===b.id&&t.status==='running'))throw Error('已有任务执行中，请先回填结果');
     while(true){
     const t=s.tasks.find(t=>t.batchId===b.id&&t.status==='pending');if(!t){b.status='done';return {task:null,batch:b};}
     const refs=[];
-    try{for(const id of [t.portraitId,t.costumeId,t.poseId].filter(Boolean))refs.push({kind:s.assets[id].kind,path:await this.downloadAsset(id),id});}
-    catch(e){t.status='failed';t.error=e.message;t.finishedAt=new Date().toISOString();b.failedCount=(b.failedCount||0)+1;b.lastError=e.message;continue;}
+    let referenceError;
+    for(const [kind,id] of [['portrait',t.portraitId],['costume',t.costumeId],['pose',t.poseId]]){
+      if(!id)continue;
+      try{refs.push({kind,path:await this.downloadAsset(id),id});}
+      catch(e){
+        const asset=s.assets[id],label=REFERENCE_LABELS[kind]+'参考图';
+        const identifier=asset?.sourceId||(kind==='portrait'?asset?.name:id);
+        referenceError='准备'+label+(identifier?'「'+identifier+'」':'')+'失败：'+e.message;
+        break;
+      }
+    }
+    if(referenceError){
+      t.status='failed';t.error=referenceError;t.finishedAt=new Date().toISOString();
+      b.failedCount=(b.failedCount||0)+1;b.lastError=referenceError.split('\n')[0];
+      continue;
+    }
     t.status='running';t.workerPid=process.pid;t.attempts++;t.startedAt=new Date().toISOString();b.status='running';
+    if(agentClaim){
+      t.agentDeadline=Date.now()+agentClaim.receiptMs;
+      delete t.agentAcknowledgedAt;
+      s.execution={batchId:b.id,phase:'claimed',message:'已领取任务，等待 Agent 确认收到并开始生成。'};
+    }
     return {task:{...t,references:refs},batch:b};
     }
   });}
+  acknowledgeAgentTask(taskId,processingMs){return this.mutate(()=>{
+    const s=this.state,t=s.tasks.find(t=>t.id===taskId&&t.status==='running');
+    if(!t?.agentDeadline||t.agentDeadline<=Date.now()||s.batch?.id!==t.batchId)throw Error('任务未领取或已超时，请重新连接工作台。');
+    if(!t.agentAcknowledgedAt){
+      t.agentAcknowledgedAt=new Date().toISOString();
+      t.agentDeadline=Date.now()+processingMs;
+      s.execution={batchId:t.batchId,phase:'generating',message:'Agent 已确认收到任务，正在生成。'};
+    }
+    return {taskId,deadline:t.agentDeadline};
+  });}
   async recordResult(taskId,{filePath,base64,error}){
+    const supplied=[filePath,base64,error].filter(v=>typeof v==='string'&&v.trim());
+    if(supplied.length!==1)throw Error('回填时请提供一项：真实图片绝对路径、图片 base64 或失败原因。');
     let asset;
-    if(!error){const bytes=base64?Buffer.from(base64,'base64'):await readFile(await realpath(filePath));asset=await this.putImage(bytes,path.basename(filePath||'generated.png'),'result');}
+    if(!error){
+      if(filePath&&!path.isAbsolute(filePath))throw Error('请提供真实生成图片的本机绝对路径。');
+      if(base64&&!/^[A-Za-z0-9+/]+={0,2}$/.test(base64))throw Error('请传纯 base64 图片内容，不含 data: 前缀。');
+      const bytes=base64?Buffer.from(base64,'base64'):await readFile(await realpath(filePath));
+      asset=await this.putImage(bytes,path.basename(filePath||'generated'+imageType(bytes).ext),'result');
+    }
     return this.mutate(()=>{
       const s=this.state,t=s.tasks.find(t=>t.id===taskId);if(!t||t.status!=='running')throw Error('该任务未在执行中，不能回填结果');
       t.status=error?'failed':'done';t.error=error||null;t.resultId=asset?.id||null;t.finishedAt=new Date().toISOString();
@@ -238,7 +346,7 @@ export class Store{
     const s=this.state,t=s.tasks.find(t=>t.id===taskId);if(!t||!['done','failed','interrupted'].includes(t.status))throw Error('该任务无法重做');
     if(t.outputStyle==='three-view')throw Error('该记录仅供查看，请创建新的单张人物图任务');
     if(s.batch&&s.tasks.some(t=>t.batchId===s.batch.id&&['pending','running'].includes(t.status))&&s.batch.status!=='cancelled')throw Error('请先处理当前批次');
-    const id=uid();s.tasks.push({...t,id,batchId:id,status:'pending',resultId:null,error:null,attempts:0,remoteTaskId:null,providerStatus:null,outputUrl:null});s.batch={id,status:'queued',provider:t.provider||'codex',providerPreset:t.providerPreset||null};delete s.execution;return this.snapshot();
+    const id=uid(),createdAt=new Date().toISOString();s.tasks.push({...t,id,batchId:id,status:'pending',resultId:null,error:null,attempts:0,remoteTaskId:null,providerStatus:null,outputUrl:null,createdAt});s.batch={id,status:'queued',portraitId:t.portraitId,createdAt,provider:t.provider||'codex',...(t.agentHost?{agentHost:t.agentHost}:{}),providerPreset:t.providerPreset||null};delete s.execution;return this.snapshot();
   });}
   async image(id){const a=this.state.assets[id];if(!a?.path)throw Error('本地图片不存在');const bytes=await readFile(a.path);return {mime:a.mime||imageType(bytes).mime,base64:bytes.toString('base64')};}
 }

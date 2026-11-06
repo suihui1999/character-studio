@@ -9,4 +9,4 @@ This project does not claim ownership of external images or metadata. The MIT li
 
 The related Chinese gallery project was inspected during requirements research: https://github.com/anhao/ai-pose-gallery-zh . This implementation does not copy its application code or redistribute its image collections.
 
-Runtime dependencies are bundled from the MIT-licensed Model Context Protocol SDK, MCP Apps SDK, Zod and their dependencies. The build writes their available license texts into the distributable `dist/THIRD_PARTY_LICENSES.txt`.
+Runtime dependencies include the Model Context Protocol SDK, MCP Apps SDK, Zod, Yazl and their dependencies, plus ISC-licensed Lucide icons. The build writes their available license texts into the distributable `dist/THIRD_PARTY_LICENSES.txt`.

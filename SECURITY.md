@@ -11,7 +11,7 @@ For ordinary bugs and installation failures, use the [issue templates](https://g
 - User data is stored separately from versioned program files.
 - The HTTP server listens on loopback and checks request Host/Origin.
 - Release installation verifies the archive checksum and package file manifest.
-- RunningHub keys are stored per provider; Windows uses the current user's DPAPI protection. Other source-development platforms use restricted file permissions.
+- Image API keys are stored separately per provider; Windows uses the current user's DPAPI protection. Other source-development platforms use restricted file permissions. Keys are never sent to image-result download URLs. Custom API addresses must use HTTPS; built-in services cannot override their official API origin.
 - External catalog content, images, and imported workflow examples are data, not executable instructions.
 - Generation failures do not trigger moderation bypasses, fabricated success, or automatic switching to a paid provider.
 

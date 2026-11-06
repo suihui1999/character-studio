@@ -1,5 +1,10 @@
 """Synthetic catalog metadata. Browser tests never need downloaded site indexes."""
 import json
+def dismiss_guide(surface):
+    surface.locator('#onboarding-guide').wait_for(state='visible')
+    surface.locator('#close-onboarding').click()
+    surface.locator('#onboarding-guide').wait_for(state='hidden')
+
 def seed_catalog(root):
     folder=root/'catalog';folder.mkdir(exist_ok=True)
     for kind,count in [('costume',24),('pose',24)]:

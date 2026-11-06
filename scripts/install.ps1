@@ -82,7 +82,7 @@ if (-not $studioDestination) {
 }
 Write-Output '[4/4] Workbench is installed. No MCP settings were changed.'
 if (-not $NoOpen) {
-  $studioOpenArgs=@((Join-Path $studioDestination 'dist\cli.mjs'),'open','--executor','agent')
+  $studioOpenArgs=@((Join-Path $studioDestination 'dist\cli.mjs'),'open','--executor','keep')
   if ($NoBrowser) { $studioOpenArgs+='--no-browser' }
   & (Join-Path $studioDestination 'runtime\node.exe') @studioOpenArgs
   if ($LASTEXITCODE -ne 0) { throw 'Installed, but the workbench could not start. Run its doctor command.' }

@@ -82,16 +82,25 @@ async function main(){
   if(command==='doctor'){
     const service=await discover();return output({service:SERVICE,version:VERSION,ready:!!service,home:root,runtime:process.version,...(service?{url:endpoint(service.port),buildId:service.buildId}:{message:'尚未启动，运行 open 会自动启动。'})});
   }
-  if(!['open','state','wait','claim','result','disconnect','unavailable'].includes(command))throw Error('未知命令，请运行 help。');
+  if(!['open','state','wait','claim','ack','result','disconnect','unavailable'].includes(command))throw Error('未知命令，请运行 help。');
   const service=await ensure();
   if(command==='open'){
-    const executor=flags.executor||'agent';if(!['agent','codex','keep'].includes(executor))throw Error('executor 只能为 agent、codex 或 keep');
+    const current=await call(service,'get_state');
+    const executor=flags.executor||(current.channelSetup?'keep':'agent');if(!['agent','codex','keep'].includes(executor))throw Error('executor 只能为 agent、codex 或 keep');
+    if(flags.host!==undefined&&flags.host!=='doubao')throw Error('host 目前只支持 doubao');
     await call(service,'open_workbench',executor==='keep'?{}:{executor});
-    const url=endpoint(service.port);if(!flags['no-browser']){try{await openBrowser(url);}catch{throw Error('工作台已启动，但无法自动打开浏览器。请打开 '+url);}}
-    return output({opened:true,url,browserRequested:!flags['no-browser'],version:VERSION,buildId:service.buildId,agentStep:'确认本会话有看图、生图和结果文件工具后，运行 wait --agent 宿主名 --image-tool 实际工具名，保持等待用户提交。没有相应工具则运行 unavailable --reason 具体原因。'});
+    const url=endpoint(service.port)+(flags.host==='doubao'?'/?host=doubao':'');if(!flags['no-browser']){try{await openBrowser(url);}catch{throw Error('工作台已启动，但无法自动打开浏览器。请打开 '+url);}}
+    const agentStep=flags.host==='doubao'
+      ?'按安装目录中的技能先引导连接渠道。使用豆包时先检查本会话看图、生图和真实文件回填能力，建立真实等待；缺少工具用 unavailable 报告原因。已保存的其他渠道保持原选择。提交后可发送「处理工作台里待生成的图片」接手整批；测试图使用同样的 wait/ack/result 流程。'
+      :'确认本会话有看图、生图和结果文件工具后，运行 wait --follow --agent 宿主名 --image-tool 实际工具名，保持等待用户提交。没有相应工具则运行 unavailable --reason 具体原因。';
+    return output({opened:true,url,browserRequested:!flags['no-browser'],version:VERSION,buildId:service.buildId,agentStep});
   }
   if(command==='state')return output(await call(service,'get_state'));
   if(command==='claim')return output(await call(service,'claim_next_task'));
+  if(command==='ack'){
+    if(typeof flags.task!=='string')throw Error('ack 需要 --task 任务ID');
+    return output(await call(service,'agent_ack_task',{taskId:flags.task}));
+  }
   if(command==='result'){
     if(typeof flags.task!=='string'||(typeof flags.file==='string')===(typeof flags.error==='string'))throw Error('result 需要 --task，以及 --file 或 --error 中的一项');
     return output(await call(service,'record_result',{taskId:flags.task,...(flags.file?{filePath:path.resolve(flags.file)}:{error:flags.error})}));
@@ -104,6 +113,10 @@ async function main(){
   }
   if(typeof flags.agent!=='string'||typeof flags['image-tool']!=='string')throw Error('等待前需填写 --agent 和本会话实际可用的 --image-tool 名称；不能凭客户端有生图按钮宣称已接通。');
   const timeoutMs=flags.timeout?Number(flags.timeout)*1000:45000;
-  return output(await call(service,'agent_wait',{sessionId:id,agentName:flags.agent,imageTool:flags['image-tool'],timeoutMs},timeoutMs+7000));
+  const renew=flags.follow===true;
+  for(;;){
+    const result=await call(service,'agent_wait',{sessionId:id,agentName:flags.agent,imageTool:flags['image-tool'],timeoutMs,renew},timeoutMs+100000);
+    if(!renew||result.reason!=='idle')return output(result);
+  }
 }
 main().catch(error=>{output({ok:false,error:error.message});process.exitCode=1;});

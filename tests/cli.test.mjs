@@ -22,6 +22,13 @@ test('CLI opens and reuses the daemon without MCP registration, including concur
   const opened=await Promise.all([f.command('open','--no-browser'),f.command('open','--no-browser')]);assert.ok(opened.every(o=>o.url===f.opened.url));assert.equal((await fetch(f.opened.url+'/api/health').then(r=>r.json())).pid,f.health.pid);
   assert.equal(JSON.parse(await readFile(path.join(f.home,'service.json'),'utf8')).pid,f.health.pid);
 });
+test('opening again keeps the successfully configured channel instead of resetting to Agent',async t=>{
+  const f=await fixture(t),store=await new Store(f.home).init();
+  await store.saveDraft({provider:'image-openai'});
+  await store.mutate(()=>{store.state.channelSetup={provider:'image-openai',checkedAt:new Date().toISOString()};});
+  await f.command('open','--no-browser');
+  assert.equal((await f.command('state')).draft.provider,'image-openai');
+});
 test('CLI wait wakes on submission and persists exact returned result bytes',async t=>{
   const f=await fixture(t),store=await new Store(f.home).init(),portrait=await store.putImage(PNG,'fixture.png');
   const refs=[];for(const kind of ['costume','pose'])refs.push(await store.addReference({kind,id:kind,name:'日常测试',url:`https://${kind==='pose'?'ai-pose-depth-gallery':'ai-costume-gallery'}.pages.dev/img/fixture.png`}));

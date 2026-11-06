@@ -1,5 +1,17 @@
 # Changelog / 版本记录
 
+## 0.4.0 — 2026-11-06
+
+- 新增可独立下载、双击自动准备并打开工作台的 Windows EXE，以及内含启动 EXE 的解压即用 ZIP。
+- 成功记录按批次管理，可命名、打包下载；三库详情页和成功记录提供统一的单张原图下载图标。
+- 区分账号登录、执行器连接与生图能力，首次使用提供可切换的图解指南。
+- Add a self-contained double-click Windows EXE and a portable ZIP with its own GUI launcher. Add batch histories, original-image downloads, capability checks and beginner guides.
+
+- 移除工作台 RunningHub 入口与内置工作流，保留旧成功记录。
+- 新增「生图 API」，预设 OpenAI、Google Gemini、火山方舟 Seedream，支持自定义兼容接口与多图参考。
+- 沿用小按钮与弹窗管理 Key，教程按服务显示官方链接；启动指南改为 Agent／API 图解。
+- Replace RunningHub with image API presets and custom compatible endpoints; preserve historical results. Add per-service key dialogs and guides, multi-reference requests, non-generating connection checks, and real image persistence.
+
 ## 0.3.1 — 2026-11-03
 
 - 内置 RunningHub 国内站和国际站的 Qwen 2.1 换装与姿势工作流。添加消费级 Key 获取图解和图片比例选择。

@@ -14,6 +14,14 @@ readline.createInterface({input:process.stdin}).on('line',line=>{
   if(m.method==='thread/start')return reply({thread:{id:'fixture-thread-'+randomUUID(),ephemeral:true}});
   if(m.method==='turn/start'){
     const id=randomUUID(),threadId=m.params.threadId,number=++turns;reply({turn:{id,status:'inProgress',items:[]}});
+    const capabilityTest=m.params.input?.some(i=>i.type==='text'&&i.text.includes('红色陶瓷杯'));
+    // These scenarios model a working image tool whose later subject request fails.
+    if(capabilityTest&&['success','first-rejected','rejected','hang-once','crash','delayed-rejected'].includes(mode)){
+      setTimeout(()=>{
+        send({method:'item/completed',params:{threadId,turnId:id,item:{type:'imageGeneration',id:'fixture-check',status:'completed',result:png}}});
+        send({method:'turn/completed',params:{threadId,turn:{id,status:'completed',items:[],error:null}}});
+      },20);return;
+    }
     if(mode==='hanging')return;
     if(mode==='hang-once'&&!existsSync(process.env.STUDIO_TEST_HANG_FLAG)){writeFileSync(process.env.STUDIO_TEST_HANG_FLAG,'hanging');return;}
     setTimeout(()=>{

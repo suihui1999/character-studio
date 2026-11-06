@@ -12,20 +12,36 @@ The local executor uses an existing ChatGPT login through Codex App Server. It d
 
 本机需要可用的 Codex。登录、连接或生成失败会显示实际原因；当前任务完成或失败后，再领取下一项，并遵守暂停和取消。
 
-## RunningHub China and Global / 国内站与国际站
+## Image APIs / 生图 API
 
-The two sites have separate keys and model presets. This integration uses personal AI application and ComfyUI workflow APIs, not enterprise model APIs.
+工作台只显示「当前 Agent 生图」和「生图 API」。选择 API 后，服务与模型已预设，Key 通过「管理 API Key」弹窗填写。每个服务独立保存 Key。主角始终是一位，服装和姿势可选其一或同时提供。
 
-1. 选择国内站或国际站，点「获取 Key 教程」，按图解注册并登录。
-2. 登录后点击右上角头像，进入「控制台」，在左侧打开「消费级-会员」。获取完整 API Key 后回到工作台验证并保存。
-3. 工作台自动选择内置的 Qwen 2.1 换装与姿势工作流。选好主角、服装和姿势后即可生成。
+| 服务 | 预设模型 | 获取 Key |
+|---|---|---|
+| OpenAI | GPT Image 2、2.5 Sunburst、1.5 | [API keys](https://platform.openai.com/api-keys) |
+| Google Gemini | Gemini 3.1 Flash Image、3 Pro Image、2.5 Flash Image | [Google AI Studio](https://aistudio.google.com/api-keys) |
+| 火山方舟 | Seedream 4.5、5.0 Lite、4.0 | [方舟 API Key](https://ark.volcengine.com/region:cn-beijing/apikey) |
+| 自定义兼容 API | 服务商提供的模型 ID | 在服务商后台创建 |
 
-The bundled Qwen 2.1 workflow IDs are `2117565399293321218` for China and `2117590622597468162` for Global. Both require a portrait, outfit, and pose. Available aspect ratios are 1:1, 2:3, 3:2, 3:4, 4:3, 9:16, 16:9, and 21:9.
+「获取 Key 教程」提供对应官方平台链接和三步说明。OpenAI 的 ChatGPT 订阅和 API 结算分开。API 生图按所选服务计费，账号地区、模型权限、额度需在对应平台确认。
 
-Each submitted task keeps its original provider and preset snapshot. A remote task ID is retained when available. Cancellation stops local work and polling, but a task already submitted to RunningHub may still run; manage that task on the provider's site if necessary.
+Connection checks only read model metadata. They do not generate an image or verify image output. A paid test uses the first selected combination, requires an explicit fee confirmation, and leaves the user's batch and references intact. API requests send the actual selected reference images and rendered prompt; every returned PNG/JPEG/WebP is validated and saved locally, with a 12 MB output limit. No fallback images are used.
+
+自定义 API 支持 OpenAI 图片编辑（multipart 多图上传／JSON images 列表）、Gemini generateContent 和 Seedream images/generations。接口地址填写到版本前缀，例如 `https://example.com/v1`。必须支持多图参考；只支持文生图或仅提供聊天接口的服务不适用。默认协议为 OpenAI 图片编辑多图上传。服务商需要支持相应模型信息查询才能完成免生图的连接验证。
+
+Each task snapshots its service, model, custom endpoint and protocol. Changing settings cannot reroute an already submitted batch. Cancellation stops local waiting and subsequent requests; a request already accepted by the provider may continue and incur charges. The app never automatically retries an uncertain request or switches providers.
 
 ## Keys and output
 
-Enter keys in the local settings, not in chat or GitHub issues. Windows storage uses the current user's DPAPI protection. The optional development environment variables are `RUNNINGHUB_CN_API_KEY` and `RUNNINGHUB_GLOBAL_API_KEY`; no `.env` file is loaded automatically.
+Key 只在本机弹窗填写，不发到聊天或 GitHub。Windows 使用当前用户的 DPAPI 加密保存。开发环境可使用 `OPENAI_API_KEY`、`GEMINI_API_KEY`、`ARK_API_KEY`、`CHARACTER_STUDIO_IMAGE_API_KEY`；环境变量优先于本机保存值，不自动读取 .env。
 
-The current version has no general adapter for arbitrary image APIs. Adding a key from an unrelated service does not make it a supported provider.
+RunningHub 已从工作台移除。旧成功图片、批次与模型名称保留；未完成的旧渠道任务不会自动迁移到收费 API。
+
+## API contracts / 接口依据
+
+- [OpenAI image editing](https://developers.openai.com/api/reference/resources/images/methods/edit): JSON images data URLs, multipart image inputs, PNG/base64 results.
+- [Google Gemini image generation](https://ai.google.dev/gemini-api/docs/generate-content/image-generation): generateContent, inlineData, responseModalities and imageConfig.
+- [Volcengine Seedream](https://docs.volcengine.com/docs/ark/image-generation-tutorial?lang=zh): images/generations, multi-image references, model IDs and sizes.
+- [Volcengine models API](https://console.volcengine.com/ark/region%3Acn-beijing/docs/models-api): non-generating model-list connection check.
+
+Protocol tests use isolated local services. This does not claim that a user's account, region or balance has been tested against live paid endpoints.

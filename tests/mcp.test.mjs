@@ -16,7 +16,7 @@ test('bundled installed-style server exposes MCP App, saves upload and restores 
     const tools=await client.listTools();const open=tools.tools.find(t=>t.name==='open_workbench');assert.equal(open._meta.ui.resourceUri,'ui://character-studio/workbench.html');
     assert.deepEqual(tools.tools.find(t=>t.name==='claim_next_task')._meta.ui.visibility,['model']);
     const native=await client.callTool({name:'open_workbench',arguments:{executor:'agent'}});assert.ok(!native.isError);assert.equal(native.structuredContent.draft.provider,'agent');
-    const resources=await client.readResource({uri:open._meta.ui.resourceUri});assert.equal(resources.contents[0].mimeType,'text/html;profile=mcp-app');assert.match(resources.contents[0].text,/CHARACTER/);
+    const resources=await client.readResource({uri:open._meta.ui.resourceUri});assert.equal(resources.contents[0].mimeType,'text/html;profile=mcp-app');assert.match(resources.contents[0].text,/<h1\b[^>]*>Character Studio<\/h1>/i);
     const upload=await client.callTool({name:'upload_character',arguments:{name:'test-character.png',base64:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l9sAAAAASUVORK5CYII='}});
     assert.ok(!upload.isError,JSON.stringify(upload));const saved=await client.callTool({name:'get_state',arguments:{}});assert.equal(saved.structuredContent.draft.portraitId,upload.structuredContent.id);
   }finally{await client.close();}

@@ -2,7 +2,8 @@ import {spawn,execFileSync} from 'node:child_process';
 import {existsSync} from 'node:fs';
 import path from 'node:path';
 import {EventEmitter} from 'node:events';
-import {REFERENCE_LABELS} from './generation-models.mjs';
+import {REFERENCE_LABELS,selectedPreset} from './generation-models.mjs';
+import {createHash} from 'node:crypto';
 
 export function codexCommand(){
   const flags=['app-server','--disable','shell_tool','--disable','unified_exec'];
@@ -74,13 +75,33 @@ export function resultFromImageItem(item){
 
 export class GenerationRunner{
   constructor(store,{clientFactory=()=>new CodexClient(),runninghub}={}){this.store=store;this.clientFactory=clientFactory;this.runninghub=runninghub;this.job=null;this.activeRun=null;this.starting=false;}
-  async probe(provider,inputKey){provider??=(await this.store.refresh()).draft.provider||'codex';if(provider==='agent')return {available:false,engine:'agent',reason:'当前 Agent 需在支持工作台消息的宿主中执行；本机服务无法检测宿主是否开放生图工具。'};if(provider!=='codex')return this.runninghub.probe(provider,inputKey);const client=this.clientFactory();try{await client.connect();const r=await client.request('account/read',{refreshToken:false});if(r.account?.type!=='chatgpt')return {available:false,reason:'请先在 Codex CLI 使用 ChatGPT 账号登录，本工作台不切换到 API Key 生图。'};return {available:true,engine:'codex',message:'本机 Codex 已登录，可自动提交任务'};}catch(e){return {available:false,reason:e.message};}finally{await client.close();}}
-  async start(){
+  async probe(provider,inputKey,preset){
+    provider??=(await this.store.refresh()).draft.provider||'codex';
+    if(provider==='agent')return {available:false,engine:'agent',account:'unknown',executor:false,capability:'unknown',reason:'回到打开工作台的原聊天，发送「重新连接人物工作台」。'};
+    if(provider!=='codex'){
+      if(!preset){const s=await this.store.refresh();preset=selectedPreset(s.providerPresets,provider,s.draft.providerPresetId);}
+      const result=await this.runninghub.probe(provider,inputKey,preset);
+      return {...result,account:result.available?'confirmed':'unknown',executor:result.available,capability:'unknown'};
+    }
+    const client=this.clientFactory();
+    let connected=false;
+    try{
+      await client.connect();connected=true;
+      const r=await client.request('account/read',{refreshToken:false});
+      if(r.account?.type!=='chatgpt')return {available:false,engine:'codex',account:'unknown',executor:true,capability:'unknown',reason:'尚未登录 ChatGPT 账号。请打开 Codex 完成登录，再点「检测连接」。'};
+      const accountId=createHash('sha256').update(JSON.stringify(r.account)).digest('hex');
+      return {available:true,engine:'codex',account:'confirmed',executor:true,capability:'unknown',accountId,message:'本机 Codex 已登录，执行器已连接。尚未验证生图能力。'};
+    }catch(e){
+      return {available:false,engine:'codex',account:'unknown',executor:connected,capability:'unknown',reason:e.message,solution:'打开 Codex，确认已安装并完成登录，再点「检测连接」。也可选择豆包工作或生图 API。'};
+    }finally{await client.close();}
+  }
+  async start(expectedBatchId){
     if(this.starting)return {started:true,alreadyRunning:true};
     this.starting=true;
     try{
       const state=await this.store.refresh();if(!state.batch||!['queued','running'].includes(state.batch.status))throw Error('没有已提交且可执行的批次');
-      if(state.batch.provider==='agent')throw Error('当前 Agent 渠道须由宿主接收工作台消息后执行；不会自动切换到本机 Codex 或 RunningHub。');
+      if(expectedBatchId&&state.batch.id!==expectedBatchId)throw Error('当前批次已变化，请刷新后再试。');
+      if(state.batch.provider==='agent')throw Error('当前 Agent 渠道须由宿主接收工作台消息后执行；不会自动切换到其他渠道。');
       if(this.job&&this.activeRun?.batchId===state.batch.id&&!this.activeRun.controller.signal.aborted)return {started:true,alreadyRunning:true,batchId:state.batch.id};
       if(this.job){this.stop(this.activeRun);await this.job;}
       if(state.tasks.some(t=>t.batchId===state.batch.id&&t.status==='running'))return {started:true,alreadyRunning:true,batchId:state.batch.id};
@@ -107,7 +128,7 @@ export class GenerationRunner{
     const watcher=setInterval(async()=>{if(checking||signal.aborted)return;checking=true;try{const s=await this.store.refresh();if(s.batch?.id!==batchId||s.batch.status==='cancelled')this.stop(run);}catch{}finally{checking=false;}},500);watcher.unref();
     try{
       const batch=(await this.store.refresh()).batch,provider=batch.provider||'codex';
-      await this.execution(batchId,'connecting',provider==='codex'?'正在连接本机 Codex…':'正在连接 RunningHub 个人版…');
+      await this.execution(batchId,'connecting',provider==='codex'?'正在连接本机 Codex…':'正在连接生图 API…');
       if(provider!=='codex')await this.runninghub.preflight(provider,batch.providerPreset);
       else{
       client=this.clientFactory();run.client=client;await client.connect();const account=await client.request('account/read',{refreshToken:false});

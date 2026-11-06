@@ -1,17 +1,22 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "character-studio",
-  "version": "0.3.1",
-  "description": "上传主角、组合服装和姿势，由当前 Agent 生图的本地工作台。",
+  "version": "0.4.0",
+  "description": "上传主角、组合服装和姿势，由当前 Agent 或生图 API 生成的本地工作台。",
   "license": "MIT",
-  "extensions": {"com.openai": {
-    "requires_local_executor": true,
-    "interface": {
-      "displayName": "Character Studio",
-      "shortDescription": "人物、服装、姿势组合与 Agent 生图工作台",
-      "longDescription": "本机保存参考图、批量任务和结果。使用宿主 Agent 已有的生图工具。",
-      "category": "Creativity",
-      "capabilities": ["Read", "Write"]
+  "extensions": {
+    "com.openai": {
+      "requires_local_executor": true,
+      "interface": {
+        "displayName": "Character Studio",
+        "shortDescription": "人物、服装、姿势组合与 Agent／API 生图工作台",
+        "longDescription": "本机保存参考图、批量任务和结果。使用宿主 Agent 已有的生图工具或配置好的生图 API。",
+        "category": "Creativity",
+        "capabilities": [
+          "Read",
+          "Write"
+        ]
+      }
     }
-  }}
+  }
 }

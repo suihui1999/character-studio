@@ -1,9 +1,17 @@
 {
   "name": "character-studio",
-  "version": "0.3.1",
-  "description": "人物、服装、姿势组合与 Agent 生图工作台",
+  "version": "0.4.0",
+  "description": "人物、服装、姿势组合与 Agent／API 生图工作台",
   "skills": "./skills",
   "mcpServers": "./.mcp.json",
   "requires_local_executor": true,
-  "interface": {"displayName": "Character Studio", "shortDescription": "上传主角、选择服装和姿势，由 Agent 完成生图", "category": "Creativity", "capabilities": ["Read", "Write"]}
+  "interface": {
+    "displayName": "Character Studio",
+    "shortDescription": "上传主角、选择服装和姿势，由 Agent 完成生图",
+    "category": "Creativity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ]
+  }
 }

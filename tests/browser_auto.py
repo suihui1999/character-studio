@@ -4,7 +4,7 @@ The app-server executable is a clearly isolated test fixture, never a real gener
 from pathlib import Path
 import subprocess,os,time,json,urllib.request,tempfile,shutil,base64
 from playwright.sync_api import sync_playwright
-from browser_support import seed_catalog
+from browser_support import seed_catalog,dismiss_guide
 
 ROOT=Path(__file__).resolve().parents[1]
 RESULTS=ROOT/'test-results';RESULTS.mkdir(exist_ok=True)
@@ -17,14 +17,52 @@ def tool(name,args=None):
 
 with sync_playwright() as pw:
     browser=pw.chromium.launch(headless=True)
-    for mode in ['success','first-rejected','rejected','notloggedin','hang-once']:
+    for mode in ['success','first-rejected','rejected','notloggedin','unavailable','hang-once','reconnect']:
         data=Path(tempfile.mkdtemp(prefix='character-auto-browser-'));seed_catalog(data)
-        env={**os.environ,'CHARACTER_STUDIO_HOME':str(data),'CHARACTER_STUDIO_CODEX_BIN':str(ROOT/'tests/fixtures/fake-codex.js'),'STUDIO_TEST_EXECUTOR_MODE':mode,'STUDIO_TEST_HANG_FLAG':str(data/'hang-flag')}
+        env={**os.environ,'CHARACTER_STUDIO_HOME':str(data),'CHARACTER_STUDIO_CODEX_BIN':str(ROOT/'tests/fixtures/fake-codex.js'),'STUDIO_TEST_EXECUTOR_MODE':'success' if mode=='reconnect' else mode,'STUDIO_TEST_HANG_FLAG':str(data/'hang-flag')}
         proc=subprocess.Popen(['node',str(ROOT/'plugins/character-studio/dist/server.mjs'),'--http','--port','43129'],env=env,stdout=subprocess.PIPE,stderr=subprocess.PIPE,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
         try:
             for i in range(80):
                 try:tool('get_state');break
                 except Exception:time.sleep(.1)
+            if mode=='success':
+                first=browser.new_page(viewport={'width':1280,'height':1000})
+                first.route('https://ai-costume-gallery.pages.dev/thumbs/**',lambda r:r.fulfill(content_type='image/png',body=PNG))
+                first.goto(URL)
+                first.locator('#onboarding-guide').wait_for()
+                for channel,title in [('doubao','用豆包工作生图'),('codex','用 Codex 生图'),('api','用生图 API 生图')]:
+                    first.locator('#guide-'+channel+'-tab').click()
+                    assert first.locator('#guide-channel-title').text_content()==title
+                    first.wait_for_function("document.querySelector('#guide-"+channel+"-image').naturalWidth>0")
+                    assert tool('get_state')['draft']['provider']=='codex'
+                    first.locator('#onboarding-guide').screenshot(path=str(RESULTS/('guide-'+channel+'-desktop.png')))
+                dismiss_guide(first)
+                first.locator('#account-stage').get_by_text('账号已登录',exact=True).wait_for()
+                first.locator('#executor-stage').get_by_text('执行器已连接',exact=True).wait_for()
+                first.locator('#capability-stage').get_by_text('尚未验证生图能力',exact=True).wait_for()
+                assert '先生成一张测试图' in first.locator('#setup-next').text_content()
+                assert first.locator('#upload-portrait').is_disabled()
+                assert first.locator('#submit').is_disabled()
+                assert tool('get_state')['channelSetup']['provider']=='codex'
+                assert tool('get_state')['batch'] is None
+                first.screenshot(path=str(RESULTS/'first-use-channel-desktop.png'),full_page=True)
+                assert first.locator('#channel-setup').evaluate("e=>e.closest('.queue')!==null")
+                assert first.locator('#channel-setup').bounding_box()['x']>first.locator('.library').bounding_box()['x']
+                first.set_viewport_size({'width':390,'height':844})
+                assert first.evaluate('document.documentElement.scrollWidth<=innerWidth')
+                first.screenshot(path=str(RESULTS/'first-use-channel-mobile.png'),full_page=True)
+                first.locator('#open-onboarding').click()
+                first.locator('#onboarding-guide').wait_for()
+                first.locator('#onboarding-guide').screenshot(path=str(RESULTS/'guide-mobile.png'))
+                first.locator('#guide-zoom').click()
+                assert first.locator('#guide-zoom').get_attribute('aria-pressed')=='true'
+                assert first.locator('.guide-screenshots').evaluate('e=>e.scrollWidth>e.clientWidth')
+                assert first.evaluate('document.documentElement.scrollWidth<=innerWidth')
+                first.locator('#guide-zoom').click()
+                first.locator('.guide-copy summary').click()
+                first.locator('#guide-channel-title').get_by_text('用 Codex 生图',exact=True).wait_for()
+                first.locator('#close-onboarding').click()
+                first.close()
             portrait=tool('upload_character',{'name':'long-file-name-'+'A'*120+'.png','base64':base64.b64encode(PNG).decode()})
             costume=tool('browse_catalog',{'kind':'costume','limit':1})['items'][0]
             pose=tool('browse_catalog',{'kind':'pose','q':'full_single_P015_front','limit':1})['items'][0]
@@ -33,7 +71,7 @@ with sync_playwright() as pw:
             if mode in ['first-rejected','hang-once']:
                 pose2=tool('browse_catalog',{'kind':'pose','q':'full_single_P016_front','limit':1})['items'][0]
                 poses.append(tool('select_reference',{'item':pose2})['id'])
-            tool('save_draft',{'patch':{'mode':'all','costumeIds':[c['id']],'poseIds':poses}});tool('build_queue')
+            tool('save_draft',{'patch':{'mode':'all','costumeIds':[c['id']],'poseIds':poses,**({'provider':'agent'} if mode=='reconnect' else {})}});tool('build_queue')
             saved=json.loads((data/'state.json').read_text(encoding='utf-8'))
             for a in saved['assets'].values():
                 if a['kind'] in ['pose','costume']:a.update(path=portrait['path'],mime='image/png')
@@ -42,10 +80,38 @@ with sync_playwright() as pw:
             errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
             page.route('https://ai-pose-depth-gallery.pages.dev/thumbs/**',lambda r:r.fulfill(content_type='image/png',body=PNG))
             page.route('https://ai-costume-gallery.pages.dev/thumbs/**',lambda r:r.fulfill(content_type='image/png',body=PNG))
-            page.goto(URL);page.locator('#submit:not(:disabled)').wait_for()
+            page.goto(URL+('/?host=doubao' if mode=='success' else ''));page.locator('#agent-choice:not(:disabled)').wait_for()
+            if mode!='success':dismiss_guide(page)
+            else:assert not page.locator('#onboarding-guide').is_visible()
+            def verify_image_tool():
+                page.locator('#test-generation:not(:disabled)').click()
+                page.locator('#confirm-test').click()
+                page.locator('#capability-stage').get_by_text('生图能力已确认',exact=False).wait_for(timeout=15000)
+            if mode=='notloggedin':
+                page.locator('#channel-status').get_by_text('尚未登录',exact=False).wait_for()
+                assert page.locator('#submit').is_disabled()
+                assert all(t['attempts']==0 for t in tool('get_state')['tasks'])
+                page.screenshot(path=str(RESULTS/'account-login-required.png'),full_page=True)
+                page.close();continue
+            if mode=='unavailable':
+                page.locator('#test-generation:not(:disabled)').click();page.locator('#confirm-test').click()
+                page.locator('#channel-solution').get_by_text('没有可用的内置生图工具',exact=False).wait_for(timeout=15000)
+                assert page.locator('#submit').is_disabled()
+                assert tool('get_state')['batch']['status']=='draft'
+                assert all(t['attempts']==0 for t in tool('get_state')['tasks'])
+                page.screenshot(path=str(RESULTS/'image-tool-unavailable-before-batch.png'),full_page=True)
+                page.close();continue
             assert page.locator('#fallback').count()==0
             assert page.locator('#provider [aria-pressed=true]').get_attribute('data-provider')=='agent'
             if mode=='success':
+                agent=page.locator('#agent-choice')
+                assert agent.input_value()=='codex'
+                agent.select_option('doubao')
+                agent.select_option('codex')
+                page.locator('#channel-status').get_by_text('本机 Codex 已登录',exact=False).wait_for()
+                assert page.locator('#submit').is_disabled()
+                page.screenshot(path=str(RESULTS/'login-is-not-image-capability.png'),full_page=True)
+                verify_image_tool()
                 prompt_entry=page.get_by_text('编辑默认提示词',exact=True)
                 assert prompt_entry.is_visible()
                 page.locator('.queue').screenshot(path=str(RESULTS/'generation-layout.png'))
@@ -61,7 +127,27 @@ with sync_playwright() as pw:
                 page.locator('#channel-status').get_by_text('本机 Codex 已登录',exact=False).wait_for()
                 assert tool('get_state')['batch']['status']=='draft'
             assert page.locator('#output-style, #mode').count()==0
-            if mode=='hang-once':page.screenshot(path=str(RESULTS/'batch-replacement-ready.png'),full_page=True)
+            if mode=='reconnect':
+                page.locator('#submit').click()
+                page.locator('#execution-message').get_by_text('Agent 尚未领取',exact=False).wait_for()
+                batch=tool('get_state')['batch']
+                tool('report_dispatch_error',{'batchId':batch['id'],'error':'Fixture disconnected'})
+                page.locator('#execution-message').get_by_text('Fixture disconnected',exact=False).wait_for()
+                page.locator('.generation-choice').screenshot(path=str(RESULTS/'workbench-reconnect.png'))
+                page.locator('#reconnect-local-codex').click()
+                page.locator('#capability-stage').get_by_text('尚未验证生图能力',exact=True).wait_for()
+                verify_image_tool()
+                page.locator('#reconnect-local-codex').click()
+                page.locator('#success-count').get_by_text('1',exact=True).wait_for(timeout=15000)
+                s=tool('get_state')
+                assert s['batch']['id']==batch['id'] and s['batch']['status']=='done'
+                assert s['draft']['provider']=='codex'
+                assert all(t['provider']=='codex' and t['attempts']==1 for t in s['tasks'])
+                assert not errors,errors
+                page.close()
+                print('PASS workbench reconnect via local Codex on the same queued batch')
+                continue
+            if mode not in ['success','reconnect']:verify_image_tool()
             page.locator('#submit').click()
             if mode=='hang-once':
                 page.locator('#execution-message').get_by_text('已用时',exact=False).wait_for(timeout=15000)
@@ -74,14 +160,14 @@ with sync_playwright() as pw:
                 page.screenshot(path=str(RESULTS/'batch-replacement-new-queue.png'),full_page=True)
                 page.locator('#submit').click()
                 page.locator('#success-count').get_by_text('2',exact=True).wait_for(timeout=15000)
-                page.locator('#success-history>summary').click()
+                page.locator('#open-success-history').click()
                 page.locator('[data-result-image]').first.wait_for()
                 assert tool('get_state')['batch']['status']=='done'
                 page.screenshot(path=str(RESULTS/'batch-replacement-complete.png'),full_page=True)
             elif mode in ['success','first-rejected']:
                 page.locator('#success-count').get_by_text('1',exact=True).wait_for(timeout=15000)
                 assert not page.locator('#success-history').evaluate('(e)=>e.open')
-                page.locator('#success-history>summary').click()
+                page.locator('#open-success-history').click()
                 page.locator('[data-result-image]').wait_for(timeout=15000)
                 assert tool('get_state')['tasks'][0]['status']=='done'
                 if mode=='first-rejected':

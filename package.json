@@ -1,12 +1,17 @@
 {
   "name": "character-studio-workspace",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "license": "MIT",
-  "repository": {"type":"git","url":"https://github.com/web3suihuiji-ctrl/character-studio.git"},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/web3suihuiji-ctrl/character-studio.git"
+  },
   "homepage": "https://github.com/web3suihuiji-ctrl/character-studio#readme",
-  "bugs": {"url":"https://github.com/web3suihuiji-ctrl/character-studio/issues"},
+  "bugs": {
+    "url": "https://github.com/web3suihuiji-ctrl/character-studio/issues"
+  },
   "scripts": {
     "build": "node scripts/build.mjs",
     "package:agent": "node scripts/package-agent.mjs",
@@ -18,6 +23,8 @@
   "dependencies": {
     "@modelcontextprotocol/ext-apps": "2.0.4",
     "@modelcontextprotocol/sdk": "1.32.2",
+    "lucide": "1.69.0",
+    "yazl": "3.3.1",
     "zod": "^4.0.0"
   },
   "devDependencies": {
