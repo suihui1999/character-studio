@@ -23,7 +23,7 @@
 
 在支持运行本机程序的豆包工作、Codex 等 Agent 中，发送本仓库的 GitHub 链接，并说：
 
-> 安装并打开 https://github.com/web3suihuiji-ctrl/character-studio ，按 INSTALL.md 执行，连接你当前已有的生图能力，等待我在工作台提交。
+> 安装并打开 github上的web3suihuiji-ctrl/character-studio ，按 INSTALL.md 执行，连接你当前已有的生图能力，等待我在工作台提交。
 
 Agent 会下载提前打包的 Windows 程序，启动工作台。运行环境随包提供，用户无需安装 Node、填写 MCP 参数或逐张下载图库素材。豆包工作桌面端优先用豆包内置浏览器打开；其他 Agent 可以在支持时内嵌到聊天。内置入口打不开时，使用系统默认浏览器。
 
