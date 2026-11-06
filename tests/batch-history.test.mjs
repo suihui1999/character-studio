@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,readFile,readdir,writeFile} from 'node:fs/promises';
+import {mkdtemp,readFile,readdir,writeFile,realpath} from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import {Store} from '../src/store.mjs';
@@ -59,7 +59,7 @@ test('batch ZIP and saved folder contain matching, safe, distinct names and exac
     assert.ok(!/[<>:"/\\|?*]/.test(name));assert.deepEqual(await readFile(path.join(one.folder,name)),PNG);
   }
   assert.equal((await readFile(one.archive)).readUInt32LE(0),0x04034b50);
-  assert.ok(path.relative(store.root,one.folder).startsWith('exports'+path.sep));
+  assert.ok(path.relative(await realpath(store.root),await realpath(one.folder)).startsWith('exports'+path.sep));
 });
 test('download route serves only registered ZIPs, supports UTF-8 names and rejects unknown IDs',async t=>{
   const {root,store}=await setup();const id=await complete(store);await store.renameBatch(id,'中文批次');
