@@ -12,7 +12,7 @@
 2. 根据用户提供的 GitHub 项目链接确定 `owner/repo`。读取该仓库 `scripts/install.ps1`，下载到临时目录，然后执行：
 
    ```powershell
-   powershell.exe -NoProfile -ExecutionPolicy Bypass -File <下载的install.ps1完整路径> -Repository web3suihuiji-ctrl/character-studio -NoBrowser
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File <下载的install.ps1完整路径> -Repository suihui1999/character-studio -NoBrowser
    ```
 
    脚本下载并校验 Windows 发行包，安装到当前用户的 `%LOCALAPPDATA%\CharacterStudio`，启动本机服务并在最后一行 JSON 返回 `url`。使用这个地址按下文打开页面。`-NoBrowser` 让 Agent 可以先在自己的浏览器中打开。运行环境已随包提供。

@@ -1,16 +1,16 @@
 {
   "name": "character-studio-workspace",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "private": true,
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/web3suihuiji-ctrl/character-studio.git"
+    "url": "https://github.com/suihui1999/character-studio.git"
   },
-  "homepage": "https://github.com/web3suihuiji-ctrl/character-studio#readme",
+  "homepage": "https://github.com/suihui1999/character-studio#readme",
   "bugs": {
-    "url": "https://github.com/web3suihuiji-ctrl/character-studio/issues"
+    "url": "https://github.com/suihui1999/character-studio/issues"
   },
   "scripts": {
     "build": "node scripts/build.mjs",

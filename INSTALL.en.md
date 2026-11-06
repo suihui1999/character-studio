@@ -12,7 +12,7 @@ Carry out installation for the user. Do not ask a beginner to install Node.js, e
 2. Read `scripts/install.ps1` from the repository, save it to a temporary local path, and run:
 
    ```powershell
-   powershell.exe -NoProfile -ExecutionPolicy Bypass -File <absolute-path-to-install.ps1> -Repository web3suihuiji-ctrl/character-studio -NoBrowser
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File <absolute-path-to-install.ps1> -Repository suihui1999/character-studio -NoBrowser
    ```
 
    The installer verifies the Windows release package and installs it into `%LOCALAPPDATA%\CharacterStudio`. With `-NoBrowser` it starts the local service and returns its `url` in the final JSON line so the agent can open it in its own browser.

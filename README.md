@@ -9,14 +9,14 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/web3suihuiji-ctrl/character-studio/releases/latest"><img src="https://img.shields.io/github/v/release/web3suihuiji-ctrl/character-studio?color=984f38&amp;label=release" alt="Latest release"></a>
-  <a href="https://github.com/web3suihuiji-ctrl/character-studio/actions/workflows/windows.yml"><img src="https://github.com/web3suihuiji-ctrl/character-studio/actions/workflows/windows.yml/badge.svg" alt="Windows checks"></a>
+  <a href="https://github.com/suihui1999/character-studio/releases/latest"><img src="https://img.shields.io/github/v/release/suihui1999/character-studio?color=984f38&amp;label=release" alt="Latest release"></a>
+  <a href="https://github.com/suihui1999/character-studio/actions/workflows/windows.yml"><img src="https://github.com/suihui1999/character-studio/actions/workflows/windows.yml/badge.svg" alt="Windows checks"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-555" alt="MIT License"></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/web3suihuiji-ctrl/character-studio/releases/latest/download/Character-Studio-Windows-x64.exe"><img src="https://img.shields.io/badge/Windows-Download_EXE-984f38?style=for-the-badge" alt="下载 Windows EXE"></a>
-  &nbsp; <a href="https://github.com/web3suihuiji-ctrl/character-studio/releases/latest/download/character-studio-windows-x64.zip">下载 ZIP</a>
+  <a href="https://github.com/suihui1999/character-studio/releases/latest/download/Character-Studio-Windows-x64.exe"><img src="https://img.shields.io/badge/Windows-Download_EXE-984f38?style=for-the-badge" alt="下载 Windows EXE"></a>
+  &nbsp; <a href="https://github.com/suihui1999/character-studio/releases/latest/download/character-studio-windows-x64.zip">下载 ZIP</a>
   &nbsp; · &nbsp; <a href="#在-agent-里打开">在 Agent 里打开</a>
 </p>
 
@@ -57,17 +57,17 @@
 
 | 下载方式 | 怎么打开 |
 |---|---|
-| **[Windows EXE（推荐）](https://github.com/web3suihuiji-ctrl/character-studio/releases/latest/download/Character-Studio-Windows-x64.exe)** | 下载后双击，首次自动准备程序，然后打开工作台。 |
-| [Windows ZIP](https://github.com/web3suihuiji-ctrl/character-studio/releases/latest/download/character-studio-windows-x64.zip) | 完整解压，双击 **Character Studio.exe**，保留同目录的文件夹。 |
+| **[Windows EXE（推荐）](https://github.com/suihui1999/character-studio/releases/latest/download/Character-Studio-Windows-x64.exe)** | 下载后双击，首次自动准备程序，然后打开工作台。 |
+| [Windows ZIP](https://github.com/suihui1999/character-studio/releases/latest/download/character-studio-windows-x64.zip) | 完整解压，双击 **Character Studio.exe**，保留同目录的文件夹。 |
 
-不用另装 Node.js，无需管理员权限。完整文件和 SHA-256 校验见 [Windows 发行版](https://github.com/web3suihuiji-ctrl/character-studio/releases/latest)。EXE 当前未进行代码签名。安装包不包含整套图库，浏览和选用时自动加载所需素材。
+不用另装 Node.js，无需管理员权限。完整文件和 SHA-256 校验见 [Windows 发行版](https://github.com/suihui1999/character-studio/releases/latest)。EXE 当前未进行代码签名。安装包不包含整套图库，浏览和选用时自动加载所需素材。
 
 ### 在 Agent 里打开
 
 把下面这段发给能运行本机程序的豆包工作、Codex 等 Agent：
 
 ```text
-安装并打开 github上的web3suihuiji-ctrl/character-studio ，按 INSTALL.md 执行，连接你当前已有的生图能力，等待我在工作台提交。
+安装并打开 github上的suihui1999/character-studio ，按 INSTALL.md 执行，连接你当前已有的生图能力，等待我在工作台提交。
 ```
 
 Agent 下载打包好的程序并启动工作台。豆包工作桌面端优先使用内置浏览器，其他宿主在支持时内嵌到聊天；内嵌入口不可用时打开系统浏览器。
@@ -128,4 +128,4 @@ python -X utf8 tests/launcher_smoke.py
 
 - [贡献指南](CONTRIBUTING.md) · [架构说明](docs/architecture.md)
 - [版本记录](CHANGELOG.md) · [发布流程](docs/releasing.md)
-- [问题反馈](https://github.com/web3suihuiji-ctrl/character-studio/issues/new/choose) · [安全问题](SECURITY.md)
+- [问题反馈](https://github.com/suihui1999/character-studio/issues/new/choose) · [安全问题](SECURITY.md)

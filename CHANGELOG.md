@@ -1,5 +1,11 @@
 # Changelog / 版本记录
 
+## 0.4.2 — 2026-11-07
+
+- GitHub 项目地址更新为 `suihui1999/character-studio`，同步中英文安装指令、下载按钮、状态徽章、项目元数据和反馈入口。
+- Windows EXE 和 ZIP 随包说明同步使用新地址。
+- Update all installation instructions, download links, badges, metadata and support links to `suihui1999/character-studio`, including the Windows package documentation.
+
 ## 0.4.1 — 2026-11-06
 
 - 下载按钮立即显示简短浮层提示，约 2 秒自动消失；下载失败显示具体原因，停留 5 秒。

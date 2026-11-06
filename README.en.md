@@ -9,14 +9,14 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/web3suihuiji-ctrl/character-studio/releases/latest"><img src="https://img.shields.io/github/v/release/web3suihuiji-ctrl/character-studio?color=984f38&amp;label=release" alt="Latest release"></a>
-  <a href="https://github.com/web3suihuiji-ctrl/character-studio/actions/workflows/windows.yml"><img src="https://github.com/web3suihuiji-ctrl/character-studio/actions/workflows/windows.yml/badge.svg" alt="Windows checks"></a>
+  <a href="https://github.com/suihui1999/character-studio/releases/latest"><img src="https://img.shields.io/github/v/release/suihui1999/character-studio?color=984f38&amp;label=release" alt="Latest release"></a>
+  <a href="https://github.com/suihui1999/character-studio/actions/workflows/windows.yml"><img src="https://github.com/suihui1999/character-studio/actions/workflows/windows.yml/badge.svg" alt="Windows checks"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-555" alt="MIT License"></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/web3suihuiji-ctrl/character-studio/releases/latest/download/Character-Studio-Windows-x64.exe"><img src="https://img.shields.io/badge/Windows-Download_EXE-984f38?style=for-the-badge" alt="Download Windows EXE"></a>
-  &nbsp; <a href="https://github.com/web3suihuiji-ctrl/character-studio/releases/latest/download/character-studio-windows-x64.zip">Download ZIP</a>
+  <a href="https://github.com/suihui1999/character-studio/releases/latest/download/Character-Studio-Windows-x64.exe"><img src="https://img.shields.io/badge/Windows-Download_EXE-984f38?style=for-the-badge" alt="Download Windows EXE"></a>
+  &nbsp; <a href="https://github.com/suihui1999/character-studio/releases/latest/download/character-studio-windows-x64.zip">Download ZIP</a>
   &nbsp; · &nbsp; <a href="#open-through-an-agent">Open through an agent</a>
 </p>
 
@@ -57,17 +57,17 @@ The successful results dialog groups images by batch. Name a batch, download all
 
 | Download | Open |
 |---|---|
-| **[Windows EXE (recommended)](https://github.com/web3suihuiji-ctrl/character-studio/releases/latest/download/Character-Studio-Windows-x64.exe)** | Double-click. The first launch prepares the application and opens the workbench. |
-| [Windows ZIP](https://github.com/web3suihuiji-ctrl/character-studio/releases/latest/download/character-studio-windows-x64.zip) | Extract everything and run **Character Studio.exe**, keeping the adjacent folders together. |
+| **[Windows EXE (recommended)](https://github.com/suihui1999/character-studio/releases/latest/download/Character-Studio-Windows-x64.exe)** | Double-click. The first launch prepares the application and opens the workbench. |
+| [Windows ZIP](https://github.com/suihui1999/character-studio/releases/latest/download/character-studio-windows-x64.zip) | Extract everything and run **Character Studio.exe**, keeping the adjacent folders together. |
 
-Node.js installation and administrator access are not required. The [Windows release](https://github.com/web3suihuiji-ctrl/character-studio/releases/latest) includes SHA-256 checksums. Executables are currently unsigned. Full external galleries are loaded as needed rather than bundled in the download.
+Node.js installation and administrator access are not required. The [Windows release](https://github.com/suihui1999/character-studio/releases/latest) includes SHA-256 checksums. Executables are currently unsigned. Full external galleries are loaded as needed rather than bundled in the download.
 
 ### Open through an agent
 
 Send this to a Windows agent that can run programs on your computer:
 
 ```text
-Install and open https://github.com/web3suihuiji-ctrl/character-studio . Follow INSTALL.en.md, connect your existing image-generation tools, and wait for me to submit a task in the workbench.
+Install and open https://github.com/suihui1999/character-studio . Follow INSTALL.en.md, connect your existing image-generation tools, and wait for me to submit a task in the workbench.
 ```
 
 The agent downloads the prebuilt application and starts it. Doubao Work on desktop uses its built-in browser first; other compatible hosts can embed the workbench in chat. When embedding is unavailable, the agent opens the system browser.
@@ -126,4 +126,4 @@ python -X utf8 tests/launcher_smoke.py
 
 Windows packaging produces an EXE, a ZIP and their SHA-256 sidecars under `.local/distribution/`. Upload all four to the same GitHub Release. The final check exercises both actual release launchers.
 
-[Contributing](CONTRIBUTING.md) · [Architecture](docs/architecture.md) · [Changelog](CHANGELOG.md) · [Releasing](docs/releasing.md) · [Report an issue](https://github.com/web3suihuiji-ctrl/character-studio/issues/new/choose) · [Security](SECURITY.md)
+[Contributing](CONTRIBUTING.md) · [Architecture](docs/architecture.md) · [Changelog](CHANGELOG.md) · [Releasing](docs/releasing.md) · [Report an issue](https://github.com/suihui1999/character-studio/issues/new/choose) · [Security](SECURITY.md)

@@ -4,7 +4,7 @@ For vulnerability reports, use GitHub's **Security → Report a vulnerability** 
 
 安全漏洞请优先通过仓库 Security 页的私密报告入口提交。不要在公开 Issue 中粘贴 Key、私人人像或整个本机数据目录；没有私密入口时，可先发不含敏感细节的联系请求。
 
-For ordinary bugs and installation failures, use the [issue templates](https://github.com/web3suihuiji-ctrl/character-studio/issues/new/choose).
+For ordinary bugs and installation failures, use the [issue templates](https://github.com/suihui1999/character-studio/issues/new/choose).
 
 ## Scope and current behavior
 

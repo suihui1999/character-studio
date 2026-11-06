@@ -1,6 +1,6 @@
 {
   "name": "character-studio",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "人物、服装、姿势组合与 Agent／API 生图工作台",
   "skills": "./skills",
   "mcpServers": "./.mcp.json",

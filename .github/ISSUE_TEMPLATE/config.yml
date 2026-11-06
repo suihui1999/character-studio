@@ -1,5 +1,5 @@
 blank_issues_enabled: true
 contact_links:
   - name: Troubleshooting / 常见问题
-    url: https://github.com/web3suihuiji-ctrl/character-studio/blob/main/docs/troubleshooting.md
+    url: https://github.com/suihui1999/character-studio/blob/main/docs/troubleshooting.md
     about: Installation, agent connection, and generation help.

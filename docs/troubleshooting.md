@@ -42,4 +42,4 @@ Agent 回填时使用同一个任务 ID。成功结果为 PNG、JPEG 或 WebP，
 
 ## Still stuck? / 仍然有问题？
 
-Open a [bug report](https://github.com/web3suihuiji-ctrl/character-studio/issues/new/choose) with the application version, host, operating system, steps, and the visible error. Remove keys, private images, and personal paths from any attached logs.
+Open a [bug report](https://github.com/suihui1999/character-studio/issues/new/choose) with the application version, host, operating system, steps, and the visible error. Remove keys, private images, and personal paths from any attached logs.
