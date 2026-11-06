@@ -23,7 +23,7 @@ for mode,exe in [('portable',portable/'Character Studio.exe'),('single',DIST/'Ch
         assert json.loads((home/'state.json').read_text(encoding='utf-8'))['tasks']==[]
         if mode=='single':
             pointer=json.loads((install/'current.json').read_text(encoding='utf-8'))
-            assert Path(pointer['path']).is_relative_to(install)
+            assert Path(pointer['path']).resolve().is_relative_to(install.resolve())
             assert (Path(pointer['path'])/'Character Studio.exe').is_file()
         subprocess.run([str(exe),'--no-browser'],env=env,check=True,timeout=120)
         assert json.load(urllib.request.urlopen(url+'/api/health'))['pid']==health['pid']
